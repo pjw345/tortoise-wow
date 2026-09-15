@@ -1,6 +1,7 @@
 
 #include "playerbot/playerbot.h"
 #include "ListQuestsActions.h"
+#include "QueryQuestAction.h"
 #include "playerbot/TravelMgr.h"
 
 using namespace ai;
@@ -20,6 +21,10 @@ bool ListQuestsAction::Execute(Event& event)
     {
         ListQuests(requester, QUEST_LIST_FILTER_ALL);
     }
+    else if (event.getParam() == "progress" || event.getParam() == "pr")
+    {
+        ListQuestProgress(requester);
+    }
     else if (event.getParam().find("travel") == 0)
     {
         std::set<uint32> questIds;
@@ -33,6 +38,30 @@ bool ListQuestsAction::Execute(Event& event)
         ListQuests(requester, QUEST_LIST_FILTER_SUMMARY);
     }
     return true;
+}
+
+void ListQuestsAction::ListQuestProgress(Player* requester)
+{
+    QueryQuestAction queryQuest(ai);
+    bool foundQuest = false;
+
+    for (uint16 slot = 0; slot < MAX_QUEST_LOG_SIZE; ++slot)
+    {
+        uint32 questId = bot->GetQuestSlotQuestId(slot);
+        if (!questId)
+            continue;
+
+        foundQuest = true;
+        queryQuest.TellQuest(requester, questId);
+    }
+
+    if (!foundQuest)
+    {
+        ai->TellPlayer(requester,
+            "Quest log is empty.",
+            PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL,
+            false);
+    }
 }
 
 void ListQuestsAction::ListQuests(Player* requester, QuestListFilter filter, QuestTravelDetail travelDetail, std::set<uint32> onlyQuestIds)

@@ -35,6 +35,11 @@ bool QueryQuestAction::Execute(Event& event)
     if (!questId)
         return false;
 
+    return TellQuest(requester, questId);
+}
+
+bool QueryQuestAction::TellQuest(Player* requester, uint32 questId)
+{
     for (uint16 slot = 0; slot < MAX_QUEST_LOG_SIZE; ++slot)
     {
         if (questId != bot->GetQuestSlotQuestId(slot))
