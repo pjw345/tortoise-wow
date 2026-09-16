@@ -11,7 +11,6 @@ using namespace ai;
 LootTarget::LootTarget(ObjectGuid guid) : guid(guid), asOfTime(time(0))
 {
 }
-
 LootTarget::LootTarget(LootTarget const& other)
 {
     guid = other.guid;
@@ -259,7 +258,11 @@ bool LootObject::IsLootPossible(Player* bot)
         if (creature && sServerFacade.GetDeathState(creature) == CORPSE)
         {
             if (creature->m_loot && skillId != SKILL_SKINNING)
-                if (!creature->m_loot->CanLoot(bot))
+                // Reuse Turtle's authoritative group, round-robin, quest-item
+                // and allowed-looter checks. The compatibility CanLoot helper
+                // only examined the shared item vector and missed per-player
+                // quest loot.
+                if (!bot->IsAllowedToLoot(creature))
                     return false;
         }
     }
@@ -404,4 +407,3 @@ std::vector<LootObject> LootObjectStack::OrderByDistance(float maxDistance)
         result.push_back(i->second);
     return result;
 }
-

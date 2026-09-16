@@ -3308,23 +3308,29 @@ bool RunAwayAction::Execute(Event& event)
 bool MoveToLootAction::Execute(Event& event)
 {
     LootObject loot = AI_VALUE(LootObject, "loot target");
+    ObjectGuid lootGuid = loot.guid;
     if (!loot.IsLootPossible(bot))
     {
         sLog.outDebug("[BOT LOOT] %s: MoveToLoot abort guid=%lu (IsLootPossible=false)",
-            bot->GetName(), loot.guid.GetRawValue());
+            bot->GetName(), lootGuid.GetRawValue());
         if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
         {
-            WorldObject* wo = loot.GetWorldObject(bot);
+            WorldObject* wo = ai->GetWorldObject(lootGuid);
 
             if (!wo)
             {
-                ai->TellPlayerNoFacing(GetMaster(), "Can not move to loot " + std::to_string(loot.guid) +  " because it no longer exists.");
+                ai->TellPlayerNoFacing(GetMaster(), "Cleared loot target " + lootGuid.GetString() + " because it no longer exists.");
             }
             else
             {
-                ai->TellPlayerNoFacing(GetMaster(), "Can not move to loot " + ChatHelper::formatWorldobject(wo) + " because it is not possible to loot.");
+                ai->TellPlayerNoFacing(GetMaster(), "Cleared loot target " + ChatHelper::formatWorldobject(wo) + " because it is not possible to loot.");
             }
         }
+
+        // Do not leave an invalid target selected: the non-combat engine will
+        // otherwise choose "move to loot" again and starve normal following.
+        AI_VALUE(LootObjectStack*, "available loot")->Remove(lootGuid);
+        RESET_AI_VALUE(LootObject, "loot target");
 
         return false;
     }

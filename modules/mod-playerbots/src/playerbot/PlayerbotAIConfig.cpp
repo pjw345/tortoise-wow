@@ -203,6 +203,10 @@ bool PlayerbotAIConfig::Initialize()
     farDistance = config.GetFloatDefault("AiPlayerbot.FarDistance", 20.0f);
     sightDistance = config.GetFloatDefault("AiPlayerbot.SightDistance", 75.0f);
     spellDistance = config.GetFloatDefault("AiPlayerbot.SpellDistance", 25.0f);
+    // Pre-pull spacing is deliberately independent of ordinary casting range.
+    // Using SpellDistance here made companions run roughly 26 yards away while
+    // waiting for the master to initiate combat.
+    waitForAttackDistance = std::max(0.0f, config.GetFloatDefault("AiPlayerbot.WaitForAttackDistance", 8.0f));
     shootDistance = config.GetFloatDefault("AiPlayerbot.ShootDistance", 25.0f);
     // 125 was three times the reach of any heal in this expansion, and it fed
     // target selection, the out-of-range trigger and the approach action alike -
@@ -1047,6 +1051,8 @@ std::string PlayerbotAIConfig::GetValue(std::string name)
         out << sightDistance;
     else if (name == "SpellDistance")
         out << spellDistance;
+    else if (name == "WaitForAttackDistance")
+        out << waitForAttackDistance;
     else if (name == "ReactDistance")
         out << reactDistance;
     else if (name == "GrindDistance")
@@ -1086,6 +1092,8 @@ void PlayerbotAIConfig::SetValue(std::string name, std::string value)
         out >> sightDistance;
     else if (name == "SpellDistance")
         out >> spellDistance;
+    else if (name == "WaitForAttackDistance")
+        out >> waitForAttackDistance;
     else if (name == "ReactDistance")
         out >> reactDistance;
     else if (name == "GrindDistance")

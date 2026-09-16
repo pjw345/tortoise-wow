@@ -362,6 +362,13 @@ bool StoreLootAction::Execute(Event& event)
         sLog.outDebug("[BOT LOOT] %s: loot REJECTED guid=%lu error=%u (%s)",
             bot->GetName(), guid.GetRawValue(), lootError, errName);
 
+        if (requester)
+        {
+            std::ostringstream out;
+            out << "Loot rejected for " << guid.GetString() << ": " << errName << ". Target cleared.";
+            ai->TellDebug(requester, out.str(), "debug loot");
+        }
+
         // Drop the corpse so the bot stops retrying a loot the server won't grant.
         AI_VALUE(LootObjectStack*, "available loot")->Remove(guid);
         RESET_AI_VALUE(LootObject, "loot target");
@@ -441,13 +448,19 @@ bool StoreLootAction::Execute(Event& event)
         if (!proto)
             continue;
 
-        LootItem* lootItem = loot->GetLootItemInSlot(itemindex);
+        // Turtle appends player-specific quest items after the shared item
+        // slots. Use its native slot resolver rather than the compatibility
+        // helper that only indexed loot->items.
+        QuestItem* questItem = nullptr;
+        LootItem* lootItem = loot->LootItemInSlot(itemindex, bot->GetGUIDLow(), &questItem);
 
         if (!lootItem)
             continue;
 
-        //have no right to loot
-        if (lootItem->is_blocked || lootItem->GetSlotTypeForSharedLoot(ALL_PERMISSION, bot, loot ? loot->GetLootTarget() : nullptr) == MAX_LOOT_SLOT_TYPE)
+        // Match Turtle's native autostore contract: quest items use is_blocked
+        // for other purposes, so only shared blocked items are rejected here.
+        // The native handler remains authoritative for all other permissions.
+        if (!questItem && lootItem->is_blocked)
         {
             sLog.outDebug("[BOT LOOT] %s: skip item=%u (no right: blocked=%u)", bot->GetName(), itemid, lootItem->is_blocked ? 1 : 0);
             continue;
@@ -461,11 +474,56 @@ bool StoreLootAction::Execute(Event& event)
                 sRandomPlayerbotMgr.AddTradeDiscount(bot, master, price);
         }
 
+        uint32 itemCountBefore = bot->GetItemCount(itemid);
+
         WorldPacket packet(CMSG_AUTOSTORE_LOOT_ITEM, 1);
         packet << itemindex;
         bot->GetSession()->HandleAutostoreLootItemOpcode(packet);
+
+        uint32 itemCountAfter = bot->GetItemCount(itemid);
+        uint32 itemCountTaken = itemCountAfter > itemCountBefore ? itemCountAfter - itemCountBefore : 0;
+        if (!itemCountTaken)
+        {
+            sLog.outDebug("[BOT LOOT] %s: item=%u was not transferred by native autostore handler",
+                bot->GetName(), itemid);
+            if (requester)
+            {
+                ai->TellDebug(requester,
+                    "Failed to loot " + chat->formatItem(itemQualifier) + ": inventory count did not increase.",
+                    "debug loot");
+            }
+            continue;
+        }
+
         ++itemsTaken;
-        sLog.outDebug("[BOT LOOT] %s: take item=%u x%u", bot->GetName(), itemid, itemcount);
+        sLog.outDebug("[BOT LOOT] %s: take item=%u x%u", bot->GetName(), itemid, itemCountTaken);
+
+        if (requester && ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+        {
+            std::ostringstream out;
+            out << "Looted " << chat->formatItem(itemQualifier) << " x" << itemCountTaken;
+            ai->TellPlayerNoFacing(requester, out.str());
+
+            for (uint8 questSlot = 0; questSlot < MAX_QUEST_LOG_SIZE; ++questSlot)
+            {
+                uint32 questId = bot->GetQuestSlotQuestId(questSlot);
+                Quest const* quest = sObjectMgr.GetQuestTemplate(questId);
+                if (!quest)
+                    continue;
+
+                QuestStatusData const& questStatus = bot->getQuestStatusMap()[questId];
+                for (uint8 objective = 0; objective < QUEST_OBJECTIVES_COUNT; ++objective)
+                {
+                    if (quest->ReqItemId[objective] != itemid)
+                        continue;
+
+                    std::ostringstream progress;
+                    progress << "Quest progress " << chat->formatQuest(quest) << ": "
+                             << questStatus.m_itemcount[objective] << "/" << quest->ReqItemCount[objective];
+                    ai->TellPlayerNoFacing(requester, progress.str());
+                }
+            }
+        }
 
         if (proto->Quality > ITEM_QUALITY_NORMAL && !urand(0, 50) && ai->HasStrategy("emote", BotState::BOT_STATE_NON_COMBAT)) ai->PlayEmote(TEXTEMOTE_CHEER);
         if (proto->Quality >= ITEM_QUALITY_RARE && !urand(0, 1) && ai->HasStrategy("emote", BotState::BOT_STATE_NON_COMBAT)) ai->PlayEmote(TEXTEMOTE_CHEER);
