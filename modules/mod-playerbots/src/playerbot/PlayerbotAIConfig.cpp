@@ -206,7 +206,7 @@ bool PlayerbotAIConfig::Initialize()
     // Pre-pull spacing is deliberately independent of ordinary casting range.
     // Using SpellDistance here made companions run roughly 26 yards away while
     // waiting for the master to initiate combat.
-    waitForAttackDistance = std::max(0.0f, config.GetFloatDefault("AiPlayerbot.WaitForAttackDistance", 8.0f));
+    waitForAttackDistance = std::max(0.0f, config.GetFloatDefault("AiPlayerbot.WaitForAttackDistance", 3.0f));
     shootDistance = config.GetFloatDefault("AiPlayerbot.ShootDistance", 25.0f);
     // 125 was three times the reach of any heal in this expansion, and it fed
     // target selection, the out-of-range trigger and the approach action alike -

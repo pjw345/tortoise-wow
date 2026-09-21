@@ -370,6 +370,9 @@ file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/values/LootValues.cpp" botLootValues)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/values/Formations.cpp" botFormations)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/generic/CombatStrategy.h" botCombatStrategy)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/LootObjectStack.cpp" botLootStack)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/generic/LootNonCombatStrategy.cpp" botLootStrategy)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/PlayerbotAIConfig.cpp" botConfig)
 foreach(required
     "LootItemInSlot(itemindex, bot->GetGUIDLow(), &questItem)"
     "if (!questItem && lootItem->is_blocked)"
@@ -402,4 +405,24 @@ string(FIND "${botCombatStrategy}" "sPlayerbotAIConfig.waitForAttackDistance" wa
 if(waitDistance EQUAL -1)
     message(FATAL_ERROR "Wait-for-attack spacing must not reuse ordinary spell range")
 endif()
-message(STATUS "PASS: player-specific quest loot, invalid-target cleanup and movement spacing guards")
+foreach(required "availableLoot.erase(existing)" "availableLoot.insert(guid)")
+    string(FIND "${botLootStack}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Rediscovered loot targets must refresh their queue age: ${required}")
+    endif()
+endforeach()
+foreach(required
+    "new NextAction(\"loot\", 23.0f)"
+    "new NextAction(\"move to loot\", 24.0f)"
+    "new NextAction(\"open loot\", 25.0f)"
+    "\"very often\"")
+    string(FIND "${botLootStrategy}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Automatic loot scheduling guard missing: ${required}")
+    endif()
+endforeach()
+string(FIND "${botConfig}" "WaitForAttackDistance\", 3.0f" compactWaitDistance)
+if(compactWaitDistance EQUAL -1)
+    message(FATAL_ERROR "Wait-for-attack default must keep companions close to the player")
+endif()
+message(STATUS "PASS: player-specific quest loot, queue refresh and movement spacing guards")

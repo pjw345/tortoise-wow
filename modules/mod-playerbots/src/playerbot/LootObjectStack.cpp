@@ -343,8 +343,19 @@ bool LootObject::IsLootPossible(Player* bot)
 
 bool LootObjectStack::Add(ObjectGuid guid)
 {
-    if (!availableLoot.insert(guid).second)
+    LootTargetList::iterator existing = availableLoot.find(guid);
+    if (existing != availableLoot.end())
+    {
+        // A corpse can enter the queue from the XP event while combat is still
+        // active. If it is rediscovered after combat, refresh its age instead
+        // of allowing OrderByDistance() to discard the original entry as soon
+        // as it reaches the 30-second limit.
+        availableLoot.erase(existing);
+        availableLoot.insert(guid);
         return false;
+    }
+
+    availableLoot.insert(guid);
 
     if (availableLoot.size() < MAX_LOOT_OBJECT_COUNT)
         return true;
