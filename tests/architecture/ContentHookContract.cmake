@@ -366,6 +366,7 @@ message(STATUS "PASS: native custom aura registration and recipient-side Avoidan
 # Playerbot movement and loot adapters must preserve Turtle's player-specific
 # loot-slot view and must not let stale combat state override normal following.
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/LootAction.cpp" botLootAction)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/AddLootAction.cpp" botAddLootAction)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/MovementActions.cpp" botMovementAction)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/values/LootValues.cpp" botLootValues)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/values/Formations.cpp" botFormations)
@@ -405,10 +406,23 @@ string(FIND "${botCombatStrategy}" "sPlayerbotAIConfig.waitForAttackDistance" wa
 if(waitDistance EQUAL -1)
     message(FATAL_ERROR "Wait-for-attack spacing must not reuse ordinary spell range")
 endif()
-foreach(required "availableLoot.erase(existing)" "availableLoot.insert(guid)")
+foreach(required
+    "if (guid.IsCreature())"
+    "std::multimap<LootOrder, LootObject>"
+    "LootOrder(guid.IsCreature() ? 0 : 1, distance)"
+    "Remove(guid)")
     string(FIND "${botLootStack}" "${required}" found)
     if(found EQUAL -1)
-        message(FATAL_ERROR "Rediscovered loot targets must refresh their queue age: ${required}")
+        message(FATAL_ERROR "Loot queue filtering and corpse-priority guard missing: ${required}")
+    endif()
+endforeach()
+foreach(required
+    "loot.skillId != SKILL_NONE && !questGameObject"
+    "go->GetGOInfo()->GetLootId() != 0"
+    "game object has no loot, quest activation or item spell")
+    string(FIND "${botAddLootAction}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Ordinary loot must reject gathering and decorative game objects: ${required}")
     endif()
 endforeach()
 foreach(required
@@ -425,4 +439,4 @@ string(FIND "${botConfig}" "WaitForAttackDistance\", 3.0f" compactWaitDistance)
 if(compactWaitDistance EQUAL -1)
     message(FATAL_ERROR "Wait-for-attack default must keep companions close to the player")
 endif()
-message(STATUS "PASS: player-specific quest loot, queue refresh and movement spacing guards")
+message(STATUS "PASS: player-specific quest loot, corpse-priority queue filtering and movement spacing guards")

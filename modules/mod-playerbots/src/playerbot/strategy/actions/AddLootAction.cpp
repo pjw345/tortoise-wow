@@ -71,6 +71,37 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
     if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
         loot.Refresh(bot, guid, true);
 
+    bool questGameObject = false;
+    if (guid.IsGameObject())
+    {
+        GameObject* go = ai->GetGameObject(guid);
+        if (go)
+        {
+            questGameObject = sObjectMgr.IsGameObjectForQuests(guid.GetEntry()) && go->ActivateToQuest(bot);
+
+            // Ordinary corpse/chest looting must not consume profession nodes.
+            // The separate gather strategy owns herbs, ore and skinning, while
+            // quest objects remain available even when their lock uses a skill.
+            if (!AllowsGatheringTargets() && loot.skillId != SKILL_NONE && !questGameObject)
+            {
+                ai->TellDebug(requester, "Skipping gathering target " + ChatHelper::formatWorldobject(go), "debug loot");
+                sLog.outDebug("[BOT LOOT] %s: AddLoot reject guid=%lu (gathering target belongs to gather strategy)",
+                    bot->GetName(), guid.GetRawValue());
+                return false;
+            }
+
+            bool hasLootTemplate = go->GetGOInfo()->GetLootId() != 0;
+            bool createsItem = go->GetGoType() == GAMEOBJECT_TYPE_GOOBER && go->GetSpellId() != 0;
+            if (!AllowsGatheringTargets() && !questGameObject && !hasLootTemplate && !createsItem)
+            {
+                ai->TellDebug(requester, "Skipping non-loot object " + ChatHelper::formatWorldobject(go), "debug loot");
+                sLog.outDebug("[BOT LOOT] %s: AddLoot reject guid=%lu (game object has no loot, quest activation or item spell)",
+                    bot->GetName(), guid.GetRawValue());
+                return false;
+            }
+        }
+    }
+
     WorldObject* wo = loot.GetWorldObject(bot);
 
     if (!wo)

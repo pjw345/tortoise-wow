@@ -33,6 +33,7 @@ namespace ai
     protected:
         virtual bool AddLoot(Player* requester, ObjectGuid guid);
         virtual bool Execute(Event& event) override;
+        virtual bool AllowsGatheringTargets() const { return false; }
 
 #ifdef GenerateBotHelp
         virtual std::string GetHelpName() { return "add all loot"; }
@@ -53,6 +54,7 @@ namespace ai
 
     private:
         bool AddLoot(Player* requester, ObjectGuid guid) override;
+        bool AllowsGatheringTargets() const override { return true; }
 
 #ifdef GenerateBotHelp
         virtual std::string GetHelpName() { return "add gathering loot"; }

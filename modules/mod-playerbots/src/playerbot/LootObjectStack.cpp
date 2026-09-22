@@ -347,11 +347,14 @@ bool LootObjectStack::Add(ObjectGuid guid)
     if (existing != availableLoot.end())
     {
         // A corpse can enter the queue from the XP event while combat is still
-        // active. If it is rediscovered after combat, refresh its age instead
-        // of allowing OrderByDistance() to discard the original entry as soon
-        // as it reaches the 30-second limit.
-        availableLoot.erase(existing);
-        availableLoot.insert(guid);
+        // active. Refresh corpse entries when rediscovered after combat, but do
+        // not keep game objects alive indefinitely as the periodic scanner sees
+        // them repeatedly.
+        if (guid.IsCreature())
+        {
+            availableLoot.erase(existing);
+            availableLoot.insert(guid);
+        }
         return false;
     }
 
@@ -399,22 +402,36 @@ std::vector<LootObject> LootObjectStack::OrderByDistance(float maxDistance)
         sLog.outDebug("[BOT LOOT] %s: loot stack expired %zu corpse(s) (>30s old, dropped before looting)",
             bot->GetName(), beforeShrink - availableLoot.size());
 
-    std::map<float, LootObject> sortedMap;
+    // Creature corpses always precede chests and quest game objects. A
+    // multimap also preserves multiple targets at the same measured distance;
+    // the old map<float, LootObject> silently discarded one of them.
+    typedef std::pair<uint8, float> LootOrder;
+    std::multimap<LootOrder, LootObject> sortedMap;
     LootTargetList safeCopy(availableLoot);
     for (LootTargetList::iterator i = safeCopy.begin(); i != safeCopy.end(); i++)
     {
         ObjectGuid guid = i->guid;
         LootObject lootObject(bot, guid);
         if (!lootObject.IsLootPossible(bot))
+        {
+            Remove(guid);
             continue;
+        }
 
-        float distance = bot->GetDistance(lootObject.GetWorldObject(bot));
+        WorldObject* worldObject = lootObject.GetWorldObject(bot);
+        if (!worldObject)
+        {
+            Remove(guid);
+            continue;
+        }
+
+        float distance = bot->GetDistance(worldObject);
         if (!maxDistance || distance <= maxDistance)
-            sortedMap[distance] = lootObject;
+            sortedMap.insert(std::make_pair(LootOrder(guid.IsCreature() ? 0 : 1, distance), lootObject));
     }
 
     std::vector<LootObject> result;
-    for (std::map<float, LootObject>::iterator i = sortedMap.begin(); i != sortedMap.end(); i++)
+    for (std::multimap<LootOrder, LootObject>::iterator i = sortedMap.begin(); i != sortedMap.end(); i++)
         result.push_back(i->second);
     return result;
 }
