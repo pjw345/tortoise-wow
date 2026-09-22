@@ -52,8 +52,12 @@ bool LootAction::Execute(Event& event)
         released = true;
     }
 
-    sLog.outDebug("[BOT LOOT] %s: select target=%lu (prev=%lu released=%d)",
-        bot->GetName(), lootObject.guid.GetRawValue(), prevLoot.guid.GetRawValue(), released ? 1 : 0);
+    if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+        sLog.outBasic("[BOT LOOT] %s: select target=%lu (prev=%lu released=%d)",
+            bot->GetName(), lootObject.guid.GetRawValue(), prevLoot.guid.GetRawValue(), released ? 1 : 0);
+    else
+        sLog.outDebug("[BOT LOOT] %s: select target=%lu (prev=%lu released=%d)",
+            bot->GetName(), lootObject.guid.GetRawValue(), prevLoot.guid.GetRawValue(), released ? 1 : 0);
 
     context->GetValue<LootObject>("loot target")->Set(lootObject);
     return true;
@@ -359,8 +363,12 @@ bool StoreLootAction::Execute(Event& event)
         const char* errName =
             lootError == 0 ? "DIDNT_KILL/no-permission" :
             lootError == 4 ? "TOO_FAR" : "other";
-        sLog.outDebug("[BOT LOOT] %s: loot REJECTED guid=%lu error=%u (%s)",
-            bot->GetName(), guid.GetRawValue(), lootError, errName);
+        if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+            sLog.outBasic("[BOT LOOT] %s: loot REJECTED guid=%lu error=%u (%s)",
+                bot->GetName(), guid.GetRawValue(), lootError, errName);
+        else
+            sLog.outDebug("[BOT LOOT] %s: loot REJECTED guid=%lu error=%u (%s)",
+                bot->GetName(), guid.GetRawValue(), lootError, errName);
 
         if (requester)
         {
@@ -544,8 +552,12 @@ bool StoreLootAction::Execute(Event& event)
     RESET_AI_VALUE(LootObject, "loot target");
     RESET_AI_VALUE2(bool, "should loot object", std::to_string(guid.GetRawValue()));
 
-    sLog.outDebug("[BOT LOOT] %s: StoreLoot done guid=%lu items_taken=%u gold=%u, release sent",
-        bot->GetName(), guid.GetRawValue(), itemsTaken, gold);
+    if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+        sLog.outBasic("[BOT LOOT] %s: StoreLoot done guid=%lu items_taken=%u gold=%u, release sent",
+            bot->GetName(), guid.GetRawValue(), itemsTaken, gold);
+    else
+        sLog.outDebug("[BOT LOOT] %s: StoreLoot done guid=%lu items_taken=%u gold=%u, release sent",
+            bot->GetName(), guid.GetRawValue(), itemsTaken, gold);
 
     // release loot
     WorldPacket packet(CMSG_LOOT_RELEASE, 8);

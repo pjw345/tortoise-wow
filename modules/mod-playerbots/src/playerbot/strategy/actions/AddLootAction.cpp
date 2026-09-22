@@ -141,8 +141,12 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
     if (!loot.IsLootPossible(bot))
     {
         ai->TellDebug(requester, "Looting is not possible.", "debug loot");
-        sLog.outDebug("[BOT LOOT] %s: AddLoot reject guid=%lu (IsLootPossible=false)",
-            bot->GetName(), guid.GetRawValue());
+        if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+            sLog.outBasic("[BOT LOOT] %s: AddLoot reject guid=%lu (IsLootPossible=false)",
+                bot->GetName(), guid.GetRawValue());
+        else
+            sLog.outDebug("[BOT LOOT] %s: AddLoot reject guid=%lu (IsLootPossible=false)",
+                bot->GetName(), guid.GetRawValue());
         return false;
     }
 
@@ -251,8 +255,12 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
     }
 
     bool added = AI_VALUE(LootObjectStack*, "available loot")->Add(guid);
-    sLog.outDebug("[BOT LOOT] %s: AddLoot queued guid=%lu (botDist=%.1f masterDist=%.1f cap=%.1f added=%d)",
-        bot->GetName(), guid.GetRawValue(), botDist, masterDist, lootDistanceToUse, added ? 1 : 0);
+    if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+        sLog.outBasic("[BOT LOOT] %s: AddLoot queued guid=%lu (botDist=%.1f masterDist=%.1f cap=%.1f added=%d)",
+            bot->GetName(), guid.GetRawValue(), botDist, masterDist, lootDistanceToUse, added ? 1 : 0);
+    else
+        sLog.outDebug("[BOT LOOT] %s: AddLoot queued guid=%lu (botDist=%.1f masterDist=%.1f cap=%.1f added=%d)",
+            bot->GetName(), guid.GetRawValue(), botDist, masterDist, lootDistanceToUse, added ? 1 : 0);
     return added;
 }
 

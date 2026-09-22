@@ -257,13 +257,19 @@ bool LootObject::IsLootPossible(Player* bot)
         Creature* creature = ai->GetCreature(guid);
         if (creature && sServerFacade.GetDeathState(creature) == CORPSE)
         {
-            if (creature->m_loot && skillId != SKILL_SKINNING)
-                // Reuse Turtle's authoritative group, round-robin, quest-item
-                // and allowed-looter checks. The compatibility CanLoot helper
-                // only examined the shared item vector and missed per-player
-                // quest loot.
-                if (!bot->IsAllowedToLoot(creature))
-                    return false;
+            // Reuse Turtle's authoritative group, round-robin, quest-item and
+            // allowed-looter checks. Do this even before the compatibility
+            // m_loot pointer is populated: Player::IsAllowedToLoot reads the
+            // creature's native loot object directly. Gating this call on
+            // m_loot allowed bots to repeatedly approach corpses assigned to
+            // another group member.
+            if (skillId != SKILL_SKINNING && !bot->IsAllowedToLoot(creature))
+            {
+                if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+                    sLog.outBasic("[BOT LOOT] %s: reject corpse guid=%lu (native IsAllowedToLoot=false)",
+                        bot->GetName(), guid.GetRawValue());
+                return false;
+            }
         }
     }
 
