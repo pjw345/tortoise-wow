@@ -199,6 +199,7 @@ bool PlayerbotAIConfig::Initialize()
     sitDelay = (uint32) config.GetIntDefault("AiPlayerbot.SitDelay", 30000);
     returnDelay = (uint32) config.GetIntDefault("AiPlayerbot.ReturnDelay", 7000);
     lootDelay = (uint32)config.GetIntDefault("AiPlayerbot.LootDelayDelay", 750);
+    lootTargetRetryDelay = std::max(1, config.GetIntDefault("AiPlayerbot.LootTargetRetryDelay", 10));
 
     farDistance = config.GetFloatDefault("AiPlayerbot.FarDistance", 20.0f);
     sightDistance = config.GetFloatDefault("AiPlayerbot.SightDistance", 75.0f);
@@ -220,6 +221,7 @@ bool PlayerbotAIConfig::Initialize()
     grindDistance = config.GetFloatDefault("AiPlayerbot.GrindDistance", 75.0f);
     aggroDistance = config.GetFloatDefault("AiPlayerbot.AggroDistance", 22.0f);
     lootDistance = config.GetFloatDefault("AiPlayerbot.LootDistance", 25.0f);
+    lootHostileDistance = std::max(0.0f, config.GetFloatDefault("AiPlayerbot.LootHostileDistance", 30.0f));
     groupMemberLootDistance = config.GetFloatDefault("AiPlayerbot.GroupMemberLootDistance", 15.0f);
     groupMemberLootDistanceWithActiveMaster = config.GetFloatDefault("AiPlayerbot.GroupMemberLootDistanceWithActiveMaster", 10.0f);
     gatheringDistance = config.GetFloatDefault("AiPlayerbot.GatheringDistance", 15.0f);

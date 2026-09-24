@@ -170,8 +170,15 @@ namespace ai
     class MoveToLootAction : public MovementAction
     {
     public:
-        MoveToLootAction(PlayerbotAI* ai) : MovementAction(ai, "move to loot") {}
+        MoveToLootAction(PlayerbotAI* ai) : MovementAction(ai, "move to loot"), bestLootDistance(0.0f),
+            lootMoveStarted(0), lastLootNotice(0) {}
         virtual bool Execute(Event& event) override;
+
+    private:
+        ObjectGuid trackedLootGuid;
+        float bestLootDistance;
+        time_t lootMoveStarted;
+        time_t lastLootNotice;
     };
 
     class MoveOutOfEnemyContactAction : public MovementAction

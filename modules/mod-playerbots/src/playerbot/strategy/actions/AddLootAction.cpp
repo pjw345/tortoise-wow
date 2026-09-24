@@ -205,18 +205,24 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
 
     //check hostile units after distance checks, to avoid unnecessary calculations
 
-    if (isInGroup && !ai->IsGroupLeader())
+    if (isInGroup && !ai->IsGroupLeader() && !ai->HasActivePlayerMaster() &&
+        sPlayerbotAIConfig.lootHostileDistance > 0.0f)
     {
-        float MOB_AGGRO_DISTANCE = 30.0f;
-        std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(wo, MOB_AGGRO_DISTANCE);
+        std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(wo, sPlayerbotAIConfig.lootHostileDistance);
 
-        if (hostiles.size() > 0)
+        if (!hostiles.empty())
         {
             std::ostringstream out;
             out << hostiles.front()->GetName() << " is blocking " << wo->GetName() << ", need to kill it or I will not loot";
             ai->TellError(requester, out.str());
-            sLog.outDebug("[BOT LOOT] %s: AddLoot reject guid=%lu (hostile '%s' within %.0fy of corpse, count=%zu)",
-                bot->GetName(), guid.GetRawValue(), hostiles.front()->GetName(), MOB_AGGRO_DISTANCE, hostiles.size());
+            if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+                sLog.outBasic("[BOT LOOT] %s: AddLoot reject guid=%lu (hostile '%s' within %.0fy, count=%zu)",
+                    bot->GetName(), guid.GetRawValue(), hostiles.front()->GetName(),
+                    sPlayerbotAIConfig.lootHostileDistance, hostiles.size());
+            else
+                sLog.outDebug("[BOT LOOT] %s: AddLoot reject guid=%lu (hostile '%s' within %.0fy, count=%zu)",
+                    bot->GetName(), guid.GetRawValue(), hostiles.front()->GetName(),
+                    sPlayerbotAIConfig.lootHostileDistance, hostiles.size());
             return false;
         }
     }

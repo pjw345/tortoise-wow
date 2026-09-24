@@ -349,6 +349,12 @@ bool LootObject::IsLootPossible(Player* bot)
 
 bool LootObjectStack::Add(ObjectGuid guid)
 {
+    PruneIgnored();
+
+    std::map<ObjectGuid, time_t>::const_iterator ignored = ignoredLoot.find(guid);
+    if (ignored != ignoredLoot.end())
+        return false;
+
     LootTargetList::iterator existing = availableLoot.find(guid);
     if (existing != availableLoot.end())
     {
@@ -383,9 +389,28 @@ void LootObjectStack::Remove(ObjectGuid guid)
         availableLoot.erase(i);
 }
 
+void LootObjectStack::Ignore(ObjectGuid guid, uint32 seconds)
+{
+    Remove(guid);
+    ignoredLoot[guid] = time(0) + std::max<uint32>(1, seconds);
+}
+
+void LootObjectStack::PruneIgnored()
+{
+    time_t now = time(0);
+    for (std::map<ObjectGuid, time_t>::iterator i = ignoredLoot.begin(); i != ignoredLoot.end();)
+    {
+        if (i->second <= now)
+            ignoredLoot.erase(i++);
+        else
+            ++i;
+    }
+}
+
 void LootObjectStack::Clear()
 {
     availableLoot.clear();
+    ignoredLoot.clear();
 }
 
 bool LootObjectStack::CanLoot(float maxDistance)

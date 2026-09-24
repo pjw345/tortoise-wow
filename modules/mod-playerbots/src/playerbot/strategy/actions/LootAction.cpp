@@ -216,7 +216,12 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
     uint32 spellId = GetOpeningSpell(lootObject);
     if (!spellId)
     {
-        sLog.outDebug("[BOT LOOT] %s: GO no opening spell, abort", bot->GetName());
+        if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+            sLog.outBasic("[BOT LOOT] %s: GO no opening spell, abort guid=%lu",
+                bot->GetName(), lootObject.guid.GetRawValue());
+        else
+            sLog.outDebug("[BOT LOOT] %s: GO no opening spell, abort guid=%lu",
+                bot->GetName(), lootObject.guid.GetRawValue());
         return false;
     }
 
@@ -226,7 +231,14 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
         return true;
     }
 
-    sLog.outDebug("[BOT LOOT] %s: GO opening with spell=%u guid=%lu", bot->GetName(), spellId, lootObject.guid.GetRawValue());
+    if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+        sLog.outBasic("[BOT LOOT] %s: GO opening with spell=%u guid=%lu dist=%.1f",
+            bot->GetName(), spellId, lootObject.guid.GetRawValue(),
+            go ? sServerFacade.GetDistance2d(bot, go) : -1.0f);
+    else
+        sLog.outDebug("[BOT LOOT] %s: GO opening with spell=%u guid=%lu dist=%.1f",
+            bot->GetName(), spellId, lootObject.guid.GetRawValue(),
+            go ? sServerFacade.GetDistance2d(bot, go) : -1.0f);
 
     //Keys need to use the key 
     if (spellId == sPlayerbotAIConfig.openGoSpell && go && lootObject.reqItem && bot->HasItemCount(lootObject.reqItem,1,false))
@@ -234,7 +246,11 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
         return ai->DoSpecificAction("use", Event("do loot", chat->formatQItem(lootObject.reqItem) + " " + chat->formatGameobject(go)));
     }
 
-    return ai->CastSpell(spellId, bot);
+    bool opened = ai->CastSpell(spellId, bot);
+    if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+        sLog.outBasic("[BOT LOOT] %s: GO open cast result=%d spell=%u guid=%lu",
+            bot->GetName(), opened ? 1 : 0, spellId, lootObject.guid.GetRawValue());
+    return opened;
 }
 
 uint32 OpenLootAction::GetOpeningSpell(LootObject& lootObject)

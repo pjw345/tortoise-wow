@@ -390,7 +390,12 @@ foreach(required "GetMaxSlotInLootFor(player->GetGUIDLow())" "LootItemInSlot(slo
         message(FATAL_ERROR "Player-specific quest-loot enumeration missing: ${required}")
     endif()
 endforeach()
-foreach(required "Remove(lootGuid)" "RESET_AI_VALUE(LootObject, \"loot target\")")
+foreach(required
+    "Remove(lootGuid)"
+    "RESET_AI_VALUE(LootObject, \"loot target\")"
+    "INTERACTION_DISTANCE - 1.0f"
+    "lootStack->Ignore(lootGuid, sPlayerbotAIConfig.lootTargetRetryDelay)"
+    "sLog.outBasic(\"[BOT LOOT] %s: MoveToLoot")
     string(FIND "${botMovementAction}" "${required}" found)
     if(found EQUAL -1)
         message(FATAL_ERROR "Invalid move-to-loot cleanup missing: ${required}")
@@ -410,6 +415,8 @@ foreach(required
     "if (guid.IsCreature())"
     "std::multimap<LootOrder, LootObject>"
     "LootOrder(guid.IsCreature() ? 0 : 1, distance)"
+    "ignoredLoot.find(guid)"
+    "ignoredLoot[guid] = time(0)"
     "Remove(guid)")
     string(FIND "${botLootStack}" "${required}" found)
     if(found EQUAL -1)
@@ -439,4 +446,16 @@ string(FIND "${botConfig}" "WaitForAttackDistance\", 3.0f" compactWaitDistance)
 if(compactWaitDistance EQUAL -1)
     message(FATAL_ERROR "Wait-for-attack default must keep companions close to the player")
 endif()
-message(STATUS "PASS: player-specific quest loot, corpse-priority queue filtering and movement spacing guards")
+foreach(required "LootHostileDistance\", 30.0f" "LootTargetRetryDelay\", 10")
+    string(FIND "${botConfig}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Configurable loot safety/retry contract missing: ${required}")
+    endif()
+endforeach()
+foreach(required "!ai->HasActivePlayerMaster()" "sPlayerbotAIConfig.lootHostileDistance > 0.0f")
+    string(FIND "${botAddLootAction}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Active-master/configurable hostile loot bypass missing: ${required}")
+    endif()
+endforeach()
+message(STATUS "PASS: player-specific quest loot, bounded target retries, GO interaction approach and movement spacing guards")

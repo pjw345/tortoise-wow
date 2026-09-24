@@ -3309,46 +3309,101 @@ bool MoveToLootAction::Execute(Event& event)
 {
     LootObject loot = AI_VALUE(LootObject, "loot target");
     ObjectGuid lootGuid = loot.guid;
+    LootObjectStack* lootStack = AI_VALUE(LootObjectStack*, "available loot");
+    bool debugLoot = ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT);
+
     if (!loot.IsLootPossible(bot))
     {
-        sLog.outDebug("[BOT LOOT] %s: MoveToLoot abort guid=%lu (IsLootPossible=false)",
-            bot->GetName(), lootGuid.GetRawValue());
-        if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
-        {
-            WorldObject* wo = ai->GetWorldObject(lootGuid);
+        if (debugLoot)
+            sLog.outBasic("[BOT LOOT] %s: MoveToLoot abort guid=%lu (IsLootPossible=false)",
+                bot->GetName(), lootGuid.GetRawValue());
+        else
+            sLog.outDebug("[BOT LOOT] %s: MoveToLoot abort guid=%lu (IsLootPossible=false)",
+                bot->GetName(), lootGuid.GetRawValue());
 
-            if (!wo)
-            {
+        if (debugLoot)
+        {
+            WorldObject* invalidObject = ai->GetWorldObject(lootGuid);
+            if (!invalidObject)
                 ai->TellPlayerNoFacing(GetMaster(), "Cleared loot target " + lootGuid.GetString() + " because it no longer exists.");
-            }
             else
-            {
-                ai->TellPlayerNoFacing(GetMaster(), "Cleared loot target " + ChatHelper::formatWorldobject(wo) + " because it is not possible to loot.");
-            }
+                ai->TellPlayerNoFacing(GetMaster(), "Cleared loot target " + ChatHelper::formatWorldobject(invalidObject) + " because it is not possible to loot.");
         }
 
-        // Do not leave an invalid target selected: the non-combat engine will
-        // otherwise choose "move to loot" again and starve normal following.
-        AI_VALUE(LootObjectStack*, "available loot")->Remove(lootGuid);
+        lootStack->Remove(lootGuid);
         RESET_AI_VALUE(LootObject, "loot target");
-
+        trackedLootGuid = ObjectGuid();
         return false;
     }
 
-    WorldObject *wo = loot.GetWorldObject(bot);
+    WorldObject* wo = loot.GetWorldObject(bot);
+    if (!wo)
+    {
+        lootStack->Ignore(lootGuid, sPlayerbotAIConfig.lootTargetRetryDelay);
+        RESET_AI_VALUE(LootObject, "loot target");
+        trackedLootGuid = ObjectGuid();
+        return false;
+    }
 
-    if (ai->HasStrategy("debug move", BotState::BOT_STATE_NON_COMBAT) || ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+    float dist = sServerFacade.GetDistance2d(bot, wo);
+    time_t now = time(0);
+    if (trackedLootGuid != lootGuid)
+    {
+        trackedLootGuid = lootGuid;
+        bestLootDistance = dist;
+        lootMoveStarted = now;
+        lastLootNotice = 0;
+    }
+    else if (dist + 0.5f < bestLootDistance)
+    {
+        bestLootDistance = dist;
+        lootMoveStarted = now;
+    }
+
+    if ((ai->HasStrategy("debug move", BotState::BOT_STATE_NON_COMBAT) || debugLoot) &&
+        (!lastLootNotice || now - lastLootNotice >= 5))
     {
         std::ostringstream out;
-        out << "Moving to loot " << ChatHelper::formatWorldobject(wo);
+        out << "Moving to loot " << ChatHelper::formatWorldobject(wo) << " (" << uint32(dist) << "y)";
         ai->TellPlayerNoFacing(GetMaster(), out);
+        lastLootNotice = now;
     }
 
     bool los = sServerFacade.IsWithinLOSInMap(bot, wo);
-    float dist = sServerFacade.GetDistance2d(bot, wo);
-    bool moved = los ? MoveNear(wo, sPlayerbotAIConfig.contactDistance) : MoveTo(WorldPosition(wo));
-    sLog.outDebug("[BOT LOOT] %s: MoveToLoot guid=%lu dist=%.1f los=%d via=%s result=%d",
-        bot->GetName(), loot.guid.GetRawValue(), dist, los ? 1 : 0, los ? "MoveNear" : "MoveTo", moved ? 1 : 0);
+    // Game-object centres can be inside their collision geometry. Approach to a
+    // valid interaction radius rather than demanding corpse-style contact with
+    // the object's centre (notably Furlbrow's Wardrobe).
+    float approachDistance = lootGuid.IsGameObject() ?
+        std::max(sPlayerbotAIConfig.contactDistance, INTERACTION_DISTANCE - 1.0f) :
+        sPlayerbotAIConfig.contactDistance;
+    bool moved = los ? MoveNear(wo, approachDistance) : MoveTo(WorldPosition(wo));
+
+    if (debugLoot)
+        sLog.outBasic("[BOT LOOT] %s: MoveToLoot guid=%lu dist=%.1f best=%.1f los=%d approach=%.1f result=%d",
+            bot->GetName(), lootGuid.GetRawValue(), dist, bestLootDistance, los ? 1 : 0, approachDistance, moved ? 1 : 0);
+    else
+        sLog.outDebug("[BOT LOOT] %s: MoveToLoot guid=%lu dist=%.1f best=%.1f los=%d approach=%.1f result=%d",
+            bot->GetName(), lootGuid.GetRawValue(), dist, bestLootDistance, los ? 1 : 0, approachDistance, moved ? 1 : 0);
+
+    if (now - lootMoveStarted >= sPlayerbotAIConfig.lootTargetRetryDelay)
+    {
+        if (debugLoot)
+        {
+            std::ostringstream out;
+            out << "Pausing unreachable loot " << ChatHelper::formatWorldobject(wo)
+                << " for " << sPlayerbotAIConfig.lootTargetRetryDelay << " seconds.";
+            ai->TellPlayerNoFacing(GetMaster(), out);
+            sLog.outBasic("[BOT LOOT] %s: stalled guid=%lu dist=%.1f best=%.1f; retry in %us",
+                bot->GetName(), lootGuid.GetRawValue(), dist, bestLootDistance,
+                sPlayerbotAIConfig.lootTargetRetryDelay);
+        }
+
+        lootStack->Ignore(lootGuid, sPlayerbotAIConfig.lootTargetRetryDelay);
+        RESET_AI_VALUE(LootObject, "loot target");
+        trackedLootGuid = ObjectGuid();
+        return false;
+    }
+
     return moved;
 }
 
