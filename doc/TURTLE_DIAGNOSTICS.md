@@ -9,7 +9,8 @@ The `debug loot` strategy writes a compact trace to
 `nc +debug loot` and disable it with `nc -debug loot`. The trace records target
 discovery, queueing, movement, native open responses, item policy decisions,
 successful inventory transfers and quest-objective counts. It is not echoed to
-party or whisper chat.
+party or whisper chat. Broad nearby-object scans omit rejected decorative game
+objects; the trace contains actionable loot candidates and their later events.
 
 Success is recorded only after Turtle's native autostore handler increases the
 bot's inventory count. `AiPlayerbot.LootLogFile` selects the filename and

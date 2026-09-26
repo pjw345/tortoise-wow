@@ -140,7 +140,11 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
         return false;
     }
 
-    if (creature && creature->HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE) && !creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE))
+    // A corpse can expose ordinary loot and skinning at the same time. Refresh()
+    // leaves skillId at SKILL_NONE while the ordinary-loot phase is pending, so
+    // consume that loot before attempting the creature's gathering skill.
+    if (creature && creature->HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE) &&
+        lootObject.skillId == SKILL_NONE)
     {
         if (!lootObject.IsLootPossible(bot)) //Clear loot if bot can't loot it.
         {
@@ -179,25 +183,41 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
         if (debugLoot)
             sLog.outLoot("bot=%s event=gather-attempt guid=%lu skill=%u required=%u",
                 bot->GetName(), lootObject.guid.GetRawValue(), skill, lootObject.reqSkillValue);
+        bool opened = false;
         if (!CanOpenLock(skill, lootObject.reqSkillValue))
         {
             if (debugLoot)
                 sLog.outLoot("bot=%s event=reject guid=%lu reason=gather-skill skill=%u",
                     bot->GetName(), lootObject.guid.GetRawValue(), skill);
-            return false;
         }
-
-        switch (skill)
+        else switch (skill)
         {
         case SKILL_ENGINEERING:
-            return ai->HasSkill(SKILL_ENGINEERING) ? ai->CastSpell(ENGINEERING, creature) : false;
+            opened = ai->HasSkill(SKILL_ENGINEERING) && ai->CastSpell(ENGINEERING, creature);
+            break;
         case SKILL_HERBALISM:
-            return ai->HasSkill(SKILL_HERBALISM) ? ai->CastSpell(32605, creature) : false;
+            opened = ai->HasSkill(SKILL_HERBALISM) && ai->CastSpell(32605, creature);
+            break;
         case SKILL_MINING:
-            return ai->HasSkill(SKILL_MINING) ? ai->CastSpell(32606, creature) : false;
+            opened = ai->HasSkill(SKILL_MINING) && ai->CastSpell(32606, creature);
+            break;
         default:
-            return ai->HasSkill(SKILL_SKINNING) ? ai->CastSpell(SKINNING, creature) : false;
+            opened = ai->HasSkill(SKILL_SKINNING) && ai->CastSpell(SKINNING, creature);
+            break;
         }
+
+        if (!opened)
+        {
+            if (debugLoot)
+                sLog.outLoot("bot=%s event=gather-retry guid=%lu skill=%u retry-seconds=%u",
+                    bot->GetName(), lootObject.guid.GetRawValue(), skill,
+                    sPlayerbotAIConfig.lootTargetRetryDelay);
+            AI_VALUE(LootObjectStack*, "available loot")->Ignore(
+                lootObject.guid, sPlayerbotAIConfig.lootTargetRetryDelay);
+            RESET_AI_VALUE(LootObject, "loot target");
+        }
+
+        return opened;
     }
 
     GameObject* go = ai->GetGameObject(lootObject.guid);

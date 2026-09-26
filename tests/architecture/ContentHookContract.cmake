@@ -380,7 +380,10 @@ foreach(required
     "if (!questItem && lootItem->is_blocked)"
     "itemCountAfter > itemCountBefore"
     "phase=quest result=progress"
-    "groupMemberLootDistanceWithActiveMaster")
+    "groupMemberLootDistanceWithActiveMaster"
+    "lootObject.skillId == SKILL_NONE"
+    "event=gather-retry"
+    "lootTargetRetryDelay")
     string(FIND "${botLootAction}" "${required}" found)
     if(found EQUAL -1)
         message(FATAL_ERROR "Playerbot native loot/store contract missing: ${required}")
@@ -429,13 +432,16 @@ endforeach()
 foreach(required
     "loot.skillId != SKILL_NONE && !questGameObject"
     "go->GetGOInfo()->GetLootId() != 0"
-    "reason=non-loot-gameobject"
     "lootTargetInspectDelay")
     string(FIND "${botAddLootAction}" "${required}" found)
     if(found EQUAL -1)
         message(FATAL_ERROR "Ordinary loot must reject gathering and decorative game objects: ${required}")
     endif()
 endforeach()
+string(FIND "${botAddLootAction}" "loot.Refresh(bot, guid, true)" noisyLootScan)
+if(NOT noisyLootScan EQUAL -1)
+    message(FATAL_ERROR "Broad loot scans must not emit verbose diagnostics for decorative game objects")
+endif()
 foreach(required
     "new NextAction(\"loot\", 23.0f)"
     "new NextAction(\"move to loot\", 24.0f)"

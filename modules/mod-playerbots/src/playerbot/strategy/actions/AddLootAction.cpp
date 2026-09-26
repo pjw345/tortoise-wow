@@ -69,9 +69,6 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
     LootObject loot(bot, guid);
     bool debugLoot = ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT);
 
-    if (debugLoot)
-        loot.Refresh(bot, guid, true);
-
     bool questGameObject = false;
     if (guid.IsGameObject())
     {
@@ -85,9 +82,6 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
             // quest objects remain available even when their lock uses a skill.
             if (!AllowsGatheringTargets() && loot.skillId != SKILL_NONE && !questGameObject)
             {
-                if (debugLoot)
-                    sLog.outLoot("bot=%s event=reject guid=%lu reason=gather-strategy-target",
-                        bot->GetName(), guid.GetRawValue());
                 return false;
             }
 
@@ -95,9 +89,6 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
             bool createsItem = go->GetGoType() == GAMEOBJECT_TYPE_GOOBER && go->GetSpellId() != 0;
             if (!AllowsGatheringTargets() && !questGameObject && !hasLootTemplate && !createsItem)
             {
-                if (debugLoot)
-                    sLog.outLoot("bot=%s event=reject guid=%lu reason=non-loot-gameobject",
-                        bot->GetName(), guid.GetRawValue());
                 return false;
             }
         }
@@ -109,9 +100,6 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
     {
         wo = ai->GetWorldObject(guid);
 
-        if (debugLoot)
-            sLog.outLoot("bot=%s event=reject guid=%lu reason=no-lootable-worldobject",
-                bot->GetName(), guid.GetRawValue());
         return false;
     }
 
@@ -121,9 +109,6 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
 
     if (loot.IsEmpty())
     {
-        if (debugLoot)
-            sLog.outLoot("bot=%s event=reject guid=%lu reason=empty",
-                bot->GetName(), guid.GetRawValue());
         return false;
     }
 

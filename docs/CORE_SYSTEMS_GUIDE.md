@@ -92,6 +92,11 @@ vector silently omits quest items. Creature eligibility should use
 `Player::IsAllowedToLoot`, and the native autostore handler remains authoritative
 for storage, quest counters, notifications and failure handling.
 
+A corpse may expose ordinary loot and skinning simultaneously. In that state,
+`LootObject::skillId == SKILL_NONE` denotes the ordinary-loot phase: open and
+release it before attempting skinning. A failed gathering cast must use a
+bounded retry rather than selecting the same corpse again every AI tick.
+
 Playerbot corpse discovery is periodic, so a corpse that remains server-lootable
 with only policy-excluded items (for example cloth on a bot configured not to
 loot cloth) must be remembered per bot for a bounded interval after inspection.
