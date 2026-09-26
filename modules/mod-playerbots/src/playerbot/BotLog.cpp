@@ -53,6 +53,95 @@ void BotLog::Initialize(const char* logFile, const char* logsDir, bool debugEnab
     fflush(m_file);
 }
 
+void BotLog::InitializeLoot(const char* logFile, const char* logsDir, std::size_t maxBytes)
+{
+    std::lock_guard<std::mutex> g(m_mutex);
+
+    if (m_lootFile)
+    {
+        fclose(m_lootFile);
+        m_lootFile = nullptr;
+    }
+
+    m_lootPath.clear();
+    m_lootBytes = 0;
+    m_lootMaxBytes = maxBytes;
+
+    if (!logFile || logFile[0] == '\0')
+        return;
+
+    if (logsDir && logsDir[0] != '\0')
+    {
+        m_lootPath = logsDir;
+        if (m_lootPath.back() != '/' && m_lootPath.back() != '\\')
+            m_lootPath += '/';
+    }
+    m_lootPath += logFile;
+
+    m_lootFile = fopen(m_lootPath.c_str(), "a+");
+    if (!m_lootFile)
+    {
+        Log::Instance().outError("[BotLog] Failed to open loot log file: %s", m_lootPath.c_str());
+        return;
+    }
+
+    if (fseek(m_lootFile, 0, SEEK_END) == 0)
+    {
+        long size = ftell(m_lootFile);
+        if (size > 0)
+            m_lootBytes = static_cast<std::size_t>(size);
+    }
+}
+
+void BotLog::RotateLootIfNeeded()
+{
+    if (!m_lootFile || !m_lootMaxBytes || m_lootBytes < m_lootMaxBytes)
+        return;
+
+    fclose(m_lootFile);
+    m_lootFile = nullptr;
+
+    std::string rotatedPath = m_lootPath + ".1";
+    std::remove(rotatedPath.c_str());
+    std::rename(m_lootPath.c_str(), rotatedPath.c_str());
+
+    m_lootFile = fopen(m_lootPath.c_str(), "w");
+    m_lootBytes = 0;
+    if (!m_lootFile)
+        Log::Instance().outError("[BotLog] Failed to rotate loot log file: %s", m_lootPath.c_str());
+}
+
+void BotLog::outLoot(const char* fmt, ...)
+{
+    char msg[4096];
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(msg, sizeof(msg), fmt, ap);
+    va_end(ap);
+
+    std::lock_guard<std::mutex> g(m_mutex);
+    if (!m_lootFile)
+        return;
+
+    RotateLootIfNeeded();
+    if (!m_lootFile)
+        return;
+
+    std::time_t now = std::time(nullptr);
+    std::tm lt{};
+#ifdef _WIN32
+    localtime_s(&lt, &now);
+#else
+    localtime_r(&now, &lt);
+#endif
+    char ts[32];
+    std::strftime(ts, sizeof(ts), "%Y-%m-%d %H:%M:%S", &lt);
+    int written = fprintf(m_lootFile, "%s %s\n", ts, msg);
+    if (written > 0)
+        m_lootBytes += static_cast<std::size_t>(written);
+    fflush(m_lootFile);
+}
+
 // Format the message into a fixed buffer, then route to file or sLog.
 // Using a macro to keep the call-sites DRY while still being able to do
 // va_start / va_end in the caller function (va_list can't cross helpers cleanly).

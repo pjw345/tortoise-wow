@@ -69,13 +69,15 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
             if (creature->IsTappedBy(bot))
             {
                 if (debug)
-                    ai->TellDebug(ai->GetMaster(), "Creature flag lootable.", "debug loot");
+                    sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=accepted type=creature reason=lootable",
+                        bot->GetName(), guid.GetRawValue());
 
                 this->guid = guid;
             }
             else if (debug)
             {
-                ai->TellDebug(ai->GetMaster(), "Creature lootable but not tapped by bot.", "debug loot");
+                sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=rejected type=creature reason=not_tapped",
+                    bot->GetName(), guid.GetRawValue());
             }
         }
 
@@ -101,17 +103,19 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
             if (ai->HasSkill((SkillType)skillId) && bot->GetSkillValue(skillId) >= reqSkillValue)
             {
                 if (debug)
-                    ai->TellDebug(ai->GetMaster(), "Creature flag skinnable and has skill.", "debug loot");
+                    sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=accepted type=skinning reason=has_skill",
+                        bot->GetName(), guid.GetRawValue());
                 this->guid = guid;
             }
-
-            if (debug)
-                ai->TellDebug(ai->GetMaster(), "Creature flag skinnable not enough skill.", "debug loot");
+            else if (debug)
+                sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=rejected type=skinning reason=insufficient_skill",
+                    bot->GetName(), guid.GetRawValue());
             return;
         }
 
         if (debug)
-            ai->TellDebug(ai->GetMaster(), "Creature without loot or skin flag.", "debug loot");
+            sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=rejected type=creature reason=no_loot_or_skin_flag",
+                bot->GetName(), guid.GetRawValue());
 
         return;
     }
@@ -129,7 +133,8 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
             if (ItemUsageValue::IsNeededForQuest(bot, itemId))
             {
                 if (debug)
-                    ai->TellDebug(ai->GetMaster(), "GO has item needed for quest.", "debug loot");
+                    sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=accepted type=gameobject reason=quest_item",
+                        bot->GetName(), guid.GetRawValue());
                 this->guid = guid;
                 return;
             }
@@ -153,7 +158,8 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
         if (isQuestItemOnly)
         {
             if (debug)
-                ai->TellDebug(ai->GetMaster(), "Go has only quests items we don't need.", "debug loot");
+                sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=rejected type=gameobject reason=unneeded_quest_items",
+                    bot->GetName(), guid.GetRawValue());
             return;
         }
 
@@ -162,7 +168,8 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
         if (skipGoLootList.find(goId) != skipGoLootList.end())
         {
             if (debug)
-                ai->TellDebug(ai->GetMaster(), "Go in skip go loot list.", "debug loot");
+                sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=rejected type=gameobject reason=skip_list",
+                    bot->GetName(), guid.GetRawValue());
             return;
         }
 
@@ -171,7 +178,8 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
         if (!lockInfo)
         {
             if (debug)
-                ai->TellDebug(ai->GetMaster(), "Go has no lockid.", "debug loot");
+                sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=rejected type=gameobject reason=no_lock",
+                    bot->GetName(), guid.GetRawValue());
             return;
         }
 
@@ -183,7 +191,8 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
                     if (lockInfo->Index[i] > 0)
                     {
                         if (debug)
-                            ai->TellDebug(ai->GetMaster(), "Go has lock with key requirement.", "debug loot");
+                            sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=accepted type=gameobject reason=key_lock",
+                                bot->GetName(), guid.GetRawValue());
                         reqItem = lockInfo->Index[i];
                         this->guid = guid;
                     }
@@ -192,13 +201,15 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
                     if (goId == 13891 || goId == 19535) // Serpentbloom
                     {
                         if (debug)
-                            ai->TellDebug(ai->GetMaster(), "Go is serpentbloom.", "debug loot");
+                            sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=accepted type=gameobject reason=serpentbloom",
+                                bot->GetName(), guid.GetRawValue());
                         this->guid = guid;
                     }
                     else if (SkillByLockType(LockType(lockInfo->Index[i])) > 0)
                     {
                         if (debug)
-                            ai->TellDebug(ai->GetMaster(), "Go requires skill.", "debug loot");
+                            sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=accepted type=gameobject reason=skill_lock",
+                                bot->GetName(), guid.GetRawValue());
                         skillId = SkillByLockType(LockType(lockInfo->Index[i]));
                         reqSkillValue = std::max((uint32)1, lockInfo->Skill[i]);
                         this->guid = guid;
@@ -206,7 +217,8 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
                     break;
                 case LOCK_KEY_NONE:
                     if (debug)
-                        ai->TellDebug(ai->GetMaster(), "Go has open lock.", "debug loot");
+                        sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=accepted type=gameobject reason=open_lock",
+                            bot->GetName(), guid.GetRawValue());
                     this->guid = guid;
                     break;
             }
@@ -214,7 +226,8 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
     }
 
     if (debug && guid && !this->guid)
-        ai->TellDebug(ai->GetMaster(), "Go has bad lock.", "debug loot");
+        sLog.outLoot("bot=\"%s\" target_guid=%lu phase=discover result=rejected type=gameobject reason=bad_lock",
+            bot->GetName(), guid.GetRawValue());
 }
 
 WorldObject* LootObject::GetWorldObject(Player* bot)
@@ -242,8 +255,11 @@ LootObject::LootObject(const LootObject& other)
     reqItem = other.reqItem;
 }
 
-bool LootObject::IsLootPossible(Player* bot)
+bool LootObject::IsLootPossible(Player* bot, bool* suppressRediscovery)
 {
+    if (suppressRediscovery)
+        *suppressRediscovery = false;
+
     if (IsEmpty() || !GetWorldObject(bot))
         return false;
 
@@ -266,8 +282,10 @@ bool LootObject::IsLootPossible(Player* bot)
             if (skillId != SKILL_SKINNING && !bot->IsAllowedToLoot(creature))
             {
                 if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
-                    sLog.outBasic("[BOT LOOT] %s: reject corpse guid=%lu (native IsAllowedToLoot=false)",
+                    sLog.outLoot("bot=%s event=reject guid=%lu reason=native-loot-rights",
                         bot->GetName(), guid.GetRawValue());
+                if (suppressRediscovery)
+                    *suppressRediscovery = true;
                 return false;
             }
         }
@@ -276,7 +294,15 @@ bool LootObject::IsLootPossible(Player* bot)
     AiObjectContext* context = ai->GetAiObjectContext();
 
     if (!AI_VALUE2_LAZY(bool, "should loot object", std::to_string(guid.GetRawValue())))
+    {
+        // A creature can remain server-lootable when it contains only items
+        // excluded by the bot's loot policy (for example linen). Remember the
+        // inspection briefly so the periodic corpse scanner does not make the
+        // bot run back and open the same corpse a second time.
+        if (guid.IsCreature() && suppressRediscovery)
+            *suppressRediscovery = true;
         return false;
+    }
 
     // Check if the game object has quest loot and bot has the quest for it
     if (guid.IsGameObject())
@@ -429,8 +455,9 @@ std::vector<LootObject> LootObjectStack::OrderByDistance(float maxDistance)
 {
     size_t beforeShrink = availableLoot.size();
     availableLoot.shrink(time(0) - 30);
-    if (availableLoot.size() < beforeShrink)
-        sLog.outDebug("[BOT LOOT] %s: loot stack expired %zu corpse(s) (>30s old, dropped before looting)",
+    if (availableLoot.size() < beforeShrink &&
+        GetBotAI(bot)->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+        sLog.outLoot("bot=%s event=queue-expire count=%zu age-seconds=30",
             bot->GetName(), beforeShrink - availableLoot.size());
 
     // Creature corpses always precede chests and quest game objects. A
@@ -443,9 +470,13 @@ std::vector<LootObject> LootObjectStack::OrderByDistance(float maxDistance)
     {
         ObjectGuid guid = i->guid;
         LootObject lootObject(bot, guid);
-        if (!lootObject.IsLootPossible(bot))
+        bool suppressRediscovery = false;
+        if (!lootObject.IsLootPossible(bot, &suppressRediscovery))
         {
-            Remove(guid);
+            if (guid.IsCreature() && suppressRediscovery)
+                Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay);
+            else
+                Remove(guid);
             continue;
         }
 

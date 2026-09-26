@@ -91,6 +91,14 @@ through `LootItemInSlot(slot, playerGuid, ...)`; direct indexing of the shared
 vector silently omits quest items. Creature eligibility should use
 `Player::IsAllowedToLoot`, and the native autostore handler remains authoritative
 for storage, quest counters, notifications and failure handling.
+
+Playerbot corpse discovery is periodic, so a corpse that remains server-lootable
+with only policy-excluded items (for example cloth on a bot configured not to
+loot cloth) must be remembered per bot for a bounded interval after inspection.
+Do not mark it globally consumed or bypass `Player::IsAllowedToLoot`. Native
+open/store failures use the shorter retry interval; a completed inspection uses
+`LootTargetInspectDelay`. Optional per-bot diagnostics go to the bounded
+`playerbot-loot.log`, not player chat or the main server stream.
 | Quests, rewards and XP | [QuestHandler.cpp](../src/game/Handlers/QuestHandler.cpp) `HandleQuestgiverCompleteQuest:588`; `Player::RewardQuest:15269`; [QuestDef.cpp](../src/game/QuestDef.cpp) | Acceptance, objectives, item/money requirements, repeatability, reputation, XP rate modifiers, reward scripts and persistence. A quest relation alone is not proof that objectives work. |
 | Trade | [TradeHandler.cpp](../src/game/Handlers/TradeHandler.cpp) `HandleAcceptTradeOpcode:293` | Both accept states, item ownership, bag space, enchant spell targets, money, cancellation and saves. Native code saves both players; that alone is not proof of one cross-player atomic transaction. |
 | Chat, WHO and commands | [ChatHandler.cpp](../src/game/Handlers/ChatHandler.cpp) `HandleMessagechatOpcode:176`; [MiscHandler.cpp](../src/game/Handlers/MiscHandler.cpp) `HandleWhoOpcode:271`; [Chat sources](../src/game/Chat) | Client request parsing, filters, result counts/wire fields, security levels, channel membership and visibility. Do not special-case one displayed name or confuse account authority with character level. |

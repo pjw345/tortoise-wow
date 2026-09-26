@@ -305,6 +305,12 @@ AiPlayerbot.BotLogFile =
 # outBasic and outErrorDb are written regardless whenever BotLogFile is set.
 # AiPlayerbot.BotLogDebug = 0
 
+# Dedicated, bounded plain-text output for bots with the "debug loot"
+# non-combat strategy. This is separate from BotLogFile and does not echo the
+# per-target trace to player chat. Set the filename empty to disable it.
+AiPlayerbot.LootLogFile = playerbot-loot.log
+AiPlayerbot.LootLogMaxBytes = 5242880
+
 # The summon command can be used without restriction by non-gms.
 # AiPlayerbot.NonGmFreeSummon = 0
 
@@ -1008,17 +1014,21 @@ AiPlayerbot.ShootDistance = 26.0
 #AiPlayerbot.ReactDistance = 150.0
 #AiPlayerbot.GrindDistance = 75.0
 #overall loot distance
-#AiPlayerbot.LootDistance = 25.0
+AiPlayerbot.LootDistance = 25.0
 # Hostile search radius around ordinary loot targets. Set to 0 to disable
 # hostile-proximity blocking; bots still stop looting while actually in combat.
 AiPlayerbot.LootHostileDistance = 30.0
 # Seconds without meaningful approach progress before an unreachable target is
 # paused for the same interval instead of monopolising movement.
 AiPlayerbot.LootTargetRetryDelay = 10
+# Seconds to remember that this bot fully inspected a corpse. This prevents
+# corpses containing only deliberately rejected items (for example cloth) from
+# being reopened until their normal corpse lifetime has elapsed.
+AiPlayerbot.LootTargetInspectDelay = 120
 #loot distance when bot is a group member (not leader)
-#AiPlayerbot.GroupMemberLootDistance = 15.0
+AiPlayerbot.GroupMemberLootDistance = 25.0
 #loot distance when bot is a group member (not leader) and has active player master (if player is group leader)
-#AiPlayerbot.GroupMemberLootDistanceWithActiveMaster = 10.0
+AiPlayerbot.GroupMemberLootDistanceWithActiveMaster = 25.0
 #overall gathering distance
 #AiPlayerbot.GatheringDistance = 15.0
 #gathering distance when bot is a group member (not leader)

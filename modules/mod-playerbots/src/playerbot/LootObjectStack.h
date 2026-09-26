@@ -14,7 +14,7 @@ namespace ai
 
     public:
         bool IsEmpty() { return !guid; }
-        bool IsLootPossible(Player* bot);
+        bool IsLootPossible(Player* bot, bool* suppressRediscovery = nullptr);
         void Refresh(Player* bot, ObjectGuid guid, bool debug = false);
         WorldObject* GetWorldObject(Player* bot);
         ObjectGuid guid;

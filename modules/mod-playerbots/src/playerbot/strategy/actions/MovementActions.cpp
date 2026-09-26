@@ -3312,25 +3312,17 @@ bool MoveToLootAction::Execute(Event& event)
     LootObjectStack* lootStack = AI_VALUE(LootObjectStack*, "available loot");
     bool debugLoot = ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT);
 
-    if (!loot.IsLootPossible(bot))
+    bool suppressRediscovery = false;
+    if (!loot.IsLootPossible(bot, &suppressRediscovery))
     {
         if (debugLoot)
-            sLog.outBasic("[BOT LOOT] %s: MoveToLoot abort guid=%lu (IsLootPossible=false)",
-                bot->GetName(), lootGuid.GetRawValue());
+            sLog.outLoot("bot=%s event=move-abort guid=%lu reason=loot-policy suppress=%d",
+                bot->GetName(), lootGuid.GetRawValue(), suppressRediscovery ? 1 : 0);
+
+        if (suppressRediscovery && lootGuid.IsCreature())
+            lootStack->Ignore(lootGuid, sPlayerbotAIConfig.lootTargetInspectDelay);
         else
-            sLog.outDebug("[BOT LOOT] %s: MoveToLoot abort guid=%lu (IsLootPossible=false)",
-                bot->GetName(), lootGuid.GetRawValue());
-
-        if (debugLoot)
-        {
-            WorldObject* invalidObject = ai->GetWorldObject(lootGuid);
-            if (!invalidObject)
-                ai->TellPlayerNoFacing(GetMaster(), "Cleared loot target " + lootGuid.GetString() + " because it no longer exists.");
-            else
-                ai->TellPlayerNoFacing(GetMaster(), "Cleared loot target " + ChatHelper::formatWorldobject(invalidObject) + " because it is not possible to loot.");
-        }
-
-        lootStack->Remove(lootGuid);
+            lootStack->Remove(lootGuid);
         RESET_AI_VALUE(LootObject, "loot target");
         trackedLootGuid = ObjectGuid();
         return false;
@@ -3352,21 +3344,11 @@ bool MoveToLootAction::Execute(Event& event)
         trackedLootGuid = lootGuid;
         bestLootDistance = dist;
         lootMoveStarted = now;
-        lastLootNotice = 0;
     }
     else if (dist + 0.5f < bestLootDistance)
     {
         bestLootDistance = dist;
         lootMoveStarted = now;
-    }
-
-    if ((ai->HasStrategy("debug move", BotState::BOT_STATE_NON_COMBAT) || debugLoot) &&
-        (!lastLootNotice || now - lastLootNotice >= 5))
-    {
-        std::ostringstream out;
-        out << "Moving to loot " << ChatHelper::formatWorldobject(wo) << " (" << uint32(dist) << "y)";
-        ai->TellPlayerNoFacing(GetMaster(), out);
-        lastLootNotice = now;
     }
 
     bool los = sServerFacade.IsWithinLOSInMap(bot, wo);
@@ -3379,24 +3361,15 @@ bool MoveToLootAction::Execute(Event& event)
     bool moved = los ? MoveNear(wo, approachDistance) : MoveTo(WorldPosition(wo));
 
     if (debugLoot)
-        sLog.outBasic("[BOT LOOT] %s: MoveToLoot guid=%lu dist=%.1f best=%.1f los=%d approach=%.1f result=%d",
-            bot->GetName(), lootGuid.GetRawValue(), dist, bestLootDistance, los ? 1 : 0, approachDistance, moved ? 1 : 0);
-    else
-        sLog.outDebug("[BOT LOOT] %s: MoveToLoot guid=%lu dist=%.1f best=%.1f los=%d approach=%.1f result=%d",
+        sLog.outLoot("bot=%s event=move guid=%lu distance=%.1f best=%.1f los=%d approach=%.1f result=%d",
             bot->GetName(), lootGuid.GetRawValue(), dist, bestLootDistance, los ? 1 : 0, approachDistance, moved ? 1 : 0);
 
     if (now - lootMoveStarted >= sPlayerbotAIConfig.lootTargetRetryDelay)
     {
         if (debugLoot)
-        {
-            std::ostringstream out;
-            out << "Pausing unreachable loot " << ChatHelper::formatWorldobject(wo)
-                << " for " << sPlayerbotAIConfig.lootTargetRetryDelay << " seconds.";
-            ai->TellPlayerNoFacing(GetMaster(), out);
-            sLog.outBasic("[BOT LOOT] %s: stalled guid=%lu dist=%.1f best=%.1f; retry in %us",
+            sLog.outLoot("bot=%s event=move-abort guid=%lu reason=stalled distance=%.1f best=%.1f retry-seconds=%u",
                 bot->GetName(), lootGuid.GetRawValue(), dist, bestLootDistance,
                 sPlayerbotAIConfig.lootTargetRetryDelay);
-        }
 
         lootStack->Ignore(lootGuid, sPlayerbotAIConfig.lootTargetRetryDelay);
         RESET_AI_VALUE(LootObject, "loot target");

@@ -4,18 +4,18 @@ Purpose: explain server-side action latency at the configured population without
 
 ## Playerbot loot diagnostics
 
-The existing `debug loot` strategy now reports successful native inventory
-transfers as `Looted [item] xN`, followed by `Quest progress [quest]: N/M` when
-the item matches an active quest objective. It also reports rejected or invalid
-loot targets when they are removed from the bot's loot stack. Enable it for a
-bot with `nc +debug loot` and disable it with `nc -debug loot`.
+The `debug loot` strategy writes a compact trace to
+`<LogsDir>/playerbot-loot.log`. Enable it for an individual bot with
+`nc +debug loot` and disable it with `nc -debug loot`. The trace records target
+discovery, queueing, movement, native open responses, item policy decisions,
+successful inventory transfers and quest-objective counts. It is not echoed to
+party or whisper chat.
 
-Success is reported only after Turtle's native autostore handler increases the
-bot's inventory count. The messages are private to the controlling player and
-contain item, quest and target identifiers only. The extra chat output and quest
-log scan are gated by `debug loot`; normal looting does not emit them. Remove
-the messages after quest-loot validation if this temporary visibility is no
-longer useful.
+Success is recorded only after Turtle's native autostore handler increases the
+bot's inventory count. `AiPlayerbot.LootLogFile` selects the filename and
+`AiPlayerbot.LootLogMaxBytes` bounds it (5 MiB by default); the previous file is
+kept as `.1` on rotation. Normal looting does not add records unless that bot
+has `debug loot` enabled.
 
 Current contract review: see `docs/CORE_COMPATIBILITY_AUDIT_2026-09-05.md` and
 `docs/CORE_SYSTEMS_GUIDE.md` at baseline `b2d5a854`. Historical port coverage below

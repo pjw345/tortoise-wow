@@ -372,13 +372,15 @@ file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/values/L
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/values/Formations.cpp" botFormations)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/generic/CombatStrategy.h" botCombatStrategy)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/LootObjectStack.cpp" botLootStack)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/BotLog.cpp" botLog)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/generic/LootNonCombatStrategy.cpp" botLootStrategy)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/PlayerbotAIConfig.cpp" botConfig)
 foreach(required
     "LootItemInSlot(itemindex, bot->GetGUIDLow(), &questItem)"
     "if (!questItem && lootItem->is_blocked)"
     "itemCountAfter > itemCountBefore"
-    "Quest progress ")
+    "phase=quest result=progress"
+    "groupMemberLootDistanceWithActiveMaster")
     string(FIND "${botLootAction}" "${required}" found)
     if(found EQUAL -1)
         message(FATAL_ERROR "Playerbot native loot/store contract missing: ${required}")
@@ -391,11 +393,11 @@ foreach(required "GetMaxSlotInLootFor(player->GetGUIDLow())" "LootItemInSlot(slo
     endif()
 endforeach()
 foreach(required
-    "Remove(lootGuid)"
+    "suppressRediscovery"
     "RESET_AI_VALUE(LootObject, \"loot target\")"
     "INTERACTION_DISTANCE - 1.0f"
     "lootStack->Ignore(lootGuid, sPlayerbotAIConfig.lootTargetRetryDelay)"
-    "sLog.outBasic(\"[BOT LOOT] %s: MoveToLoot")
+    "sLog.outLoot(\"bot=%s event=move")
     string(FIND "${botMovementAction}" "${required}" found)
     if(found EQUAL -1)
         message(FATAL_ERROR "Invalid move-to-loot cleanup missing: ${required}")
@@ -417,6 +419,7 @@ foreach(required
     "LootOrder(guid.IsCreature() ? 0 : 1, distance)"
     "ignoredLoot.find(guid)"
     "ignoredLoot[guid] = time(0)"
+    "lootTargetInspectDelay"
     "Remove(guid)")
     string(FIND "${botLootStack}" "${required}" found)
     if(found EQUAL -1)
@@ -426,7 +429,8 @@ endforeach()
 foreach(required
     "loot.skillId != SKILL_NONE && !questGameObject"
     "go->GetGOInfo()->GetLootId() != 0"
-    "game object has no loot, quest activation or item spell")
+    "reason=non-loot-gameobject"
+    "lootTargetInspectDelay")
     string(FIND "${botAddLootAction}" "${required}" found)
     if(found EQUAL -1)
         message(FATAL_ERROR "Ordinary loot must reject gathering and decorative game objects: ${required}")
@@ -446,12 +450,28 @@ string(FIND "${botConfig}" "WaitForAttackDistance\", 3.0f" compactWaitDistance)
 if(compactWaitDistance EQUAL -1)
     message(FATAL_ERROR "Wait-for-attack default must keep companions close to the player")
 endif()
-foreach(required "LootHostileDistance\", 30.0f" "LootTargetRetryDelay\", 10")
+foreach(required
+    "LootHostileDistance\", 30.0f"
+    "LootTargetRetryDelay\", 10"
+    "LootTargetInspectDelay\", 120"
+    "GroupMemberLootDistance\", 25.0f"
+    "GroupMemberLootDistanceWithActiveMaster\", 25.0f"
+    "InitializeLoot(lootLogFile.c_str()")
     string(FIND "${botConfig}" "${required}" found)
     if(found EQUAL -1)
         message(FATAL_ERROR "Configurable loot safety/retry contract missing: ${required}")
     endif()
 endforeach()
+foreach(required "RotateLootIfNeeded" "m_lootMaxBytes")
+    string(FIND "${botLog}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Dedicated bounded playerbot loot log missing: ${required}")
+    endif()
+endforeach()
+string(FIND "${botConfig}" "playerbot-loot.log" lootLogDefault)
+if(lootLogDefault EQUAL -1)
+    message(FATAL_ERROR "Dedicated playerbot loot log default missing")
+endif()
 foreach(required "!ai->HasActivePlayerMaster()" "sPlayerbotAIConfig.lootHostileDistance > 0.0f")
     string(FIND "${botAddLootAction}" "${required}" found)
     if(found EQUAL -1)
