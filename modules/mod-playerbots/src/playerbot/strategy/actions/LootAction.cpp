@@ -224,8 +224,21 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
     if (go && sServerFacade.GetDistance2d(bot, go) > INTERACTION_DISTANCE)
         return false;
 
-    if (go && (go->IsInUse() || go->GetGoState() == GO_STATE_ACTIVE))
+    bool canOpenPersonalQuestLoot = CanOpenActivatedQuestChest(bot, go);
+    if (go && (go->IsInUse() || go->GetGoState() == GO_STATE_ACTIVE) &&
+        !canOpenPersonalQuestLoot)
+    {
+        if (debugLoot)
+            sLog.outLoot("bot=%s event=reject guid=%lu reason=gameobject-active go-state=%u loot-state=%u quest=%d",
+                bot->GetName(), lootObject.guid.GetRawValue(), uint32(go->GetGoState()),
+                uint32(go->getLootState()), sObjectMgr.IsGameObjectForQuests(go->GetEntry()) ? 1 : 0);
         return false;
+    }
+
+    if (debugLoot && canOpenPersonalQuestLoot)
+        sLog.outLoot("bot=%s event=gameobject-personal-quest-reopen guid=%lu go-state=%u loot-state=%u",
+            bot->GetName(), lootObject.guid.GetRawValue(), uint32(go->GetGoState()),
+            uint32(go->getLootState()));
 
     if (lootObject.skillId == SKILL_MINING)
         return ai->HasSkill(SKILL_MINING) ? ai->CastSpell(MINING, bot) : false;

@@ -23,7 +23,22 @@ bool AddLootAction::Execute(Event& event)
     if (!guid)
         return false;
 
-    return AI_VALUE(LootObjectStack*, "available loot")->Add(guid);
+    bool added = AI_VALUE(LootObjectStack*, "available loot")->Add(guid);
+    if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+    {
+        GameObject* go = guid.IsGameObject() ? ai->GetGameObject(guid) : nullptr;
+        if (go)
+            sLog.outLoot("bot=%s event=event-queue guid=%lu object=\"%s\" added=%d go-state=%u loot-state=%u in-use=%d quest=%d eligible=%d",
+                bot->GetName(), guid.GetRawValue(), go->GetName(), added ? 1 : 0,
+                uint32(go->GetGoState()), uint32(go->getLootState()), go->IsInUse() ? 1 : 0,
+                sObjectMgr.IsGameObjectForQuests(go->GetEntry()) ? 1 : 0,
+                go->ActivateToQuest(bot) ? 1 : 0);
+        else
+            sLog.outLoot("bot=%s event=event-queue guid=%lu added=%d type=%s",
+                bot->GetName(), guid.GetRawValue(), added ? 1 : 0,
+                guid.IsCreature() ? "creature" : "other");
+    }
+    return added;
 }
 
 bool AddAllLootAction::Execute(Event& event)
@@ -38,7 +53,7 @@ bool AddAllLootAction::Execute(Event& event)
         std::list<ObjectGuid> objects = ChatHelper::parseGameobjects(text);
 
         for (auto& guid : objects)
-            added |= AddLoot(requester, guid);
+            added |= AddLoot(requester, guid, true);
     }
     else
     {
@@ -64,7 +79,7 @@ bool AddAllLootAction::isUseful()
     return true;
 }
 
-bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
+bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid, bool explicitTarget)
 {
     LootObject loot(bot, guid);
     bool debugLoot = ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT);
@@ -103,7 +118,12 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
         return false;
     }
 
-    if (debugLoot)
+    // Periodic broad scans encounter many nearby quest objects the bot is not
+    // eligible to use (for example Sack of Oats) every few seconds. Keep the
+    // dedicated log focused on corpses, eligible quest objects and explicit
+    // /loot targets; event-driven object attempts have their own trace above.
+    bool traceTarget = guid.IsCreature() || questGameObject || explicitTarget;
+    if (debugLoot && traceTarget)
         sLog.outLoot("bot=%s event=discover guid=%lu object=\"%s\"",
             bot->GetName(), guid.GetRawValue(), wo->GetName());
 
@@ -125,7 +145,7 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
     {
         if (suppressRediscovery && guid.IsCreature())
             AI_VALUE(LootObjectStack*, "available loot")->Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay);
-        if (debugLoot)
+        if (debugLoot && traceTarget)
             sLog.outLoot("bot=%s event=reject guid=%lu reason=loot-policy suppress=%d",
                 bot->GetName(), guid.GetRawValue(), suppressRediscovery ? 1 : 0);
         return false;
@@ -246,7 +266,7 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid)
     return added;
 }
 
-bool AddGatheringLootAction::AddLoot(Player* requester, ObjectGuid guid)
+bool AddGatheringLootAction::AddLoot(Player* requester, ObjectGuid guid, bool explicitTarget)
 {
     LootObject loot(bot, guid);
 
@@ -360,5 +380,5 @@ bool AddGatheringLootAction::AddLoot(Player* requester, ObjectGuid guid)
         }
     }
 
-    return AddAllLootAction::AddLoot(requester, guid);
+    return AddAllLootAction::AddLoot(requester, guid, explicitTarget);
 }

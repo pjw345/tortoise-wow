@@ -367,6 +367,7 @@ message(STATUS "PASS: native custom aura registration and recipient-side Avoidan
 # loot-slot view and must not let stale combat state override normal following.
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/LootAction.cpp" botLootAction)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/AddLootAction.cpp" botAddLootAction)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/UseItemAction.cpp" botUseItemAction)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/MovementActions.cpp" botMovementAction)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/values/LootValues.cpp" botLootValues)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/values/Formations.cpp" botFormations)
@@ -389,6 +390,26 @@ foreach(required
         message(FATAL_ERROR "Playerbot native loot/store contract missing: ${required}")
     endif()
 endforeach()
+foreach(required
+    "go->getLootState() == GO_ACTIVATED"
+    "sObjectMgr.IsGameObjectForQuests(go->GetEntry())"
+    "go->ActivateToQuest(bot)"
+    "if (!canOpenPersonalQuestLoot &&"
+    "CanOpenActivatedQuestChest(bot, go)")
+    string(FIND "${botLootStack}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Activated personal quest-chest support missing: ${required}")
+    endif()
+endforeach()
+string(FIND "${botLootAction}" "CanOpenActivatedQuestChest(bot," activeQuestLoot)
+string(FIND "${botUseItemAction}" "CanOpenActivatedQuestChest(bot," activeQuestUse)
+if(activeQuestLoot EQUAL -1 OR activeQuestUse EQUAL -1)
+    message(FATAL_ERROR "Loot and explicit-use paths must permit activated personal quest chests")
+endif()
+string(FIND "${botAddLootAction}" "event=event-queue" eventLootTrace)
+if(eventLootTrace EQUAL -1)
+    message(FATAL_ERROR "Event-driven game-object loot attempts must be written to the dedicated loot log")
+endif()
 foreach(required "GetMaxSlotInLootFor(player->GetGUIDLow())" "LootItemInSlot(slot, player->GetGUIDLow())")
     string(FIND "${botLootValues}" "${required}" found)
     if(found EQUAL -1)

@@ -8,6 +8,14 @@ using namespace ai;
 
 #define MAX_LOOT_OBJECT_COUNT 10
 
+bool ai::CanOpenActivatedQuestChest(Player* bot, GameObject* go)
+{
+    return bot && go && go->GetGoType() == GAMEOBJECT_TYPE_CHEST &&
+        go->getLootState() == GO_ACTIVATED &&
+        sObjectMgr.IsGameObjectForQuests(go->GetEntry()) &&
+        go->ActivateToQuest(bot);
+}
+
 LootTarget::LootTarget(ObjectGuid guid) : guid(guid), asOfTime(time(0))
 {
 }
@@ -121,7 +129,8 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
     }
 
     GameObject* go = ai->GetGameObject(guid);
-    if (go && sServerFacade.isSpawned(go) && !go->IsInUse())
+    if (go && sServerFacade.isSpawned(go) &&
+        (!go->IsInUse() || CanOpenActivatedQuestChest(bot, go)))
     {
         bool isQuestItemOnly = false;
 
@@ -265,6 +274,14 @@ bool LootObject::IsLootPossible(Player* bot, bool* suppressRediscovery)
 
     PlayerbotAI* ai = GetBotAI(bot);
 
+    // An activated personal quest chest does not expose this bot's quest-item
+    // slots until the bot opens it and Player::SendLoot calls
+    // FillNotNormalLootFor(bot). Do not ask "should loot object" first: that
+    // value can only see the still-empty per-player view and would reject the
+    // chest before the core has a chance to populate it.
+    GameObject* questChest = guid.IsGameObject() ? ai->GetGameObject(guid) : nullptr;
+    bool canOpenPersonalQuestLoot = CanOpenActivatedQuestChest(bot, questChest);
+
     if (reqItem && !bot->HasItemCount(reqItem, 1))
         return false;
 
@@ -293,7 +310,8 @@ bool LootObject::IsLootPossible(Player* bot, bool* suppressRediscovery)
 
     AiObjectContext* context = ai->GetAiObjectContext();
 
-    if (!AI_VALUE2_LAZY(bool, "should loot object", std::to_string(guid.GetRawValue())))
+    if (!canOpenPersonalQuestLoot &&
+        !AI_VALUE2_LAZY(bool, "should loot object", std::to_string(guid.GetRawValue())))
     {
         // A creature can remain server-lootable when it contains only items
         // excluded by the bot's loot policy (for example linen). Remember the
@@ -342,9 +360,19 @@ bool LootObject::IsLootPossible(Player* bot, bool* suppressRediscovery)
                 }
             }
 
-            //Ignore objects that are currently in use.
-            if (go->IsInUse() || go->GetGoState() == GO_STATE_ACTIVE)
+            // An activated quest chest is not globally exhausted: the core's
+            // Player::SendLoot path calls FillNotNormalLootFor for each later
+            // player. Permit that narrow case while retaining the normal
+            // in-use guard for every other game object.
+            if ((go->IsInUse() || go->GetGoState() == GO_STATE_ACTIVE) &&
+                !canOpenPersonalQuestLoot)
+            {
+                if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+                    sLog.outLoot("bot=%s event=reject guid=%lu reason=gameobject-active go-state=%u loot-state=%u quest=%d",
+                        bot->GetName(), guid.GetRawValue(), uint32(go->GetGoState()),
+                        uint32(go->getLootState()), sObjectMgr.IsGameObjectForQuests(go->GetEntry()) ? 1 : 0);
                 return false;
+            }
         }
     }
 

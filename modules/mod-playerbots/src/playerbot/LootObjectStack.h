@@ -5,6 +5,11 @@ namespace ai
 {
     class ItemQualifier;
 
+    // A quest chest can remain activated after one group member opens it.
+    // The core deliberately permits later group members to open that same
+    // chest so FillNotNormalLootFor can create their personal quest loot.
+    bool CanOpenActivatedQuestChest(Player* bot, GameObject* go);
+
     class LootObject
     {
     public:
