@@ -395,7 +395,11 @@ foreach(required
     "sObjectMgr.IsGameObjectForQuests(go->GetEntry())"
     "go->ActivateToQuest(bot)"
     "if (!canOpenPersonalQuestLoot &&"
-    "CanOpenActivatedQuestChest(bot, go)")
+    "CanOpenActivatedQuestChest(bot, go)"
+    "Group::MemberSlotList const& groupSlots"
+    "groupMember->GetPlayerbotAI()"
+    "return groupMember"
+    "event=quest-chest-wait")
     string(FIND "${botLootStack}" "${required}" found)
     if(found EQUAL -1)
         message(FATAL_ERROR "Activated personal quest-chest support missing: ${required}")

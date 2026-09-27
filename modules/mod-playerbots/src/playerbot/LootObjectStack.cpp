@@ -16,6 +16,46 @@ bool ai::CanOpenActivatedQuestChest(Player* bot, GameObject* go)
         go->ActivateToQuest(bot);
 }
 
+namespace
+{
+    // Personal quest loot is created per player, but the underlying chest is
+    // still one shared game object. Choose one nearby eligible bot using the
+    // group's stable member order so several bots do not cast OPEN_LOCK on the
+    // same chest simultaneously. After the chosen bot stores its quest item,
+    // ActivateToQuest becomes false for it and the next eligible bot advances.
+    Player* GetPersonalQuestChestTurn(Player* bot, GameObject* go)
+    {
+        if (!bot || !go || go->GetGoType() != GAMEOBJECT_TYPE_CHEST ||
+            !sObjectMgr.IsGameObjectForQuests(go->GetEntry()) ||
+            !go->ActivateToQuest(bot))
+            return bot;
+
+        Group* group = bot->GetGroup();
+        if (!group)
+            return bot;
+
+        PlayerbotAI* ai = GetBotAI(bot);
+        float maxDistance = ai->HasActivePlayerMaster() ?
+            sPlayerbotAIConfig.groupMemberLootDistanceWithActiveMaster :
+            sPlayerbotAIConfig.groupMemberLootDistance;
+
+        Group::MemberSlotList const& groupSlots = group->GetMemberSlots();
+        for (Group::member_citerator itr = groupSlots.begin(); itr != groupSlots.end(); ++itr)
+        {
+            Player* groupMember = sObjectMgr.GetPlayer(itr->guid);
+            if (!groupMember || !groupMember->GetPlayerbotAI() || !groupMember->IsAlive() ||
+                groupMember->GetMapId() != go->GetMapId() ||
+                sServerFacade.GetDistance2d(groupMember, go) > maxDistance ||
+                !go->ActivateToQuest(groupMember))
+                continue;
+
+            return groupMember;
+        }
+
+        return bot;
+    }
+}
+
 LootTarget::LootTarget(ObjectGuid guid) : guid(guid), asOfTime(time(0))
 {
 }
@@ -335,6 +375,15 @@ bool LootObject::IsLootPossible(Player* bot, bool* suppressRediscovery)
                 {
                     if (!go->ActivateToQuest(bot))
                     {
+                        return false;
+                    }
+
+                    Player* questChestTurn = GetPersonalQuestChestTurn(bot, go);
+                    if (questChestTurn != bot)
+                    {
+                        if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+                            sLog.outLoot("bot=%s event=quest-chest-wait guid=%lu turn=%s",
+                                bot->GetName(), guid.GetRawValue(), questChestTurn->GetName());
                         return false;
                     }
                 }
