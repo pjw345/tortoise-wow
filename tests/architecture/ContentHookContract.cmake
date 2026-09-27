@@ -397,7 +397,7 @@ foreach(required
     "if (!canOpenPersonalQuestLoot &&"
     "CanOpenActivatedQuestChest(bot, go)"
     "Group::MemberSlotList const& groupSlots"
-    "groupMember->GetPlayerbotAI()"
+    "GetBotAI(groupMember)"
     "return groupMember"
     "event=quest-chest-wait")
     string(FIND "${botLootStack}" "${required}" found)

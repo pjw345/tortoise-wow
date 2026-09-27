@@ -43,7 +43,7 @@ namespace
         for (Group::member_citerator itr = groupSlots.begin(); itr != groupSlots.end(); ++itr)
         {
             Player* groupMember = sObjectMgr.GetPlayer(itr->guid);
-            if (!groupMember || !groupMember->GetPlayerbotAI() || !groupMember->IsAlive() ||
+            if (!groupMember || !GetBotAI(groupMember) || !groupMember->IsAlive() ||
                 groupMember->GetMapId() != go->GetMapId() ||
                 sServerFacade.GetDistance2d(groupMember, go) > maxDistance ||
                 !go->ActivateToQuest(groupMember))
