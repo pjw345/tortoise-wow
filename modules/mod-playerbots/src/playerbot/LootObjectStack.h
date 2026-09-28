@@ -5,6 +5,11 @@ namespace ai
 {
     class ItemQualifier;
 
+    // A quest chest can remain activated after one group member opens it.
+    // The core deliberately permits later group members to open that same
+    // chest so FillNotNormalLootFor can create their personal quest loot.
+    bool CanOpenActivatedQuestChest(Player* bot, GameObject* go);
+
     class LootObject
     {
     public:
@@ -14,7 +19,7 @@ namespace ai
 
     public:
         bool IsEmpty() { return !guid; }
-        bool IsLootPossible(Player* bot);
+        bool IsLootPossible(Player* bot, bool* suppressRediscovery = nullptr);
         void Refresh(Player* bot, ObjectGuid guid, bool debug = false);
         WorldObject* GetWorldObject(Player* bot);
         ObjectGuid guid;
@@ -53,6 +58,7 @@ namespace ai
     public:
         bool Add(ObjectGuid guid);
         void Remove(ObjectGuid guid);
+        void Ignore(ObjectGuid guid, uint32 seconds);
         void Clear();
         bool CanLoot(float maxDistance);
         LootObject GetLoot(float maxDistance = 0);
@@ -61,8 +67,11 @@ namespace ai
         std::vector<LootObject> OrderByDistance(float maxDistance = 0);
 
     private:
+        void PruneIgnored();
+
         Player* bot;
         LootTargetList availableLoot;
+        std::map<ObjectGuid, time_t> ignoredLoot;
     };
 
 };

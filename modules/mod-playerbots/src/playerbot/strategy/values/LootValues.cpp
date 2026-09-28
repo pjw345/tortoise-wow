@@ -45,16 +45,22 @@ LootItemList const& LootAccess::lootItems() const
 	return loot->items;
 }
 
-std::vector<LootItem*> LootAccess::GetLootContentFor(Player* /*player*/) const
+std::vector<LootItem*> LootAccess::GetLootContentFor(Player* player) const
 {
-	std::vector<LootItem*> retvec;
-	if (!loot)
-		return retvec;
+    std::vector<LootItem*> retvec;
+    if (!loot || !player)
+        return retvec;
 
-	// Penqle's items vector holds LootItem values; bot consumers want pointers.
-	// Cast away const to publish as ptr — bot consumers treat as read-only via const accessors.
-	for (auto const& item : loot->items)
-		retvec.push_back(const_cast<LootItem*>(&item));
+    // Enumerate the same player-specific slot view that Turtle serializes to the
+    // client. Iterating loot->items alone omits m_questItems, whose slots are
+    // appended through m_playerQuestItems for each eligible player.
+    Loot* playerLoot = const_cast<Loot*>(loot);
+    uint32 maxSlot = loot->GetMaxSlotInLootFor(player->GetGUIDLow());
+    for (uint32 slot = 0; slot < maxSlot; ++slot)
+    {
+        if (LootItem* item = playerLoot->LootItemInSlot(slot, player->GetGUIDLow()))
+            retvec.push_back(item);
+    }
 
 	return retvec;
 }

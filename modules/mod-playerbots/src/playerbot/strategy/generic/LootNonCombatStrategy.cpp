@@ -8,19 +8,19 @@ void LootNonCombatStrategy::InitNonCombatTriggers(std::list<TriggerNode*> &trigg
 {
     triggers.push_back(new TriggerNode(
         "loot available",
-        NextAction::array(0, new NextAction("loot", 6.0f), NULL)));
+        NextAction::array(0, new NextAction("loot", 23.0f), NULL)));
 
     triggers.push_back(new TriggerNode(
         "far from loot target",
-        NextAction::array(0, new NextAction("move to loot", 7.0f), NULL)));
+        NextAction::array(0, new NextAction("move to loot", 24.0f), NULL)));
 
     triggers.push_back(new TriggerNode(
         "can loot",
-        NextAction::array(0, new NextAction("open loot", 8.0f), NULL)));
+        NextAction::array(0, new NextAction("open loot", 25.0f), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "often",
-        NextAction::array(0, new NextAction("add all loot", 1.0f), NULL)));
+        "very often",
+        NextAction::array(0, new NextAction("add all loot", 2.0f), NULL)));
 }
 
 void GatherStrategy::InitNonCombatTriggers(std::list<TriggerNode*> &triggers)

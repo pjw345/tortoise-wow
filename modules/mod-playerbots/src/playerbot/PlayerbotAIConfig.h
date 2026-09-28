@@ -130,8 +130,8 @@ public:
     uint32 failedActionRetryBase = 250, failedActionRetryMax = 2000;
     uint32 failedActionCacheTtl = 30000, failedActionCacheMaxEntries = 64;
     uint32 globalCoolDown, reactDelay, maxWaitForMove, expireActionTime, dispelAuraDuration, passiveDelay, repeatDelay,
-        errorDelay, rpgDelay, sitDelay, returnDelay, lootDelay, valueCacheCleanupInterval, memoryTelemetryInterval;
-    float sightDistance, spellDistance, reactDistance, grindDistance, lootDistance, groupMemberLootDistance, groupMemberLootDistanceWithActiveMaster,
+        errorDelay, rpgDelay, sitDelay, returnDelay, lootDelay, lootTargetRetryDelay, lootTargetInspectDelay, valueCacheCleanupInterval, memoryTelemetryInterval;
+    float sightDistance, spellDistance, waitForAttackDistance, reactDistance, grindDistance, lootDistance, lootHostileDistance, groupMemberLootDistance, groupMemberLootDistanceWithActiveMaster,
         gatheringDistance, groupMemberGatheringDistance, groupMemberGatheringDistanceWithActiveMaster, shootDistance,
         fleeDistance, tooCloseDistance, meleeDistance, followDistance, raidFollowDistance, wanderMinDistance, wanderMaxDistance, whisperDistance, contactDistance,
         aoeRadius, rpgDistance, targetPosRecalcDistance, farDistance, healDistance, healDistanceBg, aggroDistance, proximityDistance, maxFreeMoveDistance, freeMoveDelay, walkDistance;
@@ -491,4 +491,3 @@ private:
 };
 
 #define sPlayerbotAIConfig MaNGOS::Singleton<PlayerbotAIConfig>::Instance()
-

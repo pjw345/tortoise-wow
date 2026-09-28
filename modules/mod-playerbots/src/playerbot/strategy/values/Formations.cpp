@@ -240,9 +240,20 @@ namespace ai
         {
             float range = ai->GetRange("follow");
 
-            Unit* target = AI_VALUE(Unit*, "current target");
             Unit* followTarget = AI_VALUE(Unit*, "follow target");
-            if (!target && target != bot)
+            Unit* target = nullptr;
+
+            // Circle around the combat target only while combat is genuinely active.
+            // The current-target value can survive combat and otherwise pulls the
+            // formation back to the last enemy/corpse instead of following the master.
+            if (ai->IsStateActive(BotState::BOT_STATE_COMBAT))
+            {
+                Unit* currentTarget = AI_VALUE(Unit*, "current target");
+                if (currentTarget && currentTarget != bot && currentTarget->IsAlive())
+                    target = currentTarget;
+            }
+
+            if (!target)
                 target = followTarget;
 
             if (!target || !ai->IsSafe(target))

@@ -14,8 +14,10 @@
 
 #include "Log.h"
 #include "Platform/Define.h"
+#include <cstddef>
 #include <cstdio>
 #include <mutex>
+#include <string>
 
 class BotLog
 {
@@ -26,6 +28,12 @@ public:
     // filename (e.g. "bots.log"); logsDir is the server's LogsDir value.
     // Empty logFile disables file routing (all calls fall through to sLog).
     void Initialize(const char* logFile, const char* logsDir, bool debugEnabled = false);
+
+    // Loot tracing is intentionally separate from the general bot log. The
+    // debug-loot strategy writes compact, grep-friendly records here without
+    // flooding the controlling player's chat or enabling every bot debug line.
+    void InitializeLoot(const char* logFile, const char* logsDir, std::size_t maxBytes);
+    void outLoot(const char* fmt, ...) ATTR_PRINTF(2, 3);
 
     // Drop-in replacements for the Log methods bot code calls directly.
     void outString();
@@ -44,7 +52,13 @@ public:
     bool HasLogFilter(uint32 /*filter*/) const { return false; }
 
 private:
+    void RotateLootIfNeeded();
+
     FILE*      m_file = nullptr;
+    FILE*      m_lootFile = nullptr;
     bool       m_debugEnabled = false;
+    std::string m_lootPath;
+    std::size_t m_lootBytes = 0;
+    std::size_t m_lootMaxBytes = 0;
     std::mutex m_mutex;
 };

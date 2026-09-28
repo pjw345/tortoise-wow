@@ -81,7 +81,7 @@ namespace ai
 
         static bool ShouldWait(PlayerbotAI* ai);
         static uint8 GetWaitTime(PlayerbotAI* ai);
-        static float GetSafeDistance() { return sPlayerbotAIConfig.spellDistance; }
+        static float GetSafeDistance() { return sPlayerbotAIConfig.waitForAttackDistance; }
         static float GetSafeDistanceThreshold() { return 2.5f; }
 
 #ifdef GenerateBotHelp

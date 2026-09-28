@@ -362,3 +362,151 @@ if(NOT attackerAvoidance EQUAL -1)
     message(FATAL_ERROR "Avoidance must not halve the attacker's outgoing AoE by spell ID")
 endif()
 message(STATUS "PASS: native custom aura registration and recipient-side Avoidance")
+
+# Playerbot movement and loot adapters must preserve Turtle's player-specific
+# loot-slot view and must not let stale combat state override normal following.
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/LootAction.cpp" botLootAction)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/AddLootAction.cpp" botAddLootAction)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/UseItemAction.cpp" botUseItemAction)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/MovementActions.cpp" botMovementAction)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/values/LootValues.cpp" botLootValues)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/values/Formations.cpp" botFormations)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/generic/CombatStrategy.h" botCombatStrategy)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/LootObjectStack.cpp" botLootStack)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/BotLog.cpp" botLog)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/generic/LootNonCombatStrategy.cpp" botLootStrategy)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/PlayerbotAIConfig.cpp" botConfig)
+foreach(required
+    "LootItemInSlot(itemindex, bot->GetGUIDLow(), &questItem)"
+    "if (!questItem && lootItem->is_blocked)"
+    "itemCountAfter > itemCountBefore"
+    "phase=quest result=progress"
+    "groupMemberLootDistanceWithActiveMaster"
+    "lootObject.skillId == SKILL_NONE"
+    "event=gather-retry"
+    "lootTargetRetryDelay")
+    string(FIND "${botLootAction}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Playerbot native loot/store contract missing: ${required}")
+    endif()
+endforeach()
+foreach(required
+    "go->getLootState() == GO_ACTIVATED"
+    "sObjectMgr.IsGameObjectForQuests(go->GetEntry())"
+    "go->ActivateToQuest(bot)"
+    "if (!canOpenPersonalQuestLoot &&"
+    "CanOpenActivatedQuestChest(bot, go)"
+    "Group::MemberSlotList const& groupSlots"
+    "GetBotAI(groupMember)"
+    "return groupMember"
+    "event=quest-chest-wait")
+    string(FIND "${botLootStack}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Activated personal quest-chest support missing: ${required}")
+    endif()
+endforeach()
+string(FIND "${botLootAction}" "CanOpenActivatedQuestChest(bot," activeQuestLoot)
+string(FIND "${botUseItemAction}" "CanOpenActivatedQuestChest(bot," activeQuestUse)
+if(activeQuestLoot EQUAL -1 OR activeQuestUse EQUAL -1)
+    message(FATAL_ERROR "Loot and explicit-use paths must permit activated personal quest chests")
+endif()
+string(FIND "${botAddLootAction}" "event=event-queue" eventLootTrace)
+if(eventLootTrace EQUAL -1)
+    message(FATAL_ERROR "Event-driven game-object loot attempts must be written to the dedicated loot log")
+endif()
+foreach(required "GetMaxSlotInLootFor(player->GetGUIDLow())" "LootItemInSlot(slot, player->GetGUIDLow())")
+    string(FIND "${botLootValues}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Player-specific quest-loot enumeration missing: ${required}")
+    endif()
+endforeach()
+foreach(required
+    "suppressRediscovery"
+    "RESET_AI_VALUE(LootObject, \"loot target\")"
+    "INTERACTION_DISTANCE - 1.0f"
+    "lootStack->Ignore(lootGuid, sPlayerbotAIConfig.lootTargetRetryDelay)"
+    "sLog.outLoot(\"bot=%s event=move")
+    string(FIND "${botMovementAction}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Invalid move-to-loot cleanup missing: ${required}")
+    endif()
+endforeach()
+foreach(required "IsStateActive(BotState::BOT_STATE_COMBAT)" "currentTarget->IsAlive()" "target = followTarget")
+    string(FIND "${botFormations}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Circle formation stale-target guard missing: ${required}")
+    endif()
+endforeach()
+string(FIND "${botCombatStrategy}" "sPlayerbotAIConfig.waitForAttackDistance" waitDistance)
+if(waitDistance EQUAL -1)
+    message(FATAL_ERROR "Wait-for-attack spacing must not reuse ordinary spell range")
+endif()
+foreach(required
+    "if (guid.IsCreature())"
+    "std::multimap<LootOrder, LootObject>"
+    "LootOrder(guid.IsCreature() ? 0 : 1, distance)"
+    "ignoredLoot.find(guid)"
+    "ignoredLoot[guid] = time(0)"
+    "lootTargetInspectDelay"
+    "Remove(guid)")
+    string(FIND "${botLootStack}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Loot queue filtering and corpse-priority guard missing: ${required}")
+    endif()
+endforeach()
+foreach(required
+    "loot.skillId != SKILL_NONE && !questGameObject"
+    "go->GetGOInfo()->GetLootId() != 0"
+    "lootTargetInspectDelay")
+    string(FIND "${botAddLootAction}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Ordinary loot must reject gathering and decorative game objects: ${required}")
+    endif()
+endforeach()
+string(FIND "${botAddLootAction}" "loot.Refresh(bot, guid, true)" noisyLootScan)
+if(NOT noisyLootScan EQUAL -1)
+    message(FATAL_ERROR "Broad loot scans must not emit verbose diagnostics for decorative game objects")
+endif()
+foreach(required
+    "new NextAction(\"loot\", 23.0f)"
+    "new NextAction(\"move to loot\", 24.0f)"
+    "new NextAction(\"open loot\", 25.0f)"
+    "\"very often\"")
+    string(FIND "${botLootStrategy}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Automatic loot scheduling guard missing: ${required}")
+    endif()
+endforeach()
+string(FIND "${botConfig}" "WaitForAttackDistance\", 3.0f" compactWaitDistance)
+if(compactWaitDistance EQUAL -1)
+    message(FATAL_ERROR "Wait-for-attack default must keep companions close to the player")
+endif()
+foreach(required
+    "LootHostileDistance\", 30.0f"
+    "LootTargetRetryDelay\", 10"
+    "LootTargetInspectDelay\", 120"
+    "GroupMemberLootDistance\", 25.0f"
+    "GroupMemberLootDistanceWithActiveMaster\", 25.0f"
+    "InitializeLoot(lootLogFile.c_str()")
+    string(FIND "${botConfig}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Configurable loot safety/retry contract missing: ${required}")
+    endif()
+endforeach()
+foreach(required "RotateLootIfNeeded" "m_lootMaxBytes")
+    string(FIND "${botLog}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Dedicated bounded playerbot loot log missing: ${required}")
+    endif()
+endforeach()
+string(FIND "${botConfig}" "playerbot-loot.log" lootLogDefault)
+if(lootLogDefault EQUAL -1)
+    message(FATAL_ERROR "Dedicated playerbot loot log default missing")
+endif()
+foreach(required "!ai->HasActivePlayerMaster()" "sPlayerbotAIConfig.lootHostileDistance > 0.0f")
+    string(FIND "${botAddLootAction}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Active-master/configurable hostile loot bypass missing: ${required}")
+    endif()
+endforeach()
+message(STATUS "PASS: player-specific quest loot, bounded target retries, GO interaction approach and movement spacing guards")

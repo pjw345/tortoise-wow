@@ -8,6 +8,8 @@ namespace ai
     public:
         QueryQuestAction(PlayerbotAI* ai) : ChatCommandAction(ai, "query quest") {}
 
+        bool TellQuest(Player* requester, uint32 questId);
+
     private:
         bool Execute(Event& event) override;
         void TellObjectives(Player* requester, uint32 questId);

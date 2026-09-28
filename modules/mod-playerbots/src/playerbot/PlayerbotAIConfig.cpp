@@ -199,10 +199,16 @@ bool PlayerbotAIConfig::Initialize()
     sitDelay = (uint32) config.GetIntDefault("AiPlayerbot.SitDelay", 30000);
     returnDelay = (uint32) config.GetIntDefault("AiPlayerbot.ReturnDelay", 7000);
     lootDelay = (uint32)config.GetIntDefault("AiPlayerbot.LootDelayDelay", 750);
+    lootTargetRetryDelay = std::max(1, config.GetIntDefault("AiPlayerbot.LootTargetRetryDelay", 10));
+    lootTargetInspectDelay = std::max(1, config.GetIntDefault("AiPlayerbot.LootTargetInspectDelay", 120));
 
     farDistance = config.GetFloatDefault("AiPlayerbot.FarDistance", 20.0f);
     sightDistance = config.GetFloatDefault("AiPlayerbot.SightDistance", 75.0f);
     spellDistance = config.GetFloatDefault("AiPlayerbot.SpellDistance", 25.0f);
+    // Pre-pull spacing is deliberately independent of ordinary casting range.
+    // Using SpellDistance here made companions run roughly 26 yards away while
+    // waiting for the master to initiate combat.
+    waitForAttackDistance = std::max(0.0f, config.GetFloatDefault("AiPlayerbot.WaitForAttackDistance", 3.0f));
     shootDistance = config.GetFloatDefault("AiPlayerbot.ShootDistance", 25.0f);
     // 125 was three times the reach of any heal in this expansion, and it fed
     // target selection, the out-of-range trigger and the approach action alike -
@@ -216,8 +222,9 @@ bool PlayerbotAIConfig::Initialize()
     grindDistance = config.GetFloatDefault("AiPlayerbot.GrindDistance", 75.0f);
     aggroDistance = config.GetFloatDefault("AiPlayerbot.AggroDistance", 22.0f);
     lootDistance = config.GetFloatDefault("AiPlayerbot.LootDistance", 25.0f);
-    groupMemberLootDistance = config.GetFloatDefault("AiPlayerbot.GroupMemberLootDistance", 15.0f);
-    groupMemberLootDistanceWithActiveMaster = config.GetFloatDefault("AiPlayerbot.GroupMemberLootDistanceWithActiveMaster", 10.0f);
+    lootHostileDistance = std::max(0.0f, config.GetFloatDefault("AiPlayerbot.LootHostileDistance", 30.0f));
+    groupMemberLootDistance = config.GetFloatDefault("AiPlayerbot.GroupMemberLootDistance", 25.0f);
+    groupMemberLootDistanceWithActiveMaster = config.GetFloatDefault("AiPlayerbot.GroupMemberLootDistanceWithActiveMaster", 25.0f);
     gatheringDistance = config.GetFloatDefault("AiPlayerbot.GatheringDistance", 15.0f);
     groupMemberGatheringDistance = config.GetFloatDefault("AiPlayerbot.GroupMemberGatheringDistance", 10.0f);
     groupMemberGatheringDistanceWithActiveMaster = config.GetFloatDefault("AiPlayerbot.GroupMemberGatheringDistanceWithActiveMaster", 5.0f);
@@ -690,6 +697,10 @@ bool PlayerbotAIConfig::Initialize()
         std::string logsDir = sConfig.GetStringDefault("LogsDir");
         bool botLogDebug = config.GetBoolDefault("AiPlayerbot.BotLogDebug", false);
         BotLog::Instance().Initialize(botLogFile.c_str(), logsDir.c_str(), botLogDebug);
+
+        std::string lootLogFile = config.GetStringDefault("AiPlayerbot.LootLogFile", "playerbot-loot.log");
+        uint32 lootLogMaxBytes = std::max(1048576, config.GetIntDefault("AiPlayerbot.LootLogMaxBytes", 5242880));
+        BotLog::Instance().InitializeLoot(lootLogFile.c_str(), logsDir.c_str(), lootLogMaxBytes);
     }
     enableOffSpecStrategies = config.GetBoolDefault("AiPlayerbot.EnableOffSpecStrategies", true);
     useWanderAsDefaultFollowStrategy = config.GetBoolDefault("AiPlayerbot.UseWanderAsDefaultFollowStrategy", true);
@@ -1047,6 +1058,8 @@ std::string PlayerbotAIConfig::GetValue(std::string name)
         out << sightDistance;
     else if (name == "SpellDistance")
         out << spellDistance;
+    else if (name == "WaitForAttackDistance")
+        out << waitForAttackDistance;
     else if (name == "ReactDistance")
         out << reactDistance;
     else if (name == "GrindDistance")
@@ -1086,6 +1099,8 @@ void PlayerbotAIConfig::SetValue(std::string name, std::string value)
         out >> sightDistance;
     else if (name == "SpellDistance")
         out >> spellDistance;
+    else if (name == "WaitForAttackDistance")
+        out >> waitForAttackDistance;
     else if (name == "ReactDistance")
         out >> reactDistance;
     else if (name == "GrindDistance")

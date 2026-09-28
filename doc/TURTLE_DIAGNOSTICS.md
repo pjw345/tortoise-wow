@@ -2,6 +2,22 @@
 
 Purpose: explain server-side action latency at the configured population without logging every bot action. This is an instrumentation/removal inventory, not a claim of live performance validation.
 
+## Playerbot loot diagnostics
+
+The `debug loot` strategy writes a compact trace to
+`<LogsDir>/playerbot-loot.log`. Enable it for an individual bot with
+`nc +debug loot` and disable it with `nc -debug loot`. The trace records target
+discovery, queueing, movement, native open responses, item policy decisions,
+successful inventory transfers and quest-objective counts. It is not echoed to
+party or whisper chat. Broad nearby-object scans omit rejected decorative game
+objects; the trace contains actionable loot candidates and their later events.
+
+Success is recorded only after Turtle's native autostore handler increases the
+bot's inventory count. `AiPlayerbot.LootLogFile` selects the filename and
+`AiPlayerbot.LootLogMaxBytes` bounds it (5 MiB by default); the previous file is
+kept as `.1` on rotation. Normal looting does not add records unless that bot
+has `debug loot` enabled.
+
 Current contract review: see `docs/CORE_COMPATIBILITY_AUDIT_2026-09-05.md` and
 `docs/CORE_SYSTEMS_GUIDE.md` at baseline `b2d5a854`. Historical port coverage below
 does not certify runtime behavior or exact native equivalence. In particular,
