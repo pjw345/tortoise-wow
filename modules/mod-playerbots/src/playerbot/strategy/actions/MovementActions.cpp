@@ -3359,6 +3359,8 @@ bool MoveToLootAction::Execute(Event& event)
         std::max(sPlayerbotAIConfig.contactDistance, INTERACTION_DISTANCE - 1.0f) :
         sPlayerbotAIConfig.contactDistance;
     bool moved = los ? MoveNear(wo, approachDistance) : MoveTo(WorldPosition(wo));
+    if (moved)
+        WaitForReach(std::max(0.0f, dist - approachDistance));
 
     if (debugLoot)
         sLog.outLoot("bot=%s event=move guid=%lu distance=%.1f best=%.1f los=%d approach=%.1f result=%d",

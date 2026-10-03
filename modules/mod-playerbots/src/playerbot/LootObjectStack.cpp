@@ -323,7 +323,16 @@ bool LootObject::IsLootPossible(Player* bot, bool* suppressRediscovery)
     bool canOpenPersonalQuestLoot = CanOpenActivatedQuestChest(bot, questChest);
 
     if (reqItem && !bot->HasItemCount(reqItem, 1))
-        return false;
+    {
+        // Scripts and encounters can remove GO_FLAG_LOCKED without changing
+        // the object's template lock. In that state the native game object is
+        // authoritative: an unlocked chest no longer requires the cached key.
+        GameObject* go = guid.IsGameObject() ? ai->GetGameObject(guid) : nullptr;
+        bool unlockedChest = go && go->GetGOInfo()->type == GAMEOBJECT_TYPE_CHEST &&
+            go->GetGOInfo()->GetLootId() && !go->HasFlag(GAMEOBJECT_FLAGS, GO_FLAG_LOCKED);
+        if (!unlockedChest)
+            return false;
+    }
 
     if (guid.IsCreature())
     {
