@@ -1,8 +1,11 @@
 
 # Tortoise-WoW
 
-> [!WARNING]
-> **Project status — winding down (September 2026).** This fork is being retired. Through 30 September 2026 it will be kept in sync **only** with upstream [Penqle/tortoise-wow](https://github.com/Penqle/tortoise-wow) changes — no further work of our own. After that it will be **discontinued and archived** (read-only).
+> [!NOTE]
+> **Project status.** This repository continues the retired Shyalya Playerbots
+> integration as a deliberately maintained, source-pinned Turtle WoW server.
+> Core, Playerbots and deployment updates are reviewed separately; this fork
+> does not automatically merge or deploy either upstream.
 
 This is an unofficial, community-driven restoration of the 1.18.1 patch of Turtle-WoW, with some additions to allow for customization.  
 Do not represent this project, or anyone using it, as the original creators.  
@@ -10,6 +13,29 @@ This project targets version 1.18.1 build 7272.
 
 Portions of this project are ported from AzerothCore and VMaNGOS.
 See `AUTHORS.md` for specific contributions.
+
+## Project lineage and maintenance
+
+```mermaid
+flowchart TD
+    Core["Tortoise WoW core"] --> Shyalya["Shyalya integrated server"]
+    Bots["CMaNGOS Playerbots"] --> Shyalya
+    Shyalya --> OurCore["pjw345/tortoise-wow"]
+    Kasper["Kasperfriend Docker packaging"] --> OurDocker["pjw345/tortoise-docker"]
+    OurCore --> OurDocker
+```
+
+- The **Tortoise WoW core** owns the world server, protocol, persistence,
+  creatures, quests, spells, loot, maps and scripted content.
+- **CMaNGOS Playerbots** supplies the AI strategies that control server-side
+  `Player` characters through socketless/headless sessions.
+- **Shyalya's fork** combined those two codebases and supplied the integration
+  from which this source repository descends.
+- **Kasperfriend's repository** packaged Shyalya's server for Docker; our Docker
+  fork retains that packaging lineage but pins and builds this maintained source.
+
+See [Project lineage and upstream policy](docs/PROJECT_LINEAGE.md) for the
+repository history, current upstream status and rules used when importing fixes.
 
 > [!CAUTION]
 > The client version targeted is the unmodified 1.18.1.7272 with 2026-04-12 hotfixes client, the final client version of Turtle-WoW.  
