@@ -15,15 +15,24 @@ bool WaitForAttackKeepSafeDistanceAction::Execute(Event& event)
 
     if (target && target->IsAlive())
     {
-        const float safeDistance = std::max(float(target->GetAttackDistance(bot) + ATTACK_DISTANCE), WaitForAttackStrategy::GetSafeDistance());
+        const float safeDistance = WaitForAttackStrategy::GetSafeDistance();
         const float safeDistanceThreshold = WaitForAttackStrategy::GetSafeDistanceThreshold();
+
+        // Waiting bots only need to create space when they are inside the
+        // configured pull distance. Do not pull a bot that is already farther
+        // away back toward the hostile target.
+        if (WorldPosition(bot).fDist(WorldPosition(target)) > safeDistance)
+            return false;
 
         // Find the best point around the target.
         const WorldPosition bestPoint = GetBestPoint(target, (safeDistance - safeDistanceThreshold), safeDistance);
         if (bestPoint)
         {
             // Move to the best point
-            return MoveTo(bestPoint.getMapId(), bestPoint.getX(), bestPoint.getY(), bestPoint.getZ(), false, false, false, true);
+            bool success = MoveTo(bestPoint.getMapId(), bestPoint.getX(), bestPoint.getY(), bestPoint.getZ(), false, false, false, true);
+            if (success)
+                WaitForReach(WorldPosition(bot).fDist(bestPoint));
+            return success;
         }
     }
 
@@ -49,6 +58,8 @@ const ai::WorldPosition WaitForAttackKeepSafeDistanceAction::GetBestPoint(Unit* 
             Creature* wpCreature = bot->SummonCreature(1, point.getX(), point.getY(), point.getZ(), 0.0f, TEMPSPAWN_TIMED_DESPAWN, 1000.0f + dist * 100.0f);
         }
     }
+
+    std::list<WorldPosition> points;
 
     for (float tryAngle = 0.0f; tryAngle < M_PI_F; tryAngle += radiansIncrement)
     {
@@ -83,11 +94,22 @@ const ai::WorldPosition WaitForAttackKeepSafeDistanceAction::GetBestPoint(Unit* 
                 Creature* wpCreature = bot->SummonCreature(15631, point.getX(), point.getY(), point.getZ(), 0.0f, TEMPSPAWN_TIMED_DESPAWN, 5000.0f + tryAngle * 1000.0f);
             }
 
-            return point;
+            points.push_back(point);
         }
     }
 
-
+    // Prefer the valid point requiring the least movement. This prevents the
+    // angular scan order from making a bot cross the pull area unnecessarily.
+    if (!points.empty())
+    {
+        auto point = std::min_element(points.begin(), points.end(),
+            [botPosition](const WorldPosition& left, const WorldPosition& right)
+            {
+                return botPosition.fDist(left) < botPosition.fDist(right);
+            });
+        if (point != points.end())
+            return *point;
+    }
 
     return botPosition;
 }
@@ -97,24 +119,24 @@ bool WaitForAttackKeepSafeDistanceAction::IsEnemyClose(const WorldPosition& poin
     for (const ObjectGuid& enemyGUID : enemies)
     {
         Unit* enemy = ai->GetUnit(enemyGUID);
-        if (enemy)
+        if (enemy && enemy->CanAttackOnSight(bot))
         {
-            // If the enemy is visible in the same map
-            if (enemy->IsWithinLOSInMap(bot))
-            {
-                // If the enemy is not neutral
-                if (enemy->CanAttackOnSight(bot))
-                {
-                    const float enemyAttackRange = enemy->GetAttackDistance(bot) + ATTACK_DISTANCE;
-                    const float distanceToPoint = WorldPosition(enemy).sqDistance(point);
-                    if (distanceToPoint <= (enemyAttackRange * enemyAttackRange))
-                    {
-                        return true;
-                    }
-                }
-            }
+            // The candidate list deliberately includes targets without line
+            // of sight. A wall hiding an enemy from the bot does not make the
+            // destination on the enemy's side of that wall safe.
+            const float enemyAttackRange = enemy->GetAttackDistance(bot) + ATTACK_DISTANCE;
+            const float distanceToPoint = WorldPosition(enemy).sqDistance(point);
+            if (distanceToPoint <= (enemyAttackRange * enemyAttackRange))
+                return true;
         }
     }
 
     return false;
+}
+
+bool WaitForAttackKeepSafeDistanceAction::isUseful()
+{
+    return MovementAction::isUseful() &&
+        (!ai->HasStrategy("guard", ai->GetState()) ||
+         WaitForAttackStrategy::GetSafeDistance() <= ai->GetRange("guard"));
 }

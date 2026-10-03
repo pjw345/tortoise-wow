@@ -36,7 +36,9 @@ void DeadStrategy::InitDeadTriggers(std::list<TriggerNode*>& triggers)
 
     triggers.push_back(new TriggerNode(
         "resurrect request",
-        NextAction::array(0, new NextAction("accept resurrect", relevance), NULL)));
+        // A pending player resurrection must beat auto-release, self-resurrect
+        // and repop actions in the one-action-per-tick engine.
+        NextAction::array(0, new NextAction("accept resurrect", relevance + 10.0f), NULL)));
 
     triggers.push_back(new TriggerNode(
         "falling far",

@@ -252,10 +252,15 @@ bool MoveToTravelTargetAction::isUseful()
             return false;
     }
 
+    // Selection removes an object from the available-loot queue. Keep travel
+    // movement suppressed while that selected object is still valid.
+    LootObject lootTarget = AI_VALUE(LootObject, "loot target");
+    if (lootTarget.IsLootPossible(bot))
+        return false;
+
     if (!travelTarget->IsForced())
         if (!CanFreeMoveValue::CanFreeMoveTo(ai, *travelTarget->GetPosition()))
             return false;
 
     return true;
 }
-

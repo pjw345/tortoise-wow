@@ -282,7 +282,12 @@ bool MoveToRpgTargetAction::isUseful()
             return false;
     }
 
+    // Selection removes an object from the available-loot queue. Keep the RPG
+    // movement action suppressed while that selected object is still valid.
+    LootObject lootTarget = AI_VALUE(LootObject, "loot target");
+    if (lootTarget.IsLootPossible(bot))
+        return false;
+
     return true;
 }
-
 
