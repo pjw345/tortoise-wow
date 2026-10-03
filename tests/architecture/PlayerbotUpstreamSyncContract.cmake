@@ -6,6 +6,7 @@ file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/MoveToTravelTargetAction.cpp" travelMovement)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/generic/CombatStrategy.h" combatStrategy)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/generic/DeadStrategy.cpp" deadStrategy)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/paladin/PaladinActions.cpp" paladinActions)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/LootObjectStack.cpp" lootStack)
 
 string(FIND "${combatStrategy}" "sPlayerbotAIConfig.waitForAttackDistance" configuredDistance)
@@ -56,4 +57,37 @@ if(resurrectPriority EQUAL -1)
     message(FATAL_ERROR "Offered resurrection must outrank automatic corpse recovery")
 endif()
 
-message(STATUS "PASS: selective Playerbot upstream movement, loot, chest and resurrection contracts")
+# A party target can acquire this paladin's blessing after target selection but
+# before the action executes. Revalidate caster ownership in both self and party
+# blessing paths so the action does not replace its own active blessing.
+string(FIND "${paladinActions}" "bool HasOwnedBlessing(PlayerbotAI* ai, Unit* target)" ownershipHelperStart)
+string(FIND "${paladinActions}" "bool CastPaladinAuraAction::Execute" ownershipHelperEnd)
+if(ownershipHelperStart EQUAL -1 OR ownershipHelperEnd LESS ownershipHelperStart)
+    message(FATAL_ERROR "Cannot isolate the paladin blessing ownership helper")
+endif()
+math(EXPR ownershipHelperLength "${ownershipHelperEnd} - ${ownershipHelperStart}")
+string(SUBSTRING "${paladinActions}" ${ownershipHelperStart} ${ownershipHelperLength} ownershipHelper)
+
+foreach(required
+    "bool HasOwnedBlessing(PlayerbotAI* ai, Unit* target)"
+    "ai->HasMyAura(blessing, target)"
+    "ai->HasMyAura(\"greater \" + blessing, target)"
+    "\"blessing of might\""
+    "\"blessing of wisdom\""
+    "\"blessing of kings\""
+    "\"blessing of sanctuary\""
+    "\"blessing of salvation\""
+    "\"blessing of light\"")
+    string(FIND "${ownershipHelper}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Missing paladin blessing ownership contract: ${required}")
+    endif()
+endforeach()
+
+string(REGEX MATCHALL "HasOwnedBlessing\\(ai, target\\)" ownershipChecks "${paladinActions}")
+list(LENGTH ownershipChecks ownershipCheckCount)
+if(NOT ownershipCheckCount EQUAL 2)
+    message(FATAL_ERROR "Paladin blessing ownership must be revalidated in self and party actions")
+endif()
+
+message(STATUS "PASS: selective Playerbot upstream movement, loot, chest, resurrection and blessing contracts")
