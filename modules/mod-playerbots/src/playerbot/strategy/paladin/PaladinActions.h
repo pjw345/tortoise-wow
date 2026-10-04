@@ -201,6 +201,7 @@ namespace ai
     private:
         Unit* GetTarget() override;
         bool isPossible() override;
+        bool isUseful() override { return true; }
         virtual std::string GetBlessingForTarget(Unit* target);
 
     protected:
