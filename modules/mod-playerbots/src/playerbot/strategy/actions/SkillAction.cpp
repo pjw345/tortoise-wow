@@ -7,6 +7,9 @@ using namespace ai;
 bool SkillAction::Execute(Event& event)
 {
     Player* requester = event.getOwner() ? event.getOwner() : GetMaster();
+    if (!requester)
+        return false;
+
     std::string cmd = event.getParam();
 
     bool unlearn = (cmd.find("unlearn ") == 0);
@@ -29,6 +32,14 @@ bool SkillAction::Execute(Event& event)
     bool skillFound = false;
     std::map<std::string, std::string> args;
 
+    uint32 preferredLocale = LOCALE_enUS;
+    if (requester->GetSession())
+    {
+        uint32 sessionLocale = requester->GetSession()->GetSessionDbcLocale();
+        if (sessionLocale < MAX_DBC_LOCALE)
+            preferredLocale = sessionLocale;
+    }
+
     for (uint32 id = 0; id < sSkillLineStore.GetNumRows(); ++id)
     {
         if (!bot->HasSkill(id))
@@ -38,34 +49,24 @@ bool SkillAction::Execute(Event& event)
         if (!skillInfo)
             continue;
 
-        int loc = requester->GetSession()->GetSessionDbcLocale();
-
+        bool nameMatches = false;
         if (!skillName.empty() && skillIds.empty())
         {
-            std::string name = skillInfo->name[loc];
-
-            if (name.empty())
-                continue;
-
-            if (!Utf8FitTo(name, wnamepart))
+            auto localeMatches = [&](uint32 locale)
             {
-                loc = 0;
-                for (; loc < MAX_LOCALE; ++loc)
-                {
-                    if (loc == requester->GetSession()->GetSessionDbcLocale())
-                        continue;
+                char const* localizedName = skillInfo->name[locale];
+                return localizedName && localizedName[0] && Utf8FitTo(localizedName, wnamepart);
+            };
 
-                    name = skillInfo->name[loc];
-                    if (name.empty())
-                        continue;
-
-                    if (Utf8FitTo(name, wnamepart))
-                        break;
-                }
+            nameMatches = localeMatches(preferredLocale);
+            for (uint32 locale = 0; !nameMatches && locale < MAX_DBC_LOCALE; ++locale)
+            {
+                if (locale != preferredLocale)
+                    nameMatches = localeMatches(locale);
             }
         }
 
-        if (skillName.empty() || skillIds.find(id) != skillIds.end() || (loc < MAX_LOCALE && skillIds.empty()))
+        if (skillName.empty() || skillIds.find(id) != skillIds.end() || nameMatches)
         {
             if (unlearn)
             {
