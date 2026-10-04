@@ -4,6 +4,29 @@
 
 using namespace ai;
 
+namespace
+{
+bool HasOwnedBlessing(PlayerbotAI* ai, Unit* target)
+{
+    static std::vector<std::string> const blessings = {
+        "blessing of might",
+        "blessing of wisdom",
+        "blessing of kings",
+        "blessing of sanctuary",
+        "blessing of salvation",
+        "blessing of light"
+    };
+
+    for (std::string const& blessing : blessings)
+    {
+        if (ai->HasMyAura(blessing, target) || ai->HasMyAura("greater " + blessing, target))
+            return true;
+    }
+
+    return false;
+}
+}
+
 bool CastPaladinAuraAction::Execute(Event& event)
 {
     std::vector<std::string> altAuras;
@@ -73,6 +96,12 @@ std::string CastBlessingAction::GetBlessingForTarget(Unit* target)
     if (target)
     {
         std::vector<std::string> possibleBlessings = GetPossibleBlessingsForTarget(target);
+
+        // The trigger and action run at different times. Do not replace a
+        // blessing that this paladin applied after the target was selected.
+        if (HasOwnedBlessing(ai, target))
+            return chosenBlessing;
+
         for (const std::string& blessing : possibleBlessings)
         {
             const std::string greaterBlessing = "greater " + blessing;
@@ -262,6 +291,13 @@ std::string CastBlessingOnPartyAction::GetBlessingForTarget(Unit* target)
     if (target)
     {
         std::vector<std::string> possibleBlessings = GetPossibleBlessingsForTarget(target);
+
+        // Party target values can be stale by the time this action executes.
+        // Preserve this paladin's existing blessing while still allowing
+        // different paladins to contribute their own blessings.
+        if (HasOwnedBlessing(ai, target))
+            return chosenBlessing;
+
         for (const std::string& blessing : possibleBlessings)
         {
             // Don't cast greater salvation on possible tank classes
