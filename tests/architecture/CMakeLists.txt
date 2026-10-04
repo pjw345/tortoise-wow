@@ -298,6 +298,8 @@ add_test(NAME ContentHookContract COMMAND ${CMAKE_COMMAND}
     -DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}/../.. -P ${CMAKE_CURRENT_SOURCE_DIR}/ContentHookContract.cmake)
 add_test(NAME PlayerbotUpstreamSyncContract COMMAND ${CMAKE_COMMAND}
     -DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}/../.. -P ${CMAKE_CURRENT_SOURCE_DIR}/PlayerbotUpstreamSyncContract.cmake)
+add_test(NAME PlayerbotSkillLocaleContract COMMAND ${CMAKE_COMMAND}
+    -DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}/../.. -P ${CMAKE_CURRENT_SOURCE_DIR}/PlayerbotSkillLocaleContract.cmake)
 
 add_executable(MapDiscoveryTest MapDiscoveryTest.cpp)
 target_compile_features(MapDiscoveryTest PRIVATE cxx_std_17)
