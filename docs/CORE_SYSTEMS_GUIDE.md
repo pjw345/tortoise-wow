@@ -128,6 +128,14 @@ select Might, Wisdom, Kings, Sanctuary or Light for the current target during
 check to that stage; fixed-spell manual blessing strategies retain the normal
 generic spell guard.
 
+Playerbot `skill` chat commands search `SkillLineEntry::name`, whose vanilla
+DBC storage has `MAX_DBC_LOCALE` (eight) entries. `MAX_LOCALE` also includes
+the non-vanilla `ruRU` session locale and must never bound that array. Clamp a
+requester's preferred locale to the DBC range, scan only valid DBC slots, and
+null-check localized names both while matching and while formatting replies.
+An invalid or unavailable requester session falls back to `LOCALE_enUS`; it
+must not turn an informational chat command into a world-server crash.
+
 | Quests, rewards and XP | [QuestHandler.cpp](../src/game/Handlers/QuestHandler.cpp) `HandleQuestgiverCompleteQuest:588`; `Player::RewardQuest:15269`; [QuestDef.cpp](../src/game/QuestDef.cpp) | Acceptance, objectives, item/money requirements, repeatability, reputation, XP rate modifiers, reward scripts and persistence. A quest relation alone is not proof that objectives work. |
 | Trade | [TradeHandler.cpp](../src/game/Handlers/TradeHandler.cpp) `HandleAcceptTradeOpcode:293` | Both accept states, item ownership, bag space, enchant spell targets, money, cancellation and saves. Native code saves both players; that alone is not proof of one cross-player atomic transaction. |
 | Chat, WHO and commands | [ChatHandler.cpp](../src/game/Handlers/ChatHandler.cpp) `HandleMessagechatOpcode:176`; [MiscHandler.cpp](../src/game/Handlers/MiscHandler.cpp) `HandleWhoOpcode:271`; [Chat sources](../src/game/Chat) | Client request parsing, filters, result counts/wire fields, security levels, channel membership and visibility. Do not special-case one displayed name or confuse account authority with character level. |
