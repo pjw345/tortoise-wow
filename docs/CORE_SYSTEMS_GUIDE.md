@@ -119,6 +119,15 @@ creates space when already inside that configured radius. Candidate points are
 screened against the complete no-LOS hostile set and the least movement is
 chosen; guard range still bounds repositioning. A pending resurrection request
 outranks automatic release, self-resurrection, spirit-healer and repop actions.
+
+The action engine evaluates `isUseful()` before `isPossible()`. Most spell
+actions therefore require a resolved, learned spell ID during usefulness
+checking. Paladin's generic blessing actions are deliberately dynamic: they
+select Might, Wisdom, Kings, Sanctuary or Light for the current target during
+`isPossible()`. Both the self and party variants must defer their capability
+check to that stage; fixed-spell manual blessing strategies retain the normal
+generic spell guard.
+
 | Quests, rewards and XP | [QuestHandler.cpp](../src/game/Handlers/QuestHandler.cpp) `HandleQuestgiverCompleteQuest:588`; `Player::RewardQuest:15269`; [QuestDef.cpp](../src/game/QuestDef.cpp) | Acceptance, objectives, item/money requirements, repeatability, reputation, XP rate modifiers, reward scripts and persistence. A quest relation alone is not proof that objectives work. |
 | Trade | [TradeHandler.cpp](../src/game/Handlers/TradeHandler.cpp) `HandleAcceptTradeOpcode:293` | Both accept states, item ownership, bag space, enchant spell targets, money, cancellation and saves. Native code saves both players; that alone is not proof of one cross-player atomic transaction. |
 | Chat, WHO and commands | [ChatHandler.cpp](../src/game/Handlers/ChatHandler.cpp) `HandleMessagechatOpcode:176`; [MiscHandler.cpp](../src/game/Handlers/MiscHandler.cpp) `HandleWhoOpcode:271`; [Chat sources](../src/game/Chat) | Client request parsing, filters, result counts/wire fields, security levels, channel membership and visibility. Do not special-case one displayed name or confuse account authority with character level. |
