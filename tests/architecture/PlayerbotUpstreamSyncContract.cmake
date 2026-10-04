@@ -7,6 +7,7 @@ file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/actions/
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/generic/CombatStrategy.h" combatStrategy)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/generic/DeadStrategy.cpp" deadStrategy)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/paladin/PaladinActions.cpp" paladinActions)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/paladin/PaladinActions.h" paladinActionDefinitions)
 file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/LootObjectStack.cpp" lootStack)
 
 string(FIND "${combatStrategy}" "sPlayerbotAIConfig.waitForAttackDistance" configuredDistance)
@@ -89,5 +90,26 @@ list(LENGTH ownershipChecks ownershipCheckCount)
 if(NOT ownershipCheckCount EQUAL 2)
     message(FATAL_ERROR "Paladin blessing ownership must be revalidated in self and party actions")
 endif()
+
+# The generic spell guard evaluates isUseful() before isPossible(). Dynamic
+# blessing actions do not resolve their real spell ID until isPossible(), so
+# both the self and party variants must deliberately defer capability checks to
+# that stage. Fixed-spell manual blessing actions retain the normal guard.
+function(assert_dynamic_blessing className nextClassName)
+    string(FIND "${paladinActionDefinitions}" "class ${className}" classStart)
+    string(FIND "${paladinActionDefinitions}" "class ${nextClassName}" classEnd)
+    if(classStart EQUAL -1 OR classEnd LESS classStart)
+        message(FATAL_ERROR "Cannot isolate dynamic blessing class: ${className}")
+    endif()
+    math(EXPR classLength "${classEnd} - ${classStart}")
+    string(SUBSTRING "${paladinActionDefinitions}" ${classStart} ${classLength} classDefinition)
+    string(FIND "${classDefinition}" "bool isUseful() override { return true; }" usefulOverride)
+    if(usefulOverride EQUAL -1)
+        message(FATAL_ERROR "Dynamic blessing action must reach isPossible(): ${className}")
+    endif()
+endfunction()
+
+assert_dynamic_blessing(CastBlessingAction CastPveBlessingAction)
+assert_dynamic_blessing(CastBlessingOnPartyAction CastPveBlessingOnPartyAction)
 
 message(STATUS "PASS: selective Playerbot upstream movement, loot, chest, resurrection and blessing contracts")
