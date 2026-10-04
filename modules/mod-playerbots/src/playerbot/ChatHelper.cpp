@@ -619,9 +619,26 @@ std::string ChatHelper::formatSkill(uint32 skillId, Player* player)
     {
         int loc_idx = sPlayerbotTextMgr.GetLocalePriority();
 
-        if (loc_idx == -1)
+        if (loc_idx < 0 || loc_idx >= int(MAX_DBC_LOCALE))
             loc_idx = 0;
-        name = skillInfo->name[loc_idx];
+
+        char const* localizedName = skillInfo->name[loc_idx];
+        if (localizedName && localizedName[0])
+        {
+            name = localizedName;
+        }
+        else
+        {
+            for (uint32 locale = 0; locale < MAX_DBC_LOCALE; ++locale)
+            {
+                localizedName = skillInfo->name[locale];
+                if (localizedName && localizedName[0])
+                {
+                    name = localizedName;
+                    break;
+                }
+            }
+        }
     }
     std::ostringstream out;
     out << "|cffffffff|Hskill:" << skillId
