@@ -117,8 +117,12 @@ Ordinary mining and herbalism nodes are game-object spell targets. Their
 gathering actions must call the `PlayerbotAI::CastSpell` game-object overload
 with the selected node explicitly. Passing the bot as a unit target relies on
 an effect-slot heuristic to recover `loot target`; a cast can then report
-success without ever opening the node. Creature gathering (skinning and
-creature mining/herbalism) remains on the separate unit-target path.
+success without ever opening the node. This core's `setGOTarget` only records
+the object pointer and GUID, so both the Playerbot check and cast paths must
+also add `TARGET_FLAG_GAMEOBJECT` to the spell target mask. Omitting that bit
+allows the gathering animation to play while `EffectOpenLock` receives no node
+and produces no loot response. Creature gathering (skinning and creature
+mining/herbalism) remains on the separate unit-target path.
 
 `wait for attack` uses its dedicated `WaitForAttackDistance` (three yards by
 default), does not inherit spell, hostile-attack or flee distance, and only
