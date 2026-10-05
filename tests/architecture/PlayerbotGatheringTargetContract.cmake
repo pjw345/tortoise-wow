@@ -29,4 +29,24 @@ foreach(forbidden
     endif()
 endforeach()
 
-message(STATUS "PASS: Playerbot gathering spells explicitly target mining and herbalism nodes")
+# In this core setGOTarget stores only the object pointer/GUID. Directly
+# constructed Playerbot spells must also add the target-mask bit or the cast
+# animation can complete without EffectOpenLock receiving the node.
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/PlayerbotAI.cpp" playerbotAI)
+
+foreach(signature
+    "bool PlayerbotAI::CanCastSpell(uint32 spellid, GameObject* goTarget"
+    "bool PlayerbotAI::CastSpell(uint32 spellId, GameObject* goTarget")
+    string(FIND "${playerbotAI}" "${signature}" functionStart)
+    if(functionStart EQUAL -1)
+        message(FATAL_ERROR "Cannot find Playerbot game-object spell function: ${signature}")
+    endif()
+    string(SUBSTRING "${playerbotAI}" ${functionStart} 8000 functionBody)
+    string(FIND "${functionBody}" "setGOTarget(goTarget);" targetSet)
+    string(FIND "${functionBody}" "m_targetMask |= TARGET_FLAG_GAMEOBJECT;" targetMaskSet)
+    if(targetSet EQUAL -1 OR targetMaskSet EQUAL -1 OR targetMaskSet LESS targetSet)
+        message(FATAL_ERROR "Playerbot game-object spell must set TARGET_FLAG_GAMEOBJECT after setGOTarget: ${signature}")
+    endif()
+endforeach()
+
+message(STATUS "PASS: Playerbot gathering spells explicitly target and mask mining and herbalism nodes")
