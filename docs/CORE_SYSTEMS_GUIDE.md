@@ -113,6 +113,13 @@ same path every decision tick. Dynamic `GO_FLAG_LOCKED` state remains
 authoritative over a chest template's key requirement: only spawned, loot-bearing
 chests whose locked flag has actually been cleared may bypass a missing key.
 
+Ordinary mining and herbalism nodes are game-object spell targets. Their
+gathering actions must call the `PlayerbotAI::CastSpell` game-object overload
+with the selected node explicitly. Passing the bot as a unit target relies on
+an effect-slot heuristic to recover `loot target`; a cast can then report
+success without ever opening the node. Creature gathering (skinning and
+creature mining/herbalism) remains on the separate unit-target path.
+
 `wait for attack` uses its dedicated `WaitForAttackDistance` (three yards by
 default), does not inherit spell, hostile-attack or flee distance, and only
 creates space when already inside that configured radius. Candidate points are
