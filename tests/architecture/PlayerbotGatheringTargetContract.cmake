@@ -32,12 +32,34 @@ endforeach()
 foreach(required
     "bool const gatheringGameObject = lootObject.guid.IsGameObject()"
     "lootObject.skillId == SKILL_MINING || lootObject.skillId == SKILL_HERBALISM"
-    "lootStack->Ignore(lootObject.guid, sPlayerbotAIConfig.lootTargetRetryDelay)"
+    "lootStack->Defer(lootObject.guid, sPlayerbotAIConfig.lootTargetRetryDelay)"
     "context->GetValue<LootObject>(\"loot target\")->Set(LootObject())"
     "bool opened = ai->CastSpell(spellId, go);")
     string(FIND "${lootAction}" "${required}" found)
     if(found EQUAL -1)
         message(FATAL_ERROR "Game-object loot retry/target contract is missing: ${required}")
+    endif()
+endforeach()
+
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/LootObjectStack.h" lootStackHeader)
+file(READ "${SOURCE_ROOT}/modules/mod-playerbots/src/playerbot/LootObjectStack.cpp" lootStackSource)
+
+foreach(required
+    "void Defer(ObjectGuid guid, uint32 seconds);"
+    "std::map<ObjectGuid, time_t> deferredLoot;")
+    string(FIND "${lootStackHeader}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Gathering retry queue contract is missing: ${required}")
+    endif()
+endforeach()
+
+foreach(required
+    "void LootObjectStack::Defer(ObjectGuid guid, uint32 seconds)"
+    "deferredLoot[guid] = time(0) + std::max<uint32>(1, seconds);"
+    "if (deferredLoot.find(guid) != deferredLoot.end())")
+    string(FIND "${lootStackSource}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Gathering retry implementation is missing: ${required}")
     endif()
 endforeach()
 

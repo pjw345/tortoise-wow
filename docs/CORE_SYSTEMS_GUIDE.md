@@ -126,10 +126,13 @@ mining/herbalism) remains on the separate unit-target path.
 
 Starting a gathering cast is not proof that the node opened. Mining and
 herbalism attempts must use a bounded retry lifecycle: once `SpellStart`
-accepts the asynchronous cast, clear the current `loot target` and suppress the
-node from rediscovery for `LootTargetRetryDelay`. A successful cast still
-delivers its loot response to `StoreLootAction`; a failed cast becomes eligible
-again after the delay. Leaving the node selected makes the normal loot trigger
+accepts the asynchronous cast, clear the current `loot target`, keep the node
+in `available loot`, and defer its selection for `LootTargetRetryDelay`. A
+successful cast still delivers its loot response to `StoreLootAction`, which
+removes the node; a normal orange-skill failure produces no response and the
+same queued node becomes eligible again after the delay. This is important for
+manually queued `u go` targets, which cannot rely on a periodic gathering scan
+to rediscover them. Leaving the node selected makes the normal loot trigger
 start it again every AI update, producing an apparently endless gathering
 animation.
 

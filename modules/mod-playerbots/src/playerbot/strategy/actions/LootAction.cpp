@@ -100,11 +100,12 @@ bool OpenLootAction::Execute(Event& event)
 
         // SpellStart only confirms that the asynchronous gathering cast was
         // accepted. Clear the current target so the normal loot trigger cannot
-        // start the same cast again on the next AI update. A successful cast
-        // still delivers SMSG_LOOT_RESPONSE to StoreLootAction; a failed cast
-        // becomes discoverable again after the bounded retry delay.
+        // start the same cast again on the next AI update. Keep the node queued
+        // but temporarily unavailable: a successful cast still delivers
+        // SMSG_LOOT_RESPONSE to StoreLootAction, while a normal orange-skill
+        // failure becomes selectable again without requiring rediscovery.
         if (gatheringGameObject)
-            lootStack->Ignore(lootObject.guid, sPlayerbotAIConfig.lootTargetRetryDelay);
+            lootStack->Defer(lootObject.guid, sPlayerbotAIConfig.lootTargetRetryDelay);
         else
             lootStack->Remove(lootObject.guid);
 
