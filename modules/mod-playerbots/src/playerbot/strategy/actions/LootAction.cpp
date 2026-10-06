@@ -92,7 +92,14 @@ bool OpenLootAction::Execute(Event& event)
 {
     LootObject lootObject = AI_VALUE(LootObject, "loot target");
     bool result = DoLoot(lootObject);
-    if (result)
+    // An accepted mining/herbalism cast is not yet a completed gather. The
+    // server can fail an orange-skill attempt when the cast finishes. Keep the
+    // node selected and queued until StoreLootAction receives the successful
+    // loot response; otherwise the first ordinary skill failure permanently
+    // removes the node and a later "u go" has nothing left to retry.
+    bool const pendingGatheringResponse = lootObject.guid.IsGameObject() &&
+        (lootObject.skillId == SKILL_MINING || lootObject.skillId == SKILL_HERBALISM);
+    if (result && !pendingGatheringResponse)
     {
         AI_VALUE(LootObjectStack*, "available loot")->Remove(lootObject.guid);
         context->GetValue<LootObject>("loot target")->Set(LootObject());
