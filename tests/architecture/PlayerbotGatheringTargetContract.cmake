@@ -30,12 +30,14 @@ foreach(forbidden
 endforeach()
 
 foreach(required
-    "bool const pendingGatheringResponse = lootObject.guid.IsGameObject()"
+    "bool const gatheringGameObject = lootObject.guid.IsGameObject()"
     "lootObject.skillId == SKILL_MINING || lootObject.skillId == SKILL_HERBALISM"
-    "if (result && !pendingGatheringResponse)")
+    "lootStack->Ignore(lootObject.guid, sPlayerbotAIConfig.lootTargetRetryDelay)"
+    "context->GetValue<LootObject>(\"loot target\")->Set(LootObject())"
+    "bool opened = ai->CastSpell(spellId, go);")
     string(FIND "${lootAction}" "${required}" found)
     if(found EQUAL -1)
-        message(FATAL_ERROR "Gathering node must remain pending until its loot response: ${required}")
+        message(FATAL_ERROR "Game-object loot retry/target contract is missing: ${required}")
     endif()
 endforeach()
 
@@ -59,4 +61,4 @@ foreach(signature
     endif()
 endforeach()
 
-message(STATUS "PASS: Playerbot gathering spells target, mask and retain mining/herbalism nodes until loot response")
+message(STATUS "PASS: Playerbot game-object loot uses explicit targets and bounded gathering retries")

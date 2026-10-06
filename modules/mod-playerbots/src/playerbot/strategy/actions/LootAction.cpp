@@ -92,16 +92,22 @@ bool OpenLootAction::Execute(Event& event)
 {
     LootObject lootObject = AI_VALUE(LootObject, "loot target");
     bool result = DoLoot(lootObject);
-    // An accepted mining/herbalism cast is not yet a completed gather. The
-    // server can fail an orange-skill attempt when the cast finishes. Keep the
-    // node selected and queued until StoreLootAction receives the successful
-    // loot response; otherwise the first ordinary skill failure permanently
-    // removes the node and a later "u go" has nothing left to retry.
-    bool const pendingGatheringResponse = lootObject.guid.IsGameObject() &&
-        (lootObject.skillId == SKILL_MINING || lootObject.skillId == SKILL_HERBALISM);
-    if (result && !pendingGatheringResponse)
+    if (result)
     {
-        AI_VALUE(LootObjectStack*, "available loot")->Remove(lootObject.guid);
+        LootObjectStack* lootStack = AI_VALUE(LootObjectStack*, "available loot");
+        bool const gatheringGameObject = lootObject.guid.IsGameObject() &&
+            (lootObject.skillId == SKILL_MINING || lootObject.skillId == SKILL_HERBALISM);
+
+        // SpellStart only confirms that the asynchronous gathering cast was
+        // accepted. Clear the current target so the normal loot trigger cannot
+        // start the same cast again on the next AI update. A successful cast
+        // still delivers SMSG_LOOT_RESPONSE to StoreLootAction; a failed cast
+        // becomes discoverable again after the bounded retry delay.
+        if (gatheringGameObject)
+            lootStack->Ignore(lootObject.guid, sPlayerbotAIConfig.lootTargetRetryDelay);
+        else
+            lootStack->Remove(lootObject.guid);
+
         context->GetValue<LootObject>("loot target")->Set(LootObject());
     }
     return result;
@@ -297,7 +303,10 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
         return ai->DoSpecificAction("use", Event("do loot", chat->formatQItem(lootObject.reqItem) + " " + chat->formatGameobject(go)));
     }
 
-    bool opened = ai->CastSpell(spellId, bot);
+    // Opening spells operate on the selected game object. Passing the bot as
+    // a unit target can play the interaction animation while EffectOpenLock
+    // receives no barrel/chest and therefore sends no loot response.
+    bool opened = ai->CastSpell(spellId, go);
     if (debugLoot)
         sLog.outLoot("bot=%s event=gameobject-cast guid=%lu spell=%u result=%d",
             bot->GetName(), lootObject.guid.GetRawValue(), spellId, opened ? 1 : 0);

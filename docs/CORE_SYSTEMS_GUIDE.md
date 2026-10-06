@@ -124,12 +124,19 @@ allows the gathering animation to play while `EffectOpenLock` receives no node
 and produces no loot response. Creature gathering (skinning and creature
 mining/herbalism) remains on the separate unit-target path.
 
-Starting a gathering cast is not proof that the node opened. Orange-skill
-mining and herbalism attempts can fail at cast completion and must be retried.
-Keep an ordinary gathering game object in `loot target` and `available loot`
-until `StoreLootAction` receives the successful loot response; only that action
-removes the node. Removing it when `SpellStart` succeeds makes the animation's
-first normal skill failure permanent for that bot.
+Starting a gathering cast is not proof that the node opened. Mining and
+herbalism attempts must use a bounded retry lifecycle: once `SpellStart`
+accepts the asynchronous cast, clear the current `loot target` and suppress the
+node from rediscovery for `LootTargetRetryDelay`. A successful cast still
+delivers its loot response to `StoreLootAction`; a failed cast becomes eligible
+again after the delay. Leaving the node selected makes the normal loot trigger
+start it again every AI update, producing an apparently endless gathering
+animation.
+
+The same explicit game-object target contract applies to ordinary locked
+containers such as food or drink barrels. The generic opening path must pass
+the selected game object to `PlayerbotAI::CastSpell`; targeting the bot can play
+the interaction animation without giving `EffectOpenLock` an object to loot.
 
 `wait for attack` uses its dedicated `WaitForAttackDistance` (three yards by
 default), does not inherit spell, hostile-attack or flee distance, and only
