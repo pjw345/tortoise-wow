@@ -29,6 +29,16 @@ foreach(forbidden
     endif()
 endforeach()
 
+foreach(required
+    "bool const pendingGatheringResponse = lootObject.guid.IsGameObject()"
+    "lootObject.skillId == SKILL_MINING || lootObject.skillId == SKILL_HERBALISM"
+    "if (result && !pendingGatheringResponse)")
+    string(FIND "${lootAction}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Gathering node must remain pending until its loot response: ${required}")
+    endif()
+endforeach()
+
 # In this core setGOTarget stores only the object pointer/GUID. Directly
 # constructed Playerbot spells must also add the target-mask bit or the cast
 # animation can complete without EffectOpenLock receiving the node.
@@ -49,4 +59,4 @@ foreach(signature
     endif()
 endforeach()
 
-message(STATUS "PASS: Playerbot gathering spells explicitly target and mask mining and herbalism nodes")
+message(STATUS "PASS: Playerbot gathering spells target, mask and retain mining/herbalism nodes until loot response")
