@@ -326,15 +326,6 @@ void BotActionLog::LogCastResult(PlayerbotAI* ai, uint32 spellId, uint8 result, 
           spellName, spellId, (unsigned)result, phase ? phase : "?");
 }
 
-void BotActionLog::LogCastFailure(PlayerbotAI* ai, uint32 spellId, uint8 result, const char* phase)
-{
-    SpellEntry const* info = sSpellMgr.GetSpellEntry(spellId);
-    const char* spellName = info ? info->SpellName[0].c_str() : "?";
-    Write(ai, "CAST_FAIL",
-          "spell=%s(%u) result=%u phase=%s",
-          spellName, spellId, (unsigned)result, phase ? phase : "?");
-}
-
 void BotActionLog::LogAuraApply(PlayerbotAI* ai, uint32 spellId, int32 durationMs, ObjectGuid casterGuid, bool force)
 {
     // Filter heuristic: skip very-short transient auras unless force=true.
@@ -424,14 +415,6 @@ void BotActionLog_LogCastResult(WorldObject* caster, uint32 spellId, uint8 resul
     PlayerbotAI* ai = GetBotAI(static_cast<Player*>(caster));
     if (!ai) return;
     BotActionLog::LogCastResult(ai, spellId, result, phase);
-}
-
-void BotActionLog_LogCastFailure(WorldObject* caster, uint32 spellId, uint8 result, const char* phase)
-{
-    if (!caster || !caster->IsPlayer()) return;
-    PlayerbotAI* ai = GetBotAI(static_cast<Player*>(caster));
-    if (!ai) return;
-    BotActionLog::LogCastFailure(ai, spellId, result, phase);
 }
 
 void BotActionLog_LogDamage(Unit* attacker, Unit* victim, uint32 damage, uint32 spellId, const char* damageType)

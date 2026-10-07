@@ -12,11 +12,17 @@ math(EXPR doLootLength "${doLootEnd} - ${doLootStart}")
 string(SUBSTRING "${lootAction}" ${doLootStart} ${doLootLength} doLoot)
 
 foreach(required
-    "return go && ai->HasSkill(SKILL_MINING) ? ai->CastSpell(MINING, go) : false;"
-    "return go && ai->HasSkill(SKILL_HERBALISM) ? ai->CastSpell(HERB_GATHERING, go) : false;")
+    "ai->CastSpell(MINING, go, nullptr, true, &spellDuration);"
+    "ai->CastSpell(HERB_GATHERING, go, nullptr, true, &spellDuration);"
+    "ai->CastSpell(spellId, go, nullptr, true, &spellDuration);"
+    "ai->CastSpell(ENGINEERING, creature, nullptr, true, &spellDuration);"
+    "ai->CastSpell(32605, creature, nullptr, true, &spellDuration);"
+    "ai->CastSpell(32606, creature, nullptr, true, &spellDuration);"
+    "ai->CastSpell(SKINNING, creature, nullptr, true, &spellDuration);"
+    "SetDuration(spellDuration);")
     string(FIND "${doLoot}" "${required}" found)
     if(found EQUAL -1)
-        message(FATAL_ERROR "Gathering spell must explicitly target its game object: ${required}")
+        message(FATAL_ERROR "Gathering/opening casts must preserve their explicit target and duration: ${required}")
     endif()
 endforeach()
 
@@ -80,19 +86,6 @@ foreach(signature
     string(FIND "${functionBody}" "m_targetMask |= TARGET_FLAG_GAMEOBJECT;" targetMaskSet)
     if(targetSet EQUAL -1 OR targetMaskSet EQUAL -1 OR targetMaskSet LESS targetSet)
         message(FATAL_ERROR "Playerbot game-object spell must set TARGET_FLAG_GAMEOBJECT after setGOTarget: ${signature}")
-    endif()
-endforeach()
-
-# A cast accepted asynchronously can still be rejected by the core's strict
-# completion check. Preserve the native result so gathering failures can be
-# distinguished without changing spell behaviour.
-file(READ "${SOURCE_ROOT}/src/game/Spells/Spell.cpp" spellSource)
-foreach(required
-    "BotActionLog_LogCastFailure(m_caster, m_spellInfo->Id, uint8(castResult), \"completion-power\");"
-    "BotActionLog_LogCastFailure(m_caster, m_spellInfo->Id, uint8(castResult), \"completion-check\");")
-    string(FIND "${spellSource}" "${required}" found)
-    if(found EQUAL -1)
-        message(FATAL_ERROR "Native cast completion result diagnostic is missing: ${required}")
     endif()
 endforeach()
 

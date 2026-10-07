@@ -136,6 +136,14 @@ to rediscover them. Leaving the node selected makes the normal loot trigger
 start it again every AI update, producing an apparently endless gathering
 animation.
 
+`Engine::ListenAndExecute` applies the completed action's duration after
+`Execute` returns. `OpenLootAction` must therefore copy the asynchronous
+spell's duration into the action for game-object opening and creature
+gathering casts. Relying only on `PlayerbotAI::WaitForSpellCast` allows the
+default action delay to replace that wait; the next ordinary follow update
+then interrupts mining, herbalism, skinning or a cast-opened container before
+the native spell effect runs.
+
 The same explicit game-object target contract applies to ordinary locked
 containers such as food or drink barrels. The generic opening path must pass
 the selected game object to `PlayerbotAI::CastSpell`; targeting the bot can play

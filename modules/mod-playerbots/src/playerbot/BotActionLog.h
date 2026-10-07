@@ -52,11 +52,6 @@ public:
     // pipeline the result fired.
     static void LogCastResult(PlayerbotAI* ai, uint32 spellId, uint8 result, const char* phase);
 
-    // Log the native SpellCastResult that rejected a cast. Unlike
-    // LogCastResult, this always represents failure: zero is itself the
-    // valid SPELL_FAILED_AFFECTING_COMBAT value in the vanilla enum.
-    static void LogCastFailure(PlayerbotAI* ai, uint32 spellId, uint8 result, const char* phase);
-
     // Convenience: log an aura apply/remove. We skip very-short auras
     // (< 3s) and movement-class auras to keep the log readable; pass
     // `force=true` to always log.
