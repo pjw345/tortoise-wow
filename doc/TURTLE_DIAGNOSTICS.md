@@ -18,6 +18,12 @@ bot's inventory count. `AiPlayerbot.LootLogFile` selects the filename and
 kept as `.1` on rotation. Normal looting does not add records unless that bot
 has `debug loot` enabled.
 
+`AiPlayerbot.EnableActionLog` also records the native failure value from the
+spell engine's completion power and strict cast checks. These entries use
+`phase=completion-power` or `phase=completion-check`; the existing
+`phase=finish` entry only reports the final success/failure state. This is
+disabled with the action log and is intended for short, per-bot cast diagnosis.
+
 Current contract review: see `docs/CORE_COMPATIBILITY_AUDIT_2026-09-05.md` and
 `docs/CORE_SYSTEMS_GUIDE.md` at baseline `b2d5a854`. Historical port coverage below
 does not certify runtime behavior or exact native equivalence. In particular,

@@ -3841,6 +3841,8 @@ void Spell::cast(bool skipCheck)
         castResult = CheckPower();
         if (castResult != SPELL_CAST_OK)
         {
+            extern void BotActionLog_LogCastFailure(WorldObject* caster, uint32 spellId, uint8 result, const char* phase);
+            BotActionLog_LogCastFailure(m_caster, m_spellInfo->Id, uint8(castResult), "completion-power");
             SendInterrupted();
             SendCastResult(castResult);
             //restore spell mods
@@ -3856,6 +3858,8 @@ void Spell::cast(bool skipCheck)
         castResult = CheckCast(false);
         if (castResult != SPELL_CAST_OK)
         {
+            extern void BotActionLog_LogCastFailure(WorldObject* caster, uint32 spellId, uint8 result, const char* phase);
+            BotActionLog_LogCastFailure(m_caster, m_spellInfo->Id, uint8(castResult), "completion-check");
             SendInterrupted();
             SendCastResult(castResult);
             finish(false);

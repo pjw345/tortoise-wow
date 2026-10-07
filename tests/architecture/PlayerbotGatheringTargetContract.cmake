@@ -83,4 +83,17 @@ foreach(signature
     endif()
 endforeach()
 
+# A cast accepted asynchronously can still be rejected by the core's strict
+# completion check. Preserve the native result so gathering failures can be
+# distinguished without changing spell behaviour.
+file(READ "${SOURCE_ROOT}/src/game/Spells/Spell.cpp" spellSource)
+foreach(required
+    "BotActionLog_LogCastFailure(m_caster, m_spellInfo->Id, uint8(castResult), \"completion-power\");"
+    "BotActionLog_LogCastFailure(m_caster, m_spellInfo->Id, uint8(castResult), \"completion-check\");")
+    string(FIND "${spellSource}" "${required}" found)
+    if(found EQUAL -1)
+        message(FATAL_ERROR "Native cast completion result diagnostic is missing: ${required}")
+    endif()
+endforeach()
+
 message(STATUS "PASS: Playerbot game-object loot uses explicit targets and bounded gathering retries")
