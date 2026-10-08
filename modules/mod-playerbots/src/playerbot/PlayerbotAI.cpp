@@ -4797,6 +4797,12 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, GameObject* goTarget, uint8 effec
     Spell* spell = new Spell(bot, spellInfo, false);
 
     spell->m_targets.setGOTarget(goTarget);
+    // This core's SpellCastTargets::setGOTarget records the pointer/GUID but
+    // deliberately does not set the wire target mask.  Playerbot constructs
+    // spells directly, so supply the same game-object bit a real client cast
+    // would send; without it gathering animates but EffectOpenLock never sees
+    // the selected mining/herbalism node as the spell target.
+    spell->m_targets.m_targetMask |= TARGET_FLAG_GAMEOBJECT;
     spell->SetCastItem(aiObjectContext->GetValue<Item*>("item for spell", spellid)->Get());
     spell->m_targets.setItemTarget(spell->GetCastItem());
 
@@ -5295,6 +5301,9 @@ bool PlayerbotAI::CastSpell(uint32 spellId, GameObject* goTarget, Item* itemTarg
     }
 
     targets.setGOTarget(goTarget);
+    // setGOTarget does not update m_targetMask in this core. Preserve any
+    // source/destination flags and add the explicit game-object target bit.
+    targets.m_targetMask |= TARGET_FLAG_GAMEOBJECT;
     spell->SetCastItem(itemTarget ? itemTarget : aiObjectContext->GetValue<Item*>("item for spell", spellId)->Get());
     targets.setItemTarget(spell->GetCastItem());
 

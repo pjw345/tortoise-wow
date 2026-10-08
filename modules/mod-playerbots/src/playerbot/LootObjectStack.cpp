@@ -499,6 +499,21 @@ void LootObjectStack::Remove(ObjectGuid guid)
     LootTargetList::iterator i = availableLoot.find(guid);
     if (i != availableLoot.end())
         availableLoot.erase(i);
+
+    deferredLoot.erase(guid);
+}
+
+void LootObjectStack::Defer(ObjectGuid guid, uint32 seconds)
+{
+    // Keep the target queued while making it temporarily unavailable. This is
+    // required for asynchronous gathering casts: a normal orange-skill
+    // failure produces no loot response, but a manually queued `u go` target
+    // still has to become selectable again without relying on rediscovery.
+    LootTargetList::iterator existing = availableLoot.find(guid);
+    if (existing != availableLoot.end())
+        availableLoot.erase(existing);
+    availableLoot.insert(guid);
+    deferredLoot[guid] = time(0) + std::max<uint32>(1, seconds);
 }
 
 void LootObjectStack::Ignore(ObjectGuid guid, uint32 seconds)
@@ -519,9 +534,22 @@ void LootObjectStack::PruneIgnored()
     }
 }
 
+void LootObjectStack::PruneDeferred()
+{
+    time_t now = time(0);
+    for (std::map<ObjectGuid, time_t>::iterator i = deferredLoot.begin(); i != deferredLoot.end();)
+    {
+        if (i->second <= now)
+            deferredLoot.erase(i++);
+        else
+            ++i;
+    }
+}
+
 void LootObjectStack::Clear()
 {
     availableLoot.clear();
+    deferredLoot.clear();
     ignoredLoot.clear();
 }
 
@@ -539,6 +567,7 @@ LootObject LootObjectStack::GetLoot(float maxDistance)
 
 std::vector<LootObject> LootObjectStack::OrderByDistance(float maxDistance)
 {
+    PruneDeferred();
     size_t beforeShrink = availableLoot.size();
     availableLoot.shrink(time(0) - 30);
     if (availableLoot.size() < beforeShrink &&
@@ -555,6 +584,9 @@ std::vector<LootObject> LootObjectStack::OrderByDistance(float maxDistance)
     for (LootTargetList::iterator i = safeCopy.begin(); i != safeCopy.end(); i++)
     {
         ObjectGuid guid = i->guid;
+        if (deferredLoot.find(guid) != deferredLoot.end())
+            continue;
+
         LootObject lootObject(bot, guid);
         bool suppressRediscovery = false;
         if (!lootObject.IsLootPossible(bot, &suppressRediscovery))

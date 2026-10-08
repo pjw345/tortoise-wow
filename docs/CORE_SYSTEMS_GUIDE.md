@@ -117,8 +117,37 @@ Ordinary mining and herbalism nodes are game-object spell targets. Their
 gathering actions must call the `PlayerbotAI::CastSpell` game-object overload
 with the selected node explicitly. Passing the bot as a unit target relies on
 an effect-slot heuristic to recover `loot target`; a cast can then report
-success without ever opening the node. Creature gathering (skinning and
-creature mining/herbalism) remains on the separate unit-target path.
+success without ever opening the node. This core's `setGOTarget` only records
+the object pointer and GUID, so both the Playerbot check and cast paths must
+also add `TARGET_FLAG_GAMEOBJECT` to the spell target mask. Omitting that bit
+allows the gathering animation to play while `EffectOpenLock` receives no node
+and produces no loot response. Creature gathering (skinning and creature
+mining/herbalism) remains on the separate unit-target path.
+
+Starting a gathering cast is not proof that the node opened. Mining and
+herbalism attempts must use a bounded retry lifecycle: once `SpellStart`
+accepts the asynchronous cast, clear the current `loot target`, keep the node
+in `available loot`, and defer its selection for `LootTargetRetryDelay`. A
+successful cast still delivers its loot response to `StoreLootAction`, which
+removes the node; a normal orange-skill failure produces no response and the
+same queued node becomes eligible again after the delay. This is important for
+manually queued `u go` targets, which cannot rely on a periodic gathering scan
+to rediscover them. Leaving the node selected makes the normal loot trigger
+start it again every AI update, producing an apparently endless gathering
+animation.
+
+`Engine::ListenAndExecute` applies the completed action's duration after
+`Execute` returns. `OpenLootAction` must therefore copy the asynchronous
+spell's duration into the action for game-object opening and creature
+gathering casts. Relying only on `PlayerbotAI::WaitForSpellCast` allows the
+default action delay to replace that wait; the next ordinary follow update
+then interrupts mining, herbalism, skinning or a cast-opened container before
+the native spell effect runs.
+
+The same explicit game-object target contract applies to ordinary locked
+containers such as food or drink barrels. The generic opening path must pass
+the selected game object to `PlayerbotAI::CastSpell`; targeting the bot can play
+the interaction animation without giving `EffectOpenLock` an object to loot.
 
 `wait for attack` uses its dedicated `WaitForAttackDistance` (three yards by
 default), does not inherit spell, hostile-attack or flee distance, and only

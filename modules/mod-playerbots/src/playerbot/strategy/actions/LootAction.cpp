@@ -94,7 +94,21 @@ bool OpenLootAction::Execute(Event& event)
     bool result = DoLoot(lootObject);
     if (result)
     {
-        AI_VALUE(LootObjectStack*, "available loot")->Remove(lootObject.guid);
+        LootObjectStack* lootStack = AI_VALUE(LootObjectStack*, "available loot");
+        bool const gatheringGameObject = lootObject.guid.IsGameObject() &&
+            (lootObject.skillId == SKILL_MINING || lootObject.skillId == SKILL_HERBALISM);
+
+        // SpellStart only confirms that the asynchronous gathering cast was
+        // accepted. Clear the current target so the normal loot trigger cannot
+        // start the same cast again on the next AI update. Keep the node queued
+        // but temporarily unavailable: a successful cast still delivers
+        // SMSG_LOOT_RESPONSE to StoreLootAction, while a normal orange-skill
+        // failure becomes selectable again without requiring rediscovery.
+        if (gatheringGameObject)
+            lootStack->Defer(lootObject.guid, sPlayerbotAIConfig.lootTargetRetryDelay);
+        else
+            lootStack->Remove(lootObject.guid);
+
         context->GetValue<LootObject>("loot target")->Set(LootObject());
     }
     return result;
@@ -184,6 +198,7 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
             sLog.outLoot("bot=%s event=gather-attempt guid=%lu skill=%u required=%u",
                 bot->GetName(), lootObject.guid.GetRawValue(), skill, lootObject.reqSkillValue);
         bool opened = false;
+        uint32 spellDuration = 0;
         if (!CanOpenLock(skill, lootObject.reqSkillValue))
         {
             if (debugLoot)
@@ -193,18 +208,29 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
         else switch (skill)
         {
         case SKILL_ENGINEERING:
-            opened = ai->HasSkill(SKILL_ENGINEERING) && ai->CastSpell(ENGINEERING, creature);
+            opened = ai->HasSkill(SKILL_ENGINEERING) &&
+                ai->CastSpell(ENGINEERING, creature, nullptr, true, &spellDuration);
             break;
         case SKILL_HERBALISM:
-            opened = ai->HasSkill(SKILL_HERBALISM) && ai->CastSpell(32605, creature);
+            opened = ai->HasSkill(SKILL_HERBALISM) &&
+                ai->CastSpell(32605, creature, nullptr, true, &spellDuration);
             break;
         case SKILL_MINING:
-            opened = ai->HasSkill(SKILL_MINING) && ai->CastSpell(32606, creature);
+            opened = ai->HasSkill(SKILL_MINING) &&
+                ai->CastSpell(32606, creature, nullptr, true, &spellDuration);
             break;
         default:
-            opened = ai->HasSkill(SKILL_SKINNING) && ai->CastSpell(SKINNING, creature);
+            opened = ai->HasSkill(SKILL_SKINNING) &&
+                ai->CastSpell(SKINNING, creature, nullptr, true, &spellDuration);
             break;
         }
+
+        // Engine::ListenAndExecute applies the action duration after Execute
+        // returns. Preserve the asynchronous profession cast's duration here;
+        // otherwise the default reaction delay replaces it and a routine
+        // follow update interrupts the cast before EffectOpenLock runs.
+        if (opened)
+            SetDuration(spellDuration);
 
         if (!opened)
         {
@@ -241,7 +267,14 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
             uint32(go->getLootState()));
 
     if (lootObject.skillId == SKILL_MINING)
-        return go && ai->HasSkill(SKILL_MINING) ? ai->CastSpell(MINING, go) : false;
+    {
+        uint32 spellDuration = 0;
+        bool opened = go && ai->HasSkill(SKILL_MINING) &&
+            ai->CastSpell(MINING, go, nullptr, true, &spellDuration);
+        if (opened)
+            SetDuration(spellDuration);
+        return opened;
+    }
 
     if (lootObject.skillId == SKILL_HERBALISM)
     {
@@ -258,7 +291,12 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
 
         if (!isForQuest)
         {
-            return go && ai->HasSkill(SKILL_HERBALISM) ? ai->CastSpell(HERB_GATHERING, go) : false;
+            uint32 spellDuration = 0;
+            bool opened = go && ai->HasSkill(SKILL_HERBALISM) &&
+                ai->CastSpell(HERB_GATHERING, go, nullptr, true, &spellDuration);
+            if (opened)
+                SetDuration(spellDuration);
+            return opened;
         }
     }
 
@@ -290,7 +328,13 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
         return ai->DoSpecificAction("use", Event("do loot", chat->formatQItem(lootObject.reqItem) + " " + chat->formatGameobject(go)));
     }
 
-    bool opened = ai->CastSpell(spellId, bot);
+    // Opening spells operate on the selected game object. Passing the bot as
+    // a unit target can play the interaction animation while EffectOpenLock
+    // receives no barrel/chest and therefore sends no loot response.
+    uint32 spellDuration = 0;
+    bool opened = ai->CastSpell(spellId, go, nullptr, true, &spellDuration);
+    if (opened)
+        SetDuration(spellDuration);
     if (debugLoot)
         sLog.outLoot("bot=%s event=gameobject-cast guid=%lu spell=%u result=%d",
             bot->GetName(), lootObject.guid.GetRawValue(), spellId, opened ? 1 : 0);
