@@ -21,6 +21,7 @@
  */
 
 #include "Common.h"
+#include "BotMovementDiagnostics.h"
 #include "Database/DatabaseEnv.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
@@ -3877,6 +3878,8 @@ void Aura::HandleAuraModIncreaseSpeed(bool apply, bool Real)
     if (!Real)
         return;
 
+    BotActionLog_LogSpeedAura(GetTarget(), GetId(), m_modifier.m_auraname, m_modifier.m_amount, apply, __func__);
+
     if (apply && !GetHolder()->IsAddedBySpell())
     {
         if (Unit* caster = GetCaster())
@@ -3884,14 +3887,16 @@ void Aura::HandleAuraModIncreaseSpeed(bool apply, bool Real)
                 modOwner->ApplySpellMod(GetSpellProto()->Id, SPELLMOD_SPEED, m_modifier.m_amount);
     }
 
-    GetTarget()->UpdateSpeed(MOVE_RUN, false, GetTarget()->GetSpeedRatePersistance(MOVE_RUN));
+    GetTarget()->UpdateSpeed(MOVE_RUN, false, GetTarget()->GetSpeedRatePersistance(MOVE_RUN), __func__);
 }
 
-void Aura::HandleAuraModIncreaseMountedSpeed(bool /*apply*/, bool Real)
+void Aura::HandleAuraModIncreaseMountedSpeed(bool apply, bool Real)
 {
     // all applied/removed only at real aura add/remove
     if (!Real)
         return;
+
+    BotActionLog_LogSpeedAura(GetTarget(), GetId(), m_modifier.m_auraname, m_modifier.m_amount, apply, __func__);
 
     // Turtle WoW specific feature: all mounts will have dynamic speed:
     if (Player* player = GetTarget()->ToPlayer())
@@ -3929,21 +3934,23 @@ void Aura::HandleAuraModIncreaseMountedSpeed(bool /*apply*/, bool Real)
         }
     }
 
-    GetTarget()->UpdateSpeed(MOVE_RUN, false, GetTarget()->GetSpeedRatePersistance(MOVE_RUN));
+    GetTarget()->UpdateSpeed(MOVE_RUN, false, GetTarget()->GetSpeedRatePersistance(MOVE_RUN), __func__);
 }
 
-void Aura::HandleAuraModIncreaseSwimSpeed(bool /*apply*/, bool Real)
+void Aura::HandleAuraModIncreaseSwimSpeed(bool apply, bool Real)
 {
     // all applied/removed only at real aura add/remove
     if (!Real)
         return;
+
+    BotActionLog_LogSpeedAura(GetTarget(), GetId(), m_modifier.m_auraname, m_modifier.m_amount, apply, __func__);
 
     if (Player* player = GetTarget()->ToPlayer(); GetId() == 30174 && player) // turtle mount swimming speed. Half of normal speed
     {
         m_modifier.m_amount = static_cast<int32>(ceil(player->GetLevel() / 4));
     }
 
-    GetTarget()->UpdateSpeed(MOVE_SWIM, false, GetTarget()->GetSpeedRatePersistance(MOVE_SWIM));
+    GetTarget()->UpdateSpeed(MOVE_SWIM, false, GetTarget()->GetSpeedRatePersistance(MOVE_SWIM), __func__);
 }
 
 void Aura::HandleAuraModDecreaseSpeed(bool apply, bool Real)
@@ -3951,6 +3958,8 @@ void Aura::HandleAuraModDecreaseSpeed(bool apply, bool Real)
     // all applied/removed only at real aura add/remove
     if (!Real)
         return;
+
+    BotActionLog_LogSpeedAura(GetTarget(), GetId(), m_modifier.m_auraname, m_modifier.m_amount, apply, __func__);
 
     if (apply && !GetHolder()->IsAddedBySpell())
     {
@@ -3961,20 +3970,22 @@ void Aura::HandleAuraModDecreaseSpeed(bool apply, bool Real)
 
     Unit* target = GetTarget();
 
-    target->UpdateSpeed(MOVE_RUN, false, target->GetSpeedRatePersistance(MOVE_RUN));
-    target->UpdateSpeed(MOVE_SWIM, false, target->GetSpeedRatePersistance(MOVE_SWIM));
+    target->UpdateSpeed(MOVE_RUN, false, target->GetSpeedRatePersistance(MOVE_RUN), __func__);
+    target->UpdateSpeed(MOVE_SWIM, false, target->GetSpeedRatePersistance(MOVE_SWIM), __func__);
 }
 
-void Aura::HandleAuraModUseNormalSpeed(bool /*apply*/, bool Real)
+void Aura::HandleAuraModUseNormalSpeed(bool apply, bool Real)
 {
     // all applied/removed only at real aura add/remove
     if (!Real)
         return;
 
+    BotActionLog_LogSpeedAura(GetTarget(), GetId(), m_modifier.m_auraname, m_modifier.m_amount, apply, __func__);
+
     Unit *target = GetTarget();
 
-    target->UpdateSpeed(MOVE_RUN, false, target->GetSpeedRatePersistance(MOVE_RUN));
-    target->UpdateSpeed(MOVE_SWIM, false, target->GetSpeedRatePersistance(MOVE_SWIM));
+    target->UpdateSpeed(MOVE_RUN, false, target->GetSpeedRatePersistance(MOVE_RUN), __func__);
+    target->UpdateSpeed(MOVE_SWIM, false, target->GetSpeedRatePersistance(MOVE_SWIM), __func__);
 }
 
 /*********************************************************/

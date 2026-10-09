@@ -1670,8 +1670,8 @@ class Unit : public WorldObject
         void CheckPendingMovementChanges();
         
         void SetSpeedRate(UnitMoveType mtype, float rate);
-        void SetSpeedRateReal(UnitMoveType mtype, float rate);
-        void UpdateSpeed(UnitMoveType mtype, bool forced, float ratio = 1.0f);
+        void SetSpeedRateReal(UnitMoveType mtype, float rate, const char* reason = "direct");
+        void UpdateSpeed(UnitMoveType mtype, bool forced, float ratio = 1.0f, const char* reason = "unspecified");
         float GetSpeed(UnitMoveType mtype) const;
         // bot uses GetSpeedInMotion (current speed); Penqle uses GetSpeed(MOVE_RUN).
         float GetSpeedInMotion() const { return GetSpeed(MOVE_RUN); }

@@ -19,6 +19,7 @@
  */
 
 #include "Unit.h"
+#include "BotMovementDiagnostics.h"
 #include "ArchitectureDiagnostics.h"
 #include "Log.h"
 #include "Opcodes.h"
@@ -5337,7 +5338,7 @@ bool Unit::AttackStop(bool targetSwitch /*=false*/)
             if (me->HasSearchedAssistance())
             {
                 me->SetNoSearchAssistance(false);
-                UpdateSpeed(MOVE_RUN, false);
+                UpdateSpeed(MOVE_RUN, false, 1.0f, __func__);
             }
         }
     }
@@ -5428,7 +5429,7 @@ void Unit::ModifyAuraState(AuraState flag, bool apply)
                     case AURA_STATE_HEALTHLESS_15_PERCENT:
                     case AURA_STATE_HEALTHLESS_10_PERCENT:
                     case AURA_STATE_HEALTHLESS_5_PERCENT:
-                        UpdateSpeed(MOVE_RUN, false);
+                        UpdateSpeed(MOVE_RUN, false, 1.0f, __func__);
                         break;
                 }
             }
@@ -5463,7 +5464,7 @@ void Unit::ModifyAuraState(AuraState flag, bool apply)
                     case AURA_STATE_HEALTHLESS_15_PERCENT:
                     case AURA_STATE_HEALTHLESS_10_PERCENT:
                     case AURA_STATE_HEALTHLESS_5_PERCENT:
-                        UpdateSpeed(MOVE_RUN, false);
+                        UpdateSpeed(MOVE_RUN, false, 1.0f, __func__);
                         break;
                 }
             }
@@ -7542,32 +7543,32 @@ void Unit::ResolvePendingMovementChange(const PlayerMovementPendingChange& chang
                 MovementPacketSender::SendMovementFlagChangeToAll(this, MOVEFLAG_SAFE_FALL, change.apply);
             break;
         case SPEED_CHANGE_WALK:
-            SetSpeedRateReal(MOVE_WALK, change.newValue / baseMoveSpeed[MOVE_WALK]);
+            SetSpeedRateReal(MOVE_WALK, change.newValue / baseMoveSpeed[MOVE_WALK], "ResolvePendingMovementChange");
             if (sendToClient)
                 MovementPacketSender::SendSpeedChangeToAll(this, MOVE_WALK, change.newValue / baseMoveSpeed[MOVE_WALK]);
             break;
         case SPEED_CHANGE_RUN:
-            SetSpeedRateReal(MOVE_RUN, change.newValue / baseMoveSpeed[MOVE_RUN]);
+            SetSpeedRateReal(MOVE_RUN, change.newValue / baseMoveSpeed[MOVE_RUN], "ResolvePendingMovementChange");
             if (sendToClient)
                 MovementPacketSender::SendSpeedChangeToAll(this, MOVE_RUN, change.newValue / baseMoveSpeed[MOVE_RUN]);
             break;
         case SPEED_CHANGE_RUN_BACK:
-            SetSpeedRateReal(MOVE_RUN_BACK, change.newValue / baseMoveSpeed[MOVE_RUN_BACK]);
+            SetSpeedRateReal(MOVE_RUN_BACK, change.newValue / baseMoveSpeed[MOVE_RUN_BACK], "ResolvePendingMovementChange");
             if (sendToClient)
                 MovementPacketSender::SendSpeedChangeToAll(this, MOVE_RUN_BACK, change.newValue / baseMoveSpeed[MOVE_RUN_BACK]);
             break;
         case SPEED_CHANGE_SWIM:
-            SetSpeedRateReal(MOVE_SWIM, change.newValue / baseMoveSpeed[MOVE_SWIM]);
+            SetSpeedRateReal(MOVE_SWIM, change.newValue / baseMoveSpeed[MOVE_SWIM], "ResolvePendingMovementChange");
             if (sendToClient)
                 MovementPacketSender::SendSpeedChangeToAll(this, MOVE_SWIM, change.newValue / baseMoveSpeed[MOVE_SWIM]);
             break;
         case SPEED_CHANGE_SWIM_BACK:
-            SetSpeedRateReal(MOVE_SWIM_BACK, change.newValue / baseMoveSpeed[MOVE_SWIM_BACK]);
+            SetSpeedRateReal(MOVE_SWIM_BACK, change.newValue / baseMoveSpeed[MOVE_SWIM_BACK], "ResolvePendingMovementChange");
             if (sendToClient)
                 MovementPacketSender::SendSpeedChangeToAll(this, MOVE_SWIM_BACK, change.newValue / baseMoveSpeed[MOVE_SWIM_BACK]);
             break;
         case RATE_CHANGE_TURN:
-            SetSpeedRateReal(MOVE_TURN_RATE, change.newValue / baseMoveSpeed[MOVE_TURN_RATE]);
+            SetSpeedRateReal(MOVE_TURN_RATE, change.newValue / baseMoveSpeed[MOVE_TURN_RATE], "ResolvePendingMovementChange");
             if (sendToClient)
                 MovementPacketSender::SendSpeedChangeToAll(this, MOVE_TURN_RATE, change.newValue / baseMoveSpeed[MOVE_TURN_RATE]);
             break;
@@ -7699,8 +7700,10 @@ PlayerMovementPendingChange::PlayerMovementPendingChange()
     time = WorldTimer::getMSTime();
 }
 
-void Unit::UpdateSpeed(UnitMoveType mtype, bool forced, float ratio)
+void Unit::UpdateSpeed(UnitMoveType mtype, bool forced, float ratio, const char* reason)
 {
+    float const diagnosticRate = unsigned(mtype) < MAX_MOVE_TYPE ? GetSpeedRate(mtype) : 0.0f;
+    BotActionLog_LogSpeed(this, "SPEED_RECALC", mtype, diagnosticRate, diagnosticRate, forced, ratio, reason);
     // not in combat pet have same speed as owner
     if (IsCreature() && (((Creature*)this)->IsPet() || ToCreature()->IsCharmed()) && HasUnitState(UNIT_STAT_FOLLOW) && !IsInCombat())
     {
@@ -7847,8 +7850,9 @@ void Unit::UpdateSpeed(UnitMoveType mtype, bool forced, float ratio)
         }
     }
 
+    BotActionLog_LogSpeed(this, "SPEED_RESULT", mtype, GetSpeedRate(mtype), speed * ratio, forced, ratio, reason);
     if (forced)
-        SetSpeedRateReal(mtype, speed * ratio);
+        SetSpeedRateReal(mtype, speed * ratio, reason);
     else
         SetSpeedRate(mtype, speed * ratio);
 }
@@ -7897,7 +7901,7 @@ struct SetSpeedRateHelper
     explicit SetSpeedRateHelper(UnitMoveType _mtype, bool _forced) : mtype(_mtype), forced(_forced) {}
     void operator()(Unit* unit) const
     {
-        unit->UpdateSpeed(mtype, forced);
+        unit->UpdateSpeed(mtype, forced, 1.0f, "controlled-unit propagation");
     }
     UnitMoveType mtype;
     bool forced;
@@ -7908,6 +7912,7 @@ void Unit::SetSpeedRate(UnitMoveType mtype, float rate)
     if (rate < 0)
         rate = 0.0f;
 
+    BotActionLog_LogSpeed(this, "SPEED_REQUEST", mtype, GetSpeedRate(mtype), rate, false, 1.0f, "SetSpeedRate");
     // Update speed only on change
     MovementChangeType changeType = MovementPacketSender::GetChangeTypeByMoveType(mtype);
     if (m_speed_rate[mtype] == rate && !HasPendingMovementChange(changeType))
@@ -7931,8 +7936,9 @@ void Unit::SetSpeedRate(UnitMoveType mtype, float rate)
     // initialized in the world. cf description of PR #18771
 }
 
-void Unit::SetSpeedRateReal(UnitMoveType mtype, float rate)
+void Unit::SetSpeedRateReal(UnitMoveType mtype, float rate, const char* reason)
 {
+    BotActionLog_LogSpeed(this, "SPEED_APPLIED", mtype, GetSpeedRate(mtype), rate, true, 1.0f, reason);
     m_speed_rate[mtype] = rate;
     PropagateSpeedChange();
     CallForAllControlledUnits(SetSpeedRateHelper(mtype, true), CONTROLLED_PET | CONTROLLED_GUARDIANS | CONTROLLED_CHARM | CONTROLLED_MINIPET);
@@ -8493,7 +8499,8 @@ uint32 Unit::GetCreatureType() const
 
 void Unit::SetSpeedRatePersistance(UnitMoveType mtype, float speed)
 {
-	m_speedRatePersistance[mtype] = speed;
+    BotActionLog_LogSpeed(this, "SPEED_PERSISTENCE", mtype, m_speedRatePersistance[mtype], speed, false, 1.0f, "SetSpeedRatePersistance");
+    m_speedRatePersistance[mtype] = speed;
 }
 
 float Unit::GetSpeedRatePersistance(UnitMoveType mtype)

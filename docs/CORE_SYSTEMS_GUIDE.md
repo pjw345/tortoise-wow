@@ -271,3 +271,9 @@ Knowing that a service touches `SPELL_EFFECT_LEARN_SPELL` is only the start. The
 - Existing architecture tests are under [tests/architecture](../tests/architecture). `ContentHookContract.cmake` checks source wiring by lexical/regex assertions; passing it does not establish exactly-once execution or all boss mechanics.
 - Diagnostic controls/removal belong in the existing [diagnostic inventory](../doc/TURTLE_DIAGNOSTICS.md), not scattered permanent logs. Disabled summary logging does not necessarily remove timers/atomics.
 - Record source revision and fresh evidence on every significant update. Repository documentation makes the knowledge reusable; it does not make an assistant infallible or remove the need to reopen current source.
+
+Playerbot speed diagnostics use the existing opt-in action logs; see
+[the diagnostic ledger](../doc/TURTLE_DIAGNOSTICS.md#playerbot-speed-diagnostics-2026-10-09)
+for event interpretation, overhead and removal controls. Optional reason
+arguments on native speed APIs only identify diagnostic callers; packet/ACK,
+aura and generator propagation behavior is preserved.

@@ -21,6 +21,7 @@
 #include "playerbot/PlayerbotAIConfig.h"
 #include "PlayerbotAI.h"
 #include "BotDiagnostics.h"
+#include "BotMovementDiagnostics.h"
 #include "playerbot/PlayerbotFactory.h"
 #include "PlayerbotSecurity.h"
 #include "Group/Group.h"
@@ -300,6 +301,16 @@ void PlayerbotAI::UpdateAI(uint32 elapsed, bool minimal)
 {
     std::unique_lock<std::mutex> updateLock(updateExecutionMutex, std::try_to_lock);
     if (!updateLock.owns_lock()) return;
+    if (ai::botdiag::IsActionLogEnabled())
+    {
+        uint32 const now = WorldTimer::getMSTime();
+        if (!lastSpeedDiagnosticMs || WorldTimer::getMSTimeDiff(lastSpeedDiagnosticMs, now) >= 2000)
+        {
+            lastSpeedDiagnosticMs = now;
+            BotActionLog_LogSpeed(bot, "MOVEMENT_STATE", MOVE_RUN, bot->GetSpeedRate(MOVE_RUN),
+                bot->GetSpeedRate(MOVE_RUN), false, 1.0f, "UpdateAI");
+        }
+    }
     RevalidateMasterPointer();
     // Existing opt-in, bounded trace: sample progress even while no action can
     // execute (e.g. a taxi leg). Reads occur on this bot's current AI owner.
@@ -612,9 +623,9 @@ void PlayerbotAI::UpdateAI(uint32 elapsed, bool minimal)
         }
         if (HasCheat(BotCheatMask::movespeed))
         {
-            bot->UpdateSpeed(MOVE_WALK, true, 10);
-            bot->UpdateSpeed(MOVE_RUN, true, 10);
-            bot->UpdateSpeed(MOVE_SWIM, true, 10);
+            bot->UpdateSpeed(MOVE_WALK, true, 10, __func__);
+            bot->UpdateSpeed(MOVE_RUN, true, 10, __func__);
+            bot->UpdateSpeed(MOVE_SWIM, true, 10, __func__);
         }
         if (HasCheat(BotCheatMask::breath))
         {
@@ -1053,8 +1064,8 @@ void PlayerbotAI::Unmount()
         bot->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
         bot->Unmount();
 
-        bot->UpdateSpeed(MOVE_RUN, true);
-        bot->UpdateSpeed(MOVE_RUN, false);
+        bot->UpdateSpeed(MOVE_RUN, true, 1.0f, __func__);
+        bot->UpdateSpeed(MOVE_RUN, false, 1.0f, __func__);
 
         if (bot->IsFlying())
         {

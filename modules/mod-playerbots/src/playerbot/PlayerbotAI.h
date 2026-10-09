@@ -613,6 +613,7 @@ public:
     // there's no behavior risk since it's a pure accumulator (no class
     // invariant tied to its value beyond "nonnegative").
     uint32 scboteHeartbeatAcc = 0;
+    uint32 lastSpeedDiagnosticMs = 0;
 
     // One-shot "needs level/gear sync" flag. Set by OnBotSummoned
     // when the bot logs in; cleared by TickHeartbeat after the sync runs.
