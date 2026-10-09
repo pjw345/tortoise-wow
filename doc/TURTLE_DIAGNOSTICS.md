@@ -873,3 +873,76 @@ time/position toward Ironforge. This verifies actual departures, progress and
 two completed flight legs, not merely an activation return code. It does not
 certify every route, all bot destinations or full-population crowd distribution.
 Checks were read-only against production; the bounded trace remains unchanged.
+# Playerbot speed diagnostics (2026-10-09)
+
+Temporary, read-only speed probes use the existing `AiPlayerbot.EnableActionLog`
+switch (default 0). Enable it in the bot configuration and restart through the
+normal server workflow; per-bot files are opened lazily in `logs/bots/` or
+`../logs/bots/`, using the existing action-log path selection. No production
+configuration or server process was changed for this addition.
+
+Events: `SPEED_RECALC` records inputs, `SPEED_RESULT` records the computed rate,
+`SPEED_REQUEST` records the request before the unchanged/pending check, and
+`SPEED_APPLIED` records the old and incoming server rate immediately before
+assignment. Its other speed fields still describe the pre-assignment state.
+`SPEED_PERSISTENCE` records old/new persistence multipliers. `SPEED_AURA` records
+spell ID, aura type, handler-entry amount and apply/remove direction, including
+speed normalization and Turtle mounted/swimming handlers. `MOVEMENT_STATE`
+samples at most once per two seconds of actual AI updates, including minimal
+updates; suspended or unupdated bots do not have an independent timer.
+
+Rates are multipliers of native `baseMoveSpeed`, not yards per second.
+`reason` identifies annotated callers (aura handlers, cheats, unmount, movement
+actions, core aura transitions and controlled-unit propagation). Existing
+unannotated callers use `unspecified`; direct applied changes use `direct`.
+`ResolvePendingMovementChange` distinguishes native ACK/resolution application
+from forced recalculation. `forced` is the recalculation's flag for RECALC/RESULT;
+for APPLIED it denotes direct server assignment, including ACK resolution.
+`pending` is the pending change for that move type. Flags/state are hexadecimal
+native masks; `generators` lists native MotionMaster types bottom-to-top (last
+is active), safely handling an empty stack. Common types: idle=0, chase=5,
+point=8, flee=9, follow=14. `spline_done` distinguishes a live spline from a
+completed/interrupted one. Compare walk/run/swim rates and `MOVEFLAG_WALK_MODE`
+with strongest slow/normalization and mounted/stacking modifiers.
+
+Correlate aura removal -> recalculation result -> request -> applied rate ->
+movement snapshots in one bot file. A correct result with no subsequent applied
+rate points to the pending-change path; normal run rate with walk flags or a
+different active generator points to movement selection. Existing aura events
+and AURA_DUMP records supply additional spell identities. These are diagnostic
+clues, not proof of a root cause or a speed correction.
+
+Disabled probes return before bot lookup, file handling, generator traversal
+and aura scans. Enabled records traverse only the current unit's generators
+and aura modifiers on its existing owning execution path. They retain no unit
+or generator pointers and do not consume movement changes. Each record uses
+the existing synchronous action-log writer and flushes; enabling this for a
+large bot population can create substantial I/O and lock overhead. Capture a
+short reproduction window, then restore `AiPlayerbot.EnableActionLog=0` through
+the normal configuration workflow. Remove the bridge, its core hooks, reason
+arguments, AI sampler and focused tests together when the investigation ends.
+
+Validation: standalone MSVC Release tests in `tests/playerbot-speed-diagnostics`
+compile the real native speed/recalculation and diagnostic fragments with
+deterministic stand-ins, plus the non-bot hook stubs. They cover disabled and
+human filtering, empty stacks, aura identity/removal, cheat ratio, pending ACK
+and resend behavior, unchanged requests, mounted/full-snare calculations, file
+failure and preservation of movement state. Run with CMake/CTest normally.
+The full server configuration is blocked by missing ACE in this environment;
+the existing architecture-suite configuration separately fails to extract
+`ForkBannerCandidates.inc` from the unchanged BattleGroundTactics source.
+Source audit indexes were regenerated without database refresh; the generated
+ordering/line-number churn was excluded from this focused commit. Full linking,
+gameplay reproduction and other client variants remain unverified.
+
+Branch correction: the first diagnostic deployment, `a7c65c4`, was based on
+`playerbots-development` and omitted the later gathering fixes being tested
+on `fix/playerbot-gathering-target-mask`. The corrected diagnostic commit is
+based on that branch's `8b3026d7` tip, preserving all ten intervening commits:
+explicit game-object target masks, bounded/deferred loot retries, native cast
+completion diagnostics and gathering cast-duration waits. LootAction and
+LootObjectStack are unchanged by the diagnostic application. The existing
+gathering contract test had one stale two-argument cast expectation; it now
+checks the existing duration-returning call consistently. Both compiled speed
+tests and the gathering contract pass on the combined source. This does not
+establish live mining success; no runtime config, image or server was changed.

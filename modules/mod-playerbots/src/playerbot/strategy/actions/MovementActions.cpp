@@ -2397,17 +2397,17 @@ void MovementAction::UpdateMovementState()
     if (bot->IsInWater() || sServerFacade.IsUnderwater(bot))
     {
 		bot->m_movementInfo.AddMovementFlag(MOVEFLAG_SWIMMING);
-        bot->UpdateSpeed(MOVE_SWIM, true);
+        bot->UpdateSpeed(MOVE_SWIM, true, 1.0f, __func__);
     }
     else
     {
 		bot->m_movementInfo.RemoveMovementFlag(MOVEFLAG_SWIMMING);
-        bot->UpdateSpeed(MOVE_SWIM, true);
+        bot->UpdateSpeed(MOVE_SWIM, true, 1.0f, __func__);
     }
 
 #ifndef MANGOSBOT_ZERO
     if (bot->IsFlying())
-        bot->UpdateSpeed(MOVE_FLIGHT, true);
+        bot->UpdateSpeed(MOVE_FLIGHT, true, 1.0f, __func__);
 #endif
 }
 

@@ -120,9 +120,9 @@ void CheatAction::RemCheat(BotCheatMask cheatMask)
     switch (cheatMask)
     {
     case BotCheatMask::movespeed:
-        bot->UpdateSpeed(MOVE_WALK, true, 1);
-        bot->UpdateSpeed(MOVE_RUN, true, 1);
-        bot->UpdateSpeed(MOVE_SWIM, true, 1);
+        bot->UpdateSpeed(MOVE_WALK, true, 1, __func__);
+        bot->UpdateSpeed(MOVE_RUN, true, 1, __func__);
+        bot->UpdateSpeed(MOVE_SWIM, true, 1, __func__);
         break;
     case BotCheatMask::attackspeed:
         uint32 SPELL_MOD_MELEE_HASTE = 15181;

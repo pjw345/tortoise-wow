@@ -4,6 +4,10 @@
 
 #include "playerbot/playerbot.h"
 #include "BotActionLog.h"
+#include "BotMovementDiagnostics.h"
+#include "Movement/MovementGenerator.h"
+#include "Movement/MovementPacketSender.h"
+#include "Movement/spline/MoveSpline.h"
 #include "PlayerbotAI.h"
 #include "BotDiagnostics.h"  // for SC_LOG + IsActionLogEnabled
 #include "PlayerbotAIConfig.h"
@@ -248,6 +252,8 @@ void BotActionLog::LogState(PlayerbotAI* ai, const char* reason)
 
     // Build a compact one-liner with all the per-tick state we usually
     // care about.
+    BotActionLog_LogSpeed(bot, "MOVEMENT_STATE", MOVE_RUN, bot->GetSpeedRate(MOVE_RUN),
+        bot->GetSpeedRate(MOVE_RUN), false, 1.0f, reason);
     uint32 hp     = bot->GetMaxHealth() ? (bot->GetHealth() * 100u / bot->GetMaxHealth()) : 0u;
     uint32 maxMana = bot->GetMaxPower(bot->GetPowerType());
     uint32 manaCur = bot->GetPower(bot->GetPowerType());
@@ -369,6 +375,56 @@ namespace {
         if (!u || !u->IsPlayer()) return nullptr;
         return GetBotAI(static_cast<Player*>(u));
     }
+}
+
+void BotActionLog_LogSpeed(Unit* unit, const char* event, int moveType,
+    float oldRate, float requestedRate, bool forced, float ratio, const char* reason)
+{
+    if (!ai::botdiag::IsActionLogEnabled()) return;
+    PlayerbotAI* ai = AiFor(unit);
+    if (!ai || !BotActionLog::GetHandle(ai)) return;
+
+    // The owning map thread already owns these objects. Copy types only;
+    // do not retain generator pointers or traverse another unit's motion.
+    std::ostringstream generators;
+    for (MovementGenerator const* generator : *unit->GetMotionMaster())
+    {
+        if (generators.tellp() > 0) generators << ',';
+        generators << static_cast<unsigned>(generator->GetMovementGeneratorType());
+    }
+    const bool validType = moveType >= 0 && moveType < MAX_MOVE_TYPE;
+    const UnitMoveType type = validType ? static_cast<UnitMoveType>(moveType) : MOVE_RUN;
+    BotActionLog::Write(ai, event,
+        "reason=%s type=%d old=%.4f requested=%.4f forced=%d ratio=%.4f "
+        "persist=%.4f pending=%d run=%.4f walk=%.4f swim=%.4f "
+        "flags=0x%x state=0x%x mounted=%d death=%u "
+        "slow=%d normal=%d increase=%d mounted_increase=%d "
+        "stack=%.4f nonstack=%d mounted_stack=%.4f mounted_nonstack=%d "
+        "generators=[%s] spline_done=%d",
+        reason ? reason : "unspecified", moveType, oldRate, requestedRate, int(forced), ratio,
+        unit->GetSpeedRatePersistance(type),
+        int(validType && unit->HasPendingMovementChange(MovementPacketSender::GetChangeTypeByMoveType(type))),
+        unit->GetSpeedRate(MOVE_RUN), unit->GetSpeedRate(MOVE_WALK), unit->GetSpeedRate(MOVE_SWIM),
+        unit->GetUnitMovementFlags(), unit->GetUnitState(), int(unit->IsMounted()), unsigned(unit->GetDeathState()),
+        unit->GetMaxNegativeAuraModifier(SPELL_AURA_MOD_DECREASE_SPEED),
+        unit->GetMaxPositiveAuraModifier(SPELL_AURA_USE_NORMAL_MOVEMENT_SPEED),
+        unit->GetMaxPositiveAuraModifier(SPELL_AURA_MOD_INCREASE_SPEED),
+        unit->GetMaxPositiveAuraModifier(SPELL_AURA_MOD_INCREASE_MOUNTED_SPEED),
+        unit->GetTotalAuraMultiplier(SPELL_AURA_MOD_SPEED_ALWAYS),
+        unit->GetMaxPositiveAuraModifier(SPELL_AURA_MOD_SPEED_NOT_STACK),
+        unit->GetTotalAuraMultiplier(SPELL_AURA_MOD_MOUNTED_SPEED_ALWAYS),
+        unit->GetMaxPositiveAuraModifier(SPELL_AURA_MOD_MOUNTED_SPEED_NOT_STACK),
+        generators.str().c_str(), int(unit->movespline->Finalized()));
+}
+
+void BotActionLog_LogSpeedAura(Unit* unit, uint32 spellId, uint32 auraType,
+    int32 amount, bool apply, const char* reason)
+{
+    if (!ai::botdiag::IsActionLogEnabled()) return;
+    PlayerbotAI* ai = AiFor(unit);
+    if (!ai) return;
+    BotActionLog::Write(ai, "SPEED_AURA", "reason=%s spell=%u aura=%u amount=%d apply=%d",
+        reason, spellId, auraType, amount, int(apply));
 }
 
 void BotActionLog_LogAuraApply(Unit* target, uint32 spellId, int32 durationMs, uint64 casterGuidRaw)

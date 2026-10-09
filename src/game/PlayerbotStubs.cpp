@@ -42,3 +42,7 @@ bool ChatHandler::HandleAhBotCommand(char*)
     { SendSysMessage("AHBot not built (BUILD_PLAYERBOTS=OFF)."); return true; }
 bool ChatHandler::HandlePerfMonCommand(char*)
     { SendSysMessage("Bot performance monitor not built (BUILD_PLAYERBOTS=OFF)."); return true; }
+
+#include "BotMovementDiagnostics.h"
+void BotActionLog_LogSpeed(Unit*, const char*, int, float, float, bool, float, const char*) {}
+void BotActionLog_LogSpeedAura(Unit*, uint32, uint32, int32, bool, const char*) {}

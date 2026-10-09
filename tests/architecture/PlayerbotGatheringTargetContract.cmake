@@ -40,7 +40,7 @@ foreach(required
     "lootObject.skillId == SKILL_MINING || lootObject.skillId == SKILL_HERBALISM"
     "lootStack->Defer(lootObject.guid, sPlayerbotAIConfig.lootTargetRetryDelay)"
     "context->GetValue<LootObject>(\"loot target\")->Set(LootObject())"
-    "bool opened = ai->CastSpell(spellId, go);")
+    "bool opened = ai->CastSpell(spellId, go, nullptr, true, &spellDuration);")
     string(FIND "${lootAction}" "${required}" found)
     if(found EQUAL -1)
         message(FATAL_ERROR "Game-object loot retry/target contract is missing: ${required}")
