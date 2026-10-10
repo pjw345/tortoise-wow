@@ -557,6 +557,11 @@ void WorldSession::HandleForceSpeedChangeAckOpcodes(WorldPacket& recvData)
         return;
     }
 
+    // Matching consumes even a superseded ACK so it is not treated as bad
+    // client data. Its old speed/position/flags must not overwrite newer state.
+    if (pMover->IsMovementChangeSuperseded(MovementPacketSender::GetChangeTypeByMoveType(move_type), movementCounter))
+        return;
+
     Player* const pPlayerMover = pMover->ToPlayer();
 
     // Check if position and movement flags are fine before speed update.

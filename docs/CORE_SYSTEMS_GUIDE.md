@@ -306,3 +306,14 @@ Playerbot speed diagnostics use the existing opt-in action logs; see
 for event interpretation, overhead and removal controls. Optional reason
 arguments on native speed APIs only identify diagnostic callers; packet/ACK,
 aura and generator propagation behavior is preserved.
+
+Native speed ordering correction (2026-10-10): a direct `SetSpeedRateReal`
+assignment supersedes outstanding requests of the same movement type by
+advancing the existing per-type movement counter. Matching late ACKs are
+consumed before being rejected as superseded, preventing stale speed, position
+and flags from overwriting newer server state. Native timeout/bulk resolution
+also skips those requests. Other movement types and flag/teleport ordering are
+unchanged; this applies to players, controlled units and bots through the
+existing Unit lifecycle. No aura removal, forced normal speed or bot-only
+recovery is introduced. Focused coverage executes native setters, queue
+resolution, ACK matching and the handler's supersession guard.

@@ -946,3 +946,30 @@ gathering contract test had one stale two-argument cast expectation; it now
 checks the existing duration-returning call consistently. Both compiled speed
 tests and the gathering contract pass on the combined source. This does not
 establish live mining success; no runtime config, image or server was changed.
+
+### Stale queued speed correction — 2026-10-10
+
+Evidence from Alon on source `06f56c777e2a239a48112a2d3eb839e162e78a90`:
+Frostbolt 9672 queued run rate 0.5 at 08:49:33.629; aura removal at
+08:49:35.181 directly restored rate 1 during an active spline, with a request
+still pending. At 08:49:37.634 native pending resolution applied the old 0.5
+rate with no slow aura. Movement snapshots retained run=0.5 at 08:51:32.
+This establishes stale queued speed application; it does not establish that
+gathering changes caused the timing window.
+
+Direct server speed assignments now advance the existing native per-type
+counter when an applicable request is outstanding. Superseded requests stay
+matchable for late ACK consumption but cannot apply their old state through
+the ACK handler or native timeout/bulk resolution. Other types retain their
+requests. The fix does not depend on action logging being enabled.
+
+Validation: the compiled MSVC Release fragment tests pass, including all six
+speed types, repeated direct assignments, rejected mismatched speed ACKs,
+consumed stale ACKs, out-of-order ACKs, valid newer ACKs, independent swim/run
+requests and the native resend counter convention. Removing invalidation
+from the generated test fragment makes the captured-sequence regression fail
+with stale timeout speed application; restoring it passes. Existing diagnostic
+and non-bot stub tests plus the gathering target contract pass. Full server
+image compilation and live gameplay with this correction remain unverified.
+Source indexes were regenerated without database refresh; unrelated generated
+sorting/line-number churn was excluded.
