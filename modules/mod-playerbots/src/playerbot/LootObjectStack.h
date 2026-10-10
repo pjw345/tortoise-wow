@@ -58,6 +58,7 @@ namespace ai
     public:
         bool Add(ObjectGuid guid);
         void Remove(ObjectGuid guid);
+        void Defer(ObjectGuid guid, uint32 seconds);
         void Ignore(ObjectGuid guid, uint32 seconds);
         void Clear();
         bool CanLoot(float maxDistance);
@@ -67,10 +68,12 @@ namespace ai
         std::vector<LootObject> OrderByDistance(float maxDistance = 0);
 
     private:
+        void PruneDeferred();
         void PruneIgnored();
 
         Player* bot;
         LootTargetList availableLoot;
+        std::map<ObjectGuid, time_t> deferredLoot;
         std::map<ObjectGuid, time_t> ignoredLoot;
     };
 

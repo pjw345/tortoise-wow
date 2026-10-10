@@ -1660,6 +1660,7 @@ class Unit : public WorldObject
         void PushPendingMovementChange(PlayerMovementPendingChange newChange);
         bool HasPendingMovementChange() const { return !m_pendingMovementChanges.empty(); }
         bool HasPendingMovementChange(MovementChangeType changeType) const;
+        bool IsMovementChangeSuperseded(MovementChangeType changeType, uint32 counter);
         void ResolvePendingMovementChanges(bool sendToClient, bool includingTeleport);
         void ResolvePendingMovementChange(const PlayerMovementPendingChange& change, bool sendToClient);
         bool FindPendingMovementFlagChange(uint32 movementCounter, bool applyReceived, MovementChangeType changeTypeReceived);

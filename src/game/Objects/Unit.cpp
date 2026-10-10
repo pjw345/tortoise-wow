@@ -7503,6 +7503,11 @@ bool Unit::HasPendingMovementChange(MovementChangeType changeType) const
     }) != m_pendingMovementChanges.end();
 }
 
+bool Unit::IsMovementChangeSuperseded(MovementChangeType changeType, uint32 counter)
+{
+    return counter < GetLastCounterForMovementChangeType(changeType);
+}
+
 void Unit::ResolvePendingMovementChanges(bool sendToClient, bool includingTeleport)
 {
     while (!m_pendingMovementChanges.empty())
@@ -7517,6 +7522,12 @@ void Unit::ResolvePendingMovementChanges(bool sendToClient, bool includingTelepo
 
 void Unit::ResolvePendingMovementChange(const PlayerMovementPendingChange& change, bool sendToClient)
 {
+    // A direct server speed assignment can supersede an outstanding client
+    // request. Keep that request matchable for a late ACK, but never apply it.
+    if (change.movementChangeType >= SPEED_CHANGE_WALK && change.movementChangeType <= RATE_CHANGE_TURN &&
+        IsMovementChangeSuperseded(change.movementChangeType, change.movementCounter))
+        return;
+
     // returns true if heartbeat required
     switch (change.movementChangeType)
     {
@@ -7938,6 +7949,18 @@ void Unit::SetSpeedRate(UnitMoveType mtype, float rate)
 
 void Unit::SetSpeedRateReal(UnitMoveType mtype, float rate, const char* reason)
 {
+    MovementChangeType const changeType = MovementPacketSender::GetChangeTypeByMoveType(mtype);
+    for (auto const& pendingChange : m_pendingMovementChanges)
+    {
+        if (pendingChange.movementChangeType == changeType &&
+            !IsMovementChangeSuperseded(changeType, pendingChange.movementCounter))
+        {
+            // Advance the native per-type ordering only when there is a live
+            // queued request. Repeated forced updates need no new counter.
+            m_lastMovementChangeCounterPerType[changeType] = GetMovementCounterAndInc();
+            break;
+        }
+    }
     BotActionLog_LogSpeed(this, "SPEED_APPLIED", mtype, GetSpeedRate(mtype), rate, true, 1.0f, reason);
     m_speed_rate[mtype] = rate;
     PropagateSpeedChange();
