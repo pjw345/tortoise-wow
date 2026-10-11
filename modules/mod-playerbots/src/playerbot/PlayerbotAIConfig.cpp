@@ -1,5 +1,6 @@
 
 #include "playerbot/PlayerbotAIConfig.h"
+#include "SystemConfig.h"
 #include "playerbot/playerbot.h"
 #include <cerrno>
 #include <cctype>
@@ -26,6 +27,12 @@
 #include <fstream>
 #include <sstream>
 #include "PlayerbotLoginMgr.h"
+
+#if PLATFORM == PLATFORM_WINDOWS
+std::string _D_AIPLAYERBOT_CONFIG = "aiplayerbot.conf";
+#else
+std::string _D_AIPLAYERBOT_CONFIG = SYSCONFDIR "aiplayerbot.conf";
+#endif
 
 std::vector<std::string> ConfigAccess::GetValues(const std::string& name) const
 {

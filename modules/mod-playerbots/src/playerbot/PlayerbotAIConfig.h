@@ -4,17 +4,15 @@
 #include "Config/Config.h"
 #include "Talentspec.h"
 #include "SharedDefines.h"
-#include "SystemConfig.h"
+#include <string>
 
 class Player;
 class PlayerbotMgr;
 class ChatHandler;
 
-#if PLATFORM == PLATFORM_WINDOWS
-inline std::string _D_AIPLAYERBOT_CONFIG = "aiplayerbot.conf";
-#else
-inline std::string _D_AIPLAYERBOT_CONFIG = SYSCONFDIR "aiplayerbot.conf";
-#endif
+// Keep revision-bearing SystemConfig.h out of the shared bot PCH. The filename
+// retains one mutable definition and the same platform-specific default.
+extern std::string _D_AIPLAYERBOT_CONFIG;
 
 enum class BotCheatMask : uint32
 {

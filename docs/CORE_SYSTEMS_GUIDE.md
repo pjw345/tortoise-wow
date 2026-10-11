@@ -330,3 +330,15 @@ unchanged; this applies to players, controlled units and bots through the
 existing Unit lifecycle. No aura removal, forced normal speed or bot-only
 recovery is introduced. Focused coverage executes native setters, queue
 resolution, ACK matching and the handler's supersession guard.
+
+
+### Playerbot build revision dependency
+
+`PlayerbotAIConfig.h` is part of `botpch.h`. Keep `SystemConfig.h` (and its
+generated `revision.h`) private to `PlayerbotAIConfig.cpp`: the default filename
+is declared `extern` in the header and defined once in the implementation, with
+the existing Windows/Unix values and mutable `std::string` type. This prevents
+every source SHA change invalidating the entire bot PCH. Explicit revision users
+still include SystemConfig directly and rebuild normally. The Ubuntu packaging
+incremental regression exercises PCH and private revision-header dependencies;
+full native compilation remains required for compatibility validation.
