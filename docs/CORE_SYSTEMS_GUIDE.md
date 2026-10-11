@@ -342,3 +342,21 @@ every source SHA change invalidating the entire bot PCH. Explicit revision users
 still include SystemConfig directly and rebuild normally. The Ubuntu packaging
 incremental regression exercises PCH and private revision-header dependencies;
 full native compilation remains required for compatibility validation.
+
+## Creature health scaling and GM list SQL (2026-10-11)
+
+`Creature::SelectLevel` clamps a scaled integer health of zero to one only
+when the template has a positive maximum health. Intentionally zero-health
+templates remain zero. The native April Fools critter override and initial
+health percentage still apply afterwards. Upstream provenance: `0695ec09`.
+The focused `tests/upstream-health-sql` harness extracts the actual production
+health block, including creation/max/current-health assignment, and tests rate,
+level interpolation, zero-template, spawn percentage and seasonal variants.
+It does not certify runtime death/respawn or pet behavior.
+
+`HandleGMListFullCommand` quotes `rank` in both SELECT and WHERE. This preserves
+the existing positive-rank filter and supports MySQL reserved identifiers;
+the broader upstream quoting changes already exist here. The focused SQL test
+extracts the actual query and executes it on a disposable MySQL 8.4 account
+table, checking zero, negative and positive ranks. No production schema or
+account data is needed or changed.
