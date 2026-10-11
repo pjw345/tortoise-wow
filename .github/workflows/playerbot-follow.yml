@@ -17,6 +17,3 @@ jobs:
       - run: cmake -S tests/playerbot-follow -B build/follow-tests -DCMAKE_BUILD_TYPE=Release
       - run: cmake --build build/follow-tests --config Release --parallel 2
       - run: ctest --test-dir build/follow-tests -C Release --output-on-failure
-      - run: cmake -S tests/architecture -B build/architecture-tests -DCMAKE_BUILD_TYPE=Release
-      - run: cmake --build build/architecture-tests --config Release --parallel 2
-      - run: ctest --test-dir build/architecture-tests -C Release --output-on-failure

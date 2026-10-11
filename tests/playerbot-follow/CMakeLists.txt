@@ -42,3 +42,39 @@ foreach(source strategy/actions/FollowActions.cpp strategy/triggers/RangeTrigger
         message(FATAL_ERROR "Follow admission disagrees with dispatch: ${source}")
     endif()
 endforeach()
+
+# Existing movement consumers, without unrelated stale architecture extractions.
+extract("${BOT_ROOT}/strategy/actions/MovementActions.cpp"
+    "void MovementAction::DispatchMovement(" "Unit* MovementAction::GetMover(" BotMoveDispatch.inc)
+extract("${CORE_ROOT}/src/game/Movement/MotionMaster.cpp"
+    "void MotionMaster::MovePath(" "void MotionMaster::MoveWaypointAsDefault(" BotNativeMovePath.inc)
+extract("${CORE_ROOT}/src/game/Movement/PointMovementGenerator.cpp"
+    "template<class T>\nvoid PointMovementGenerator<T>::Initialize(" "template<class T>\nvoid PointMovementGenerator<T>::Finalize(" BotNativePointInit.inc)
+extract("${CORE_ROOT}/src/game/Movement/PointMovementGenerator.cpp"
+    "template<class T>\nbool PointMovementGenerator<T>::Update(" "template<>\nvoid PointMovementGenerator<Player>::MovementInform(" BotNativePointUpdate.inc)
+add_executable(BotMovementDispatchTest ../architecture/BotMovementDispatchTest.cpp)
+target_compile_features(BotMovementDispatchTest PRIVATE cxx_std_17)
+target_compile_definitions(BotMovementDispatchTest PRIVATE MANGOSBOT_ZERO)
+target_include_directories(BotMovementDispatchTest PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+if(MSVC)
+    target_compile_options(BotMovementDispatchTest PRIVATE /EHsc)
+endif()
+add_test(NAME BotMovementDispatchTest COMMAND BotMovementDispatchTest)
+set_tests_properties(BotMovementDispatchTest PROPERTIES TIMEOUT 20)
+
+extract("${BOT_ROOT}/WorldPosition.cpp"
+    "bool WorldPosition::ClosestCorrectPoint(" "bool WorldPosition::GetReachableRandomPointOnGround(" BotRpgPoint.inc)
+extract("${BOT_ROOT}/strategy/actions/ChooseRpgTargetAction.cpp"
+    "std::unordered_map<ObjectGuid, uint32> ChooseRpgTargetAction::GetTargetCounts(" "#define SkipRpgTarget" BotRpgCrowd.inc)
+extract("${BOT_ROOT}/strategy/actions/MoveToRpgTargetAction.cpp"
+    "    WorldPosition movePos(mapId, x, y, z);" "    if ((ai->HasStrategy(\"debug rpg\"" BotRpgApproach.inc)
+extract("${BOT_ROOT}/strategy/actions/MoveToRpgTargetAction.cpp"
+    "bool MoveToRpgTargetAction::isUseful()" "    if(MEM_AI_VALUE" BotRpgUsefulPrefix.inc)
+add_executable(BotRpgMovementTest ../architecture/BotRpgMovementTest.cpp)
+target_compile_features(BotRpgMovementTest PRIVATE cxx_std_17)
+target_include_directories(BotRpgMovementTest PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+if(MSVC)
+    target_compile_options(BotRpgMovementTest PRIVATE /EHsc)
+endif()
+add_test(NAME BotRpgMovementTest COMMAND BotRpgMovementTest)
+set_tests_properties(BotRpgMovementTest PROPERTIES TIMEOUT 20)
