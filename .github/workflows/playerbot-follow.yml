@@ -1,0 +1,22 @@
+name: Playerbot follow movement
+on:
+  push:
+    paths: ['modules/mod-playerbots/src/playerbot/ServerFacade.*', 'modules/mod-playerbots/src/playerbot/strategy/actions/FollowActions.cpp', 'modules/mod-playerbots/src/playerbot/strategy/actions/MovementActions.cpp', 'modules/mod-playerbots/src/playerbot/strategy/triggers/RangeTriggers.h', 'src/game/Movement/TargetedMovementGenerator.h', 'tests/playerbot-follow/**', '.github/workflows/playerbot-follow.yml']
+  pull_request:
+    paths: ['modules/mod-playerbots/**', 'src/game/Movement/**', 'tests/playerbot-follow/**', '.github/workflows/playerbot-follow.yml']
+permissions:
+  contents: read
+jobs:
+  follow:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S tests/playerbot-follow -B build/follow-tests -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build/follow-tests --config Release --parallel 2
+      - run: ctest --test-dir build/follow-tests -C Release --output-on-failure
+      - run: cmake -S tests/architecture -B build/architecture-tests -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build/architecture-tests --config Release --parallel 2
+      - run: ctest --test-dir build/architecture-tests -C Release --output-on-failure
