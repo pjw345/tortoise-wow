@@ -1,9 +1,9 @@
 name: Upstream health and SQL regressions
 on:
   push:
-    paths: ['src/game/Objects/Creature.cpp', 'src/game/Commands/Commands.cpp', 'tests/upstream-health-sql/**', '.github/workflows/upstream-health-sql.yml']
+    paths: ['src/game/Objects/Creature.cpp', 'src/game/Commands/Commands.cpp', 'tests/upstream-health-sql/**', 'docs/core-audit/**', '.github/workflows/upstream-health-sql.yml']
   pull_request:
-    paths: ['src/game/Objects/Creature.cpp', 'src/game/Commands/Commands.cpp', 'tests/upstream-health-sql/**', '.github/workflows/upstream-health-sql.yml']
+    paths: ['src/game/Objects/Creature.cpp', 'src/game/Commands/Commands.cpp', 'tests/upstream-health-sql/**', 'docs/core-audit/**', '.github/workflows/upstream-health-sql.yml']
 permissions:
   contents: read
 jobs:
