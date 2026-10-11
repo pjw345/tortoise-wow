@@ -91,7 +91,7 @@ See `modules/README.md` for module layout, build options, config loading, SQL mi
 ## Operating Systems
 
 * **[Windows][15]**, 32 bit and 64 bit. Windows Server 2008 (or newer) or Windows 8 (or newer) is recommended.
-* **Linux**, 32 bit and 64 bit. [Ubuntu 22.04 LTS][14] is recommended. Other distributions with similar package versions will work, too.
+* **Linux**, 32 bit and 64 bit. Our VM deployment uses [Ubuntu Server 26.04.1 LTS][14] with Docker Engine. The build and runtime containers use Ubuntu 22.04; host and container versions are independent. Other distributions with similar package versions may also work.
 Of course, newer versions should work, too. In the case of Windows, matching server versions will work, too.
 
 ## Dependencies
