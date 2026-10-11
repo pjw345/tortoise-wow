@@ -47,6 +47,34 @@ repository history, current upstream status and rules used when importing fixes.
 > A full SHA-256 manifest can be found in the [`DBC verification`](tools/dbc_verification/) folder.  
 > This manifest was retrieved from https://launcher.turtlecraft.gg/api/manifest/EU on 2026-07-14.
 
+## Run this fork on an Ubuntu Hyper-V VM
+
+Our deployment and development builds migrated from Windows Docker Desktop to
+Docker Engine inside an Ubuntu Server Hyper-V VM on 2026-10-11. The Windows
+host runs Hyper-V and the game client; the VM runs MariaDB, `realmd` and
+`mangosd` through Docker Compose. Docker Desktop is no longer required.
+
+Use the **[`pjw345/tortoise-docker` setup guide](https://github.com/pjw345/tortoise-docker#ubuntu-hyper-v-setup)**
+for VM sizing, Docker installation, client-data extraction, a source-pinned
+Playerbots build, configuration, account creation, backups and maintenance.
+It provides a fresh-install procedure; existing accounts and characters require
+a database/configuration migration, rather than a new empty database.
+
+The core branch maintained by this fork is **`playerbots-development`**:
+
+```bash
+git clone --recurse-submodules --branch playerbots-development https://github.com/pjw345/tortoise-wow.git
+```
+
+The tested Ubuntu deployment uses core revision
+`76c1741d80e44ba5050b87445b5a8f729d1f6a10`. The packaging guide passes that
+revision explicitly: its Dockerfile default and published images may contain
+an older source revision. A README update does not rebuild an image.
+
+The VM host was validated on Ubuntu Server 26.04.1 LTS; the Dockerfile builds
+and runs the binaries in Ubuntu 22.04 containers. Client data and credentials
+are supplied locally and are not included in either repository.
+
 ## Module System
 
 Optional features can be added as modules under the `modules/` folder.
