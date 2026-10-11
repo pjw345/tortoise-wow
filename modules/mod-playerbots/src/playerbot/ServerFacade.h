@@ -272,6 +272,7 @@ class ServerFacade
         Unit* GetChaseTarget(Unit* target);
         float GetChaseAngle(Unit* target);
         float GetChaseOffset(Unit* target);
+        bool IsFollowing(Unit* unit, Unit* target, float distance, float angle);
 
         BattleGroundTypeId BgTemplateId(BattleGroundQueueTypeId queueTypeId)
         {

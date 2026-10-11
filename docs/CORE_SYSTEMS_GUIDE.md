@@ -342,3 +342,22 @@ every source SHA change invalidating the entire bot PCH. Explicit revision users
 still include SystemConfig directly and rebuild normally. The Ubuntu packaging
 incremental regression exercises PCH and private revision-header dependencies;
 full native compilation remains required for compatibility validation.
+
+### Active follow-generator inspection (2026-10-11)
+
+Playerbot `ServerFacade::GetChaseTarget`, angle and offset inspect the active
+native chase/follow generator for both players and creatures. A combat victim
+is not the movement target. Unrelated or absent generators return no target
+and zero geometry; do not inspect a suspended generator beneath point movement.
+`TargetedMovementGeneratorMedium` exposes its existing follower reference and
+geometry without changing their ownership, native pathfinding or async update.
+
+Follow action admission, its update trigger and movement dispatch use the same
+`IsFollowing` comparison. The requested formation distance includes the target
+radius; the stored native offset does not. Differences within 0.01 yards and
+0.01 radians (including angle wraparound) retain the route; changed targets,
+formations or movement types issue a new native follow request. Failed path
+recovery still belongs to the native follow generator. The focused regression
+suite in `tests/playerbot-follow` covers these boundaries with deterministic
+motion services; it does not certify Stormwind navigation mesh geometry or
+live gameplay. Loot retry loops remain a separate investigation.

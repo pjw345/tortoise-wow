@@ -7,6 +7,7 @@
 #include "PlayerbotAI.h"
 
 #include "Movement/TargetedMovementGenerator.h"
+#include <cmath>
 
 ServerFacade::ServerFacade() {}
 ServerFacade::~ServerFacade() {}
@@ -149,16 +150,69 @@ FactionTemplateEntry const* ServerFacade::GetFactionTemplateEntry(Unit *unit)
 #endif
 }
 
-// Penqle's ChaseMovementGenerator is a template. The static_cast dance the
-// bot module uses against cmangos's non-templated version is fragile here,
-// so return safe defaults. Wiring actual chase-generator inspection is
-// future work.
-Unit* ServerFacade::GetChaseTarget(Unit* target) {
-    return target ? target->GetVictim() : nullptr;
+// Inspect only the active native generator, never the combat victim or a
+// suspended generator underneath an unrelated movement request.
+template<typename Read>
+static float ReadTargetedMovement(Unit* unit, Read read)
+{
+    if (!unit)
+        return 0.0f;
+
+    MovementGenerator const* generator = unit->GetMotionMaster()->GetCurrent();
+    if (!generator)
+        return 0.0f;
+
+    if (generator->GetMovementGeneratorType() == FOLLOW_MOTION_TYPE)
+    {
+        if (unit->IsPlayer())
+            return read(static_cast<FollowMovementGenerator<Player> const*>(generator));
+        if (unit->IsCreature())
+            return read(static_cast<FollowMovementGenerator<Creature> const*>(generator));
+    }
+    else if (generator->GetMovementGeneratorType() == CHASE_MOTION_TYPE)
+    {
+        if (unit->IsPlayer())
+            return read(static_cast<ChaseMovementGenerator<Player> const*>(generator));
+        if (unit->IsCreature())
+            return read(static_cast<ChaseMovementGenerator<Creature> const*>(generator));
+    }
+    return 0.0f;
 }
 
-float ServerFacade::GetChaseAngle(Unit* /*target*/) { return 0.0f; }
-float ServerFacade::GetChaseOffset(Unit* /*target*/) { return 0.0f; }
+Unit* ServerFacade::GetChaseTarget(Unit* unit)
+{
+    if (!unit)
+        return nullptr;
+    MovementGenerator const* generator = unit->GetMotionMaster()->GetCurrent();
+    if (!generator || (generator->GetMovementGeneratorType() != FOLLOW_MOTION_TYPE &&
+        generator->GetMovementGeneratorType() != CHASE_MOTION_TYPE))
+        return nullptr;
+    return generator->GetCurrentTarget();
+}
+
+float ServerFacade::GetChaseAngle(Unit* unit)
+{
+    return ReadTargetedMovement(unit, [](auto generator) { return generator->GetAngle(); });
+}
+
+float ServerFacade::GetChaseOffset(Unit* unit)
+{
+    return ReadTargetedMovement(unit, [](auto generator) { return generator->GetOffset(); });
+}
+
+bool ServerFacade::IsFollowing(Unit* unit, Unit* target, float distance, float angle)
+{
+    if (!unit || !target || unit->GetMotionMaster()->GetCurrentMovementGeneratorType() != FOLLOW_MOTION_TYPE ||
+        GetChaseTarget(unit) != target)
+        return false;
+
+    // Follow() converts the formation's centre distance to the native offset.
+    // Coordinate-derived formations incur small float rounding errors; those
+    // must not replace a route around a corner on every AI tick.
+    float offset = distance <= target->GetObjectBoundingRadius() ? 0.0f : distance - target->GetObjectBoundingRadius();
+    return std::fabs(GetChaseOffset(unit) - offset) <= 0.01f &&
+        std::fabs(std::remainder(GetChaseAngle(unit) - angle, 2.0f * M_PI_F)) <= 0.01f;
+}
 
 bool ServerFacade::isMoving(Unit *unit)
 {

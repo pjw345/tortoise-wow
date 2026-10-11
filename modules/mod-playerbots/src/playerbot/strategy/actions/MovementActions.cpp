@@ -2418,6 +2418,7 @@ bool MovementAction::Follow(Unit* target, float distance, float angle)
 
     MotionMaster &mm = *bot->GetMotionMaster();
 
+    const float formationDistance = distance;
     distance = distance <= target->GetObjectBoundingRadius() ? 0 : distance - target->GetObjectBoundingRadius();
 
     UpdateMovementState();
@@ -2612,12 +2613,8 @@ bool MovementAction::Follow(Unit* target, float distance, float angle)
         }
     }
 
-    if (bot->GetMotionMaster()->GetCurrentMovementGeneratorType() == FOLLOW_MOTION_TYPE)
-    {
-        Unit* currentTarget = sServerFacade.GetChaseTarget(bot);
-        if (currentTarget && currentTarget->GetObjectGuid() == target->GetObjectGuid() && sServerFacade.GetChaseAngle(bot) == angle && sServerFacade.GetChaseOffset(bot) == distance)
-            return false;
-    }
+    if (sServerFacade.IsFollowing(bot, target, formationDistance, angle))
+        return false;
 
     mm.MoveFollow(target, distance, angle, true, sPlayerbotAIConfig.boostFollow);
     return true;
