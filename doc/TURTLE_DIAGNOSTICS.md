@@ -973,3 +973,17 @@ and non-bot stub tests plus the gathering target contract pass. Full server
 image compilation and live gameplay with this correction remain unverified.
 Source indexes were regenerated without database refresh; unrelated generated
 sorting/line-number churn was excluded.
+
+## Playerbot travel shutdown lifecycle (2026-10-11)
+
+Two once-per-shutdown messages report the start and completion of travel-future
+draining, including the attached-AI count. They execute in the existing module
+OnShutdown hook before map teardown; there is no tick-time logging, polling,
+timeout fallback or ignored failure. They can be removed together after
+shutdown validation; retain the future waits. No bot names/passwords are logged.
+
+The focused shutdown test executes extracted production wait/hook bodies with
+real asynchronous and deferred futures. It checks pending headless/self-bot
+work, release of the registry lock before join, absent/invalid values, repeated
+drains and retained exceptions/results. It checks the host shutdown/map-unload
+ordering too. This is not a complete realm shutdown or gameplay test.

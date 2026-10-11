@@ -372,6 +372,7 @@ public:
 
     virtual void UpdateAI(uint32 elapsed, bool minimal = false);
     void CleanupExpiredValuesIfDue();
+    void WaitForTravelSearch();
     void RequestValueCacheCleanup() { valueCacheCleanupRequested.store(true, std::memory_order_release); }
 
     void HandleCommands();

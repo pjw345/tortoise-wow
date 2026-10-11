@@ -2997,6 +2997,19 @@
     "source_evidence": [
       {
         "name": "boss_aszosh_grimflame",
+        "file": "src/scripts/dungeons/stormwind_vaults/boss_aszosh_grimflame.cpp",
+        "line": 354,
+        "cmake_listed": true,
+        "file_loader_call_found": true,
+        "dependency_signals": [
+          "ai_update",
+          "spells",
+          "death_reset",
+          "timers"
+        ]
+      },
+      {
+        "name": "boss_aszosh_grimflame",
         "file": "src/scripts/events/vault/boss_aszosh_grimflame.cpp",
         "line": 277,
         "cmake_listed": false,
@@ -3005,19 +3018,6 @@
           "ai_update",
           "spells",
           "movement",
-          "death_reset",
-          "timers"
-        ]
-      },
-      {
-        "name": "boss_aszosh_grimflame",
-        "file": "src/scripts/dungeons/stormwind_vaults/boss_aszosh_grimflame.cpp",
-        "line": 354,
-        "cmake_listed": true,
-        "file_loader_call_found": true,
-        "dependency_signals": [
-          "ai_update",
-          "spells",
           "death_reset",
           "timers"
         ]

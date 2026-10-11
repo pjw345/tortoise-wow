@@ -251,6 +251,7 @@ PlayerbotAI::PlayerbotAI(Player* bot) :
 
 PlayerbotAI::~PlayerbotAI()
 {
+    WaitForTravelSearch();
     for (uint8 i = 0 ; i < (uint8)BotState::BOT_STATE_ALL; i++)
     {
         if (engines[i])
@@ -259,6 +260,22 @@ PlayerbotAI::~PlayerbotAI()
 
     if (aiObjectContext)
         delete aiObjectContext;
+}
+
+void PlayerbotAI::WaitForTravelSearch()
+{
+    // The AI owns this future, but its worker reads shared travel/terrain data.
+    // Shutdown must join it before maps unload, including headless bot sessions
+    // that are deliberately absent from World::m_sessions. Do not create values,
+    // consume results or discard exceptions here; ordinary result handling owns
+    // those semantics. Waiting is also safe for deferred and exceptional futures.
+    if (!aiObjectContext || !aiObjectContext->HasValue("future travel destinations"))
+        return;
+
+    auto* value = aiObjectContext->GetValue<FutureDestinations*>("future travel destinations");
+    FutureDestinations* future = value ? value->Get() : nullptr;
+    if (future && future->valid())
+        future->wait();
 }
 
 void PlayerbotAI::RevalidateMasterPointer()

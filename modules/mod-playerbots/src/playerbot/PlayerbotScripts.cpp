@@ -17,6 +17,7 @@
 
 #include "playerbot/playerbot.h"
 #include "Objects/Player.h"
+#include "ObjectAccessor.h"
 #include "World.h"
 #include "ScriptObjects.h"
 #include "ScriptMgr.h"
@@ -45,6 +46,27 @@ class PlayerbotWorldScript : public WorldScript
                 return;
             RandomPlayerbotFactory::CreateRandomBots();
             auctionbot.Init();
+        }
+
+        void OnShutdown() override
+        {
+            // World::Shutdown runs after the final map update joins, and before
+            // sessions, maps and terrain are torn down. Snapshot all attached AIs,
+            // not just holders or socket-backed World sessions: self-bots and
+            // dedicated headless sessions own the same travel futures.
+            std::vector<PlayerbotAI*> ais;
+            {
+                HashMapHolder<Player>::ReadGuard guard(HashMapHolder<Player>::GetLock());
+                for (auto const& entry : sObjectAccessor.GetPlayers())
+                    if (PlayerbotAI* ai = GetBotAI(entry.second))
+                        ais.push_back(ai);
+            }
+            // Never hold the player registry lock while joining workers. Do not
+            // skip draining when bots were disabled by a configuration reload.
+            sLog.outString("[Playerbots] Waiting for travel searches before map teardown...");
+            for (PlayerbotAI* ai : ais)
+                ai->WaitForTravelSearch();
+            sLog.outString("[Playerbots] Travel searches drained (%u attached AIs).", uint32(ais.size()));
         }
 
         // Was World::UpdatePlayerbotsTick(diff).

@@ -1,0 +1,32 @@
+name: Playerbot shutdown lifecycle
+on:
+  push:
+    paths:
+      - 'modules/mod-playerbots/src/playerbot/PlayerbotAI.*'
+      - 'modules/mod-playerbots/src/playerbot/PlayerbotScripts.cpp'
+      - 'src/game/World.cpp'
+      - 'src/mangosd/WorldRunnable.cpp'
+      - 'tests/playerbot-shutdown/**'
+      - 'tests/architecture/TravelShutdownLifecycleTest.cpp'
+      - '.github/workflows/playerbot-shutdown.yml'
+  pull_request:
+    paths:
+      - 'modules/mod-playerbots/**'
+      - 'src/game/World.cpp'
+      - 'src/mangosd/WorldRunnable.cpp'
+      - 'tests/playerbot-shutdown/**'
+      - 'tests/architecture/TravelShutdownLifecycleTest.cpp'
+      - '.github/workflows/playerbot-shutdown.yml'
+permissions:
+  contents: read
+jobs:
+  shutdown:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S tests/playerbot-shutdown -B build/shutdown-tests -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build/shutdown-tests --config Release --parallel 2
+      - run: ctest --test-dir build/shutdown-tests -C Release --output-on-failure
