@@ -27,6 +27,19 @@
     "source_evidence": [
       {
         "name": "instance_stormwind_vault",
+        "file": "src/scripts/events/vault/instance_stormwind_vault.cpp",
+        "line": 93,
+        "cmake_listed": false,
+        "file_loader_call_found": false,
+        "dependency_signals": [
+          "spells",
+          "death_reset",
+          "instance_state",
+          "timers"
+        ]
+      },
+      {
+        "name": "instance_stormwind_vault",
         "file": "src/scripts/dungeons/stormwind_vaults/instance_stormwind_vaults.cpp",
         "line": 214,
         "cmake_listed": true,
@@ -37,19 +50,6 @@
           "doors",
           "timers",
           "threat"
-        ]
-      },
-      {
-        "name": "instance_stormwind_vault",
-        "file": "src/scripts/events/vault/instance_stormwind_vault.cpp",
-        "line": 93,
-        "cmake_listed": false,
-        "file_loader_call_found": false,
-        "dependency_signals": [
-          "spells",
-          "death_reset",
-          "instance_state",
-          "timers"
         ]
       }
     ],

@@ -1,0 +1,19 @@
+name: Playerbot configuration build boundary
+on:
+  push:
+    paths: ['modules/mod-playerbots/src/playerbot/PlayerbotAIConfig.*', 'tests/playerbot-build/**', '.github/workflows/playerbot-build.yml']
+  pull_request:
+    paths: ['modules/mod-playerbots/src/playerbot/PlayerbotAIConfig.*', 'tests/playerbot-build/**', '.github/workflows/playerbot-build.yml']
+permissions:
+  contents: read
+jobs:
+  config-boundary:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S tests/playerbot-build -B build/config-tests
+      - run: cmake --build build/config-tests --config Release
+      - run: ctest --test-dir build/config-tests -C Release --output-on-failure
