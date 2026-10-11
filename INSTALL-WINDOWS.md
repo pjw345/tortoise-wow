@@ -321,13 +321,13 @@ Put your database credentials into `mangosd.conf` and `realmd.conf`.
 ### The one Windows-specific trap
 
 The path to the bot configuration is resolved differently per platform
-(`PlayerbotAIConfig.h`):
+(`PlayerbotAIConfig.cpp`; declared in its header):
 
 ```cpp
 #if PLATFORM == PLATFORM_WINDOWS
-inline std::string _D_AIPLAYERBOT_CONFIG = "aiplayerbot.conf";
+std::string _D_AIPLAYERBOT_CONFIG = "aiplayerbot.conf";
 #else
-inline std::string _D_AIPLAYERBOT_CONFIG = SYSCONFDIR "aiplayerbot.conf";
+std::string _D_AIPLAYERBOT_CONFIG = SYSCONFDIR "aiplayerbot.conf";
 #endif
 ```
 

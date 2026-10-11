@@ -54,7 +54,7 @@ Set `CMAKE_INSTALL_PREFIX` now and do not change it later. The path to
 `aiplayerbot.conf` is baked into the binary at compile time:
 
 ```cpp
-inline std::string _D_AIPLAYERBOT_CONFIG = SYSCONFDIR "aiplayerbot.conf";
+std::string _D_AIPLAYERBOT_CONFIG = SYSCONFDIR "aiplayerbot.conf";
 ```
 
 `SYSCONFDIR` comes from `CMAKE_INSTALL_PREFIX/etc/`. Move the installation
