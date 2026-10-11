@@ -934,9 +934,14 @@ bool PlayerbotAI::IsPlayerMasterSpellAllowed(SpellEntry const* spell, Unit* targ
     if (!ShouldAssistPlayerMaster() || !spell || IsPositiveSpell(spell))
         return true;
 
-    // An area spell can pull unrelated enemies even when aimed at the right mob.
+    // Area damage is allowed while assisting the player's victim. Caster-
+    // centred and ground-targeted area spells need not have that unit as their
+    // explicit target, but must not become permission to select an add.
     if (spell->IsAreaOfEffectSpell())
-        return false;
+    {
+        Unit* focus = GetPlayerMasterAttackTarget();
+        return focus && (!target || target == bot || target == focus);
+    }
 
     // Interrupts remain available against adds as a defensive reaction.
     if (IsSpellHaveEffect(spell, SPELL_EFFECT_INTERRUPT_CAST))

@@ -399,8 +399,9 @@ path to a safe destination is free of aggro or that navigation geometry is valid
 an active real player master on the same map/instance, outside PvP. The native
 master attack victim (not selection or a raid icon) is the allowed damage target.
 PossibleAttackTargetsValue and DPS/tank selectors share that target; AttackAction
-and unit/coordinate/pet spell dispatch recheck it. Offensive area spells are
-disabled in this mode to avoid hitting unrelated mobs. Positive spells and
+and unit/coordinate/pet spell dispatch recheck it. Area spells remain available
+against the focus target, including caster-centred and ground-targeted casts;
+they do not permit selecting an attacking add instead. Positive spells and
 interrupts remain available, including healing. Pure healers do not gain an
 automatic melee assist. Existing attack delays still apply when enabled.
 
