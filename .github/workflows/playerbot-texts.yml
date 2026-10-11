@@ -1,9 +1,9 @@
 name: Playerbot stock text migration
 on:
   push:
-    paths: ['modules/mod-playerbots/sql/world/ai_playerbot_texts.sql', 'sql/database_updates/world/20261011150000_world.sql', 'tests/playerbot-texts/**', '.github/workflows/playerbot-texts.yml']
+    paths: ['modules/mod-playerbots/sql/world/ai_playerbot_texts.sql', 'sql/database_updates/world/20261011150000_world.sql', 'sql/database_updates/world/20261011170000_world.sql', 'tests/playerbot-texts/**', '.github/workflows/playerbot-texts.yml']
   pull_request:
-    paths: ['modules/mod-playerbots/sql/world/ai_playerbot_texts.sql', 'sql/database_updates/world/20261011150000_world.sql', 'tests/playerbot-texts/**', '.github/workflows/playerbot-texts.yml']
+    paths: ['modules/mod-playerbots/sql/world/ai_playerbot_texts.sql', 'sql/database_updates/world/20261011150000_world.sql', 'sql/database_updates/world/20261011170000_world.sql', 'tests/playerbot-texts/**', '.github/workflows/playerbot-texts.yml']
 permissions:
   contents: read
 jobs:
