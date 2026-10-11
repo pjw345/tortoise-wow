@@ -1,0 +1,19 @@
+name: Playerbot loot safety
+on:
+  push:
+    paths: ['modules/mod-playerbots/src/playerbot/LootObjectStack.*', 'modules/mod-playerbots/src/playerbot/strategy/actions/*Loot*', 'modules/mod-playerbots/src/playerbot/strategy/actions/MovementActions.cpp', 'tests/playerbot-loot-safety/**', '.github/workflows/playerbot-loot-safety.yml']
+  pull_request:
+    paths: ['modules/mod-playerbots/**', 'tests/playerbot-loot-safety/**', '.github/workflows/playerbot-loot-safety.yml']
+permissions:
+  contents: read
+jobs:
+  loot-safety:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S tests/playerbot-loot-safety -B build/loot-safety
+      - run: cmake --build build/loot-safety --config Release --parallel 2
+      - run: ctest --test-dir build/loot-safety -C Release --output-on-failure

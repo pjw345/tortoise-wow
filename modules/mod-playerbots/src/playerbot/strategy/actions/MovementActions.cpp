@@ -3334,6 +3334,19 @@ bool MoveToLootAction::Execute(Event& event)
         return false;
     }
 
+    // Recheck queued loot: a hostile may have moved or respawned since the
+    // scan/selection. Do not issue a route while its destination is unsafe.
+    if (!loot.IsApproachSafe(bot))
+    {
+        if (debugLoot)
+            sLog.outLoot("bot=%s event=move-abort guid=%lu reason=hostile retry-seconds=%u",
+                bot->GetName(), lootGuid.GetRawValue(), sPlayerbotAIConfig.lootTargetRetryDelay);
+        lootStack->Defer(lootGuid, sPlayerbotAIConfig.lootTargetRetryDelay);
+        RESET_AI_VALUE(LootObject, "loot target");
+        trackedLootGuid = ObjectGuid();
+        return false;
+    }
+
     float dist = sServerFacade.GetDistance2d(bot, wo);
     time_t now = time(0);
     if (trackedLootGuid != lootGuid)

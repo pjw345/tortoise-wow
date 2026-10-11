@@ -26,6 +26,8 @@ bool LootAction::Execute(Event& event)
     std::vector<LootObject> candidates = AI_VALUE(LootObjectStack*, "available loot")->OrderByDistance(sPlayerbotAIConfig.lootDistance);
     for (LootObject& candidate : candidates)
     {
+        if (!candidate.IsApproachSafe(bot))
+            continue;
         if (master && master != bot)
         {
             Creature* c = ai->GetCreature(candidate.guid);

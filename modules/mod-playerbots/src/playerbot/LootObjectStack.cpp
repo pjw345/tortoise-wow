@@ -304,6 +304,26 @@ LootObject::LootObject(const LootObject& other)
     reqItem = other.reqItem;
 }
 
+bool LootObject::IsApproachSafe(Player* bot, Unit** blocker)
+{
+    if (blocker)
+        *blocker = nullptr;
+    PlayerbotAI* ai = GetBotAI(bot);
+    // Preserve the existing follower-only policy, including its configuration
+    // opt-out. An active human master does not make unattended loot safe.
+    if (!bot->GetGroup() || ai->IsGroupLeader() || sPlayerbotAIConfig.lootHostileDistance <= 0.0f)
+        return true;
+    WorldObject* object = GetWorldObject(bot);
+    if (!object)
+        return false;
+    std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(object, sPlayerbotAIConfig.lootHostileDistance);
+    if (hostiles.empty())
+        return true;
+    if (blocker)
+        *blocker = hostiles.front();
+    return false;
+}
+
 bool LootObject::IsLootPossible(Player* bot, bool* suppressRediscovery)
 {
     if (suppressRediscovery)
