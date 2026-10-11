@@ -84,7 +84,7 @@ bool FollowAction::isUseful()
         return true;
     }
 
-    if (followTarget && sServerFacade.GetChaseTarget(bot) && sServerFacade.GetChaseTarget(bot)->GetObjectGuid() == followTarget->GetObjectGuid() && formation->GetAngle() == sServerFacade.GetChaseAngle(bot) && formation->GetOffset() == sServerFacade.GetChaseOffset(bot))
+    if (sServerFacade.IsFollowing(bot, followTarget, formation->GetOffset(), formation->GetAngle()))
     {
         return false;
     }

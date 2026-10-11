@@ -5553,7 +5553,7 @@
       "death_reset",
       "timers"
     ],
-    "sha256": "9EFE45A62D57BCB071A470663EABABA9F21D2F4EE20BB616284E5DD6EE460560"
+    "sha256": "A2C52C6510E9AE931B2D556744969FE5FB27E13A3D72CE1D6B3A456212E76251"
   },
   {
     "file": "src/game/Movement/ConfusedMovementGenerator.h",
@@ -17933,7 +17933,7 @@
     "dependency_signals": [
       "threat"
     ],
-    "sha256": "3516D005F3E21882196C0DB79FE8139BC610832A9E43C3713EBB80A7BE57FE0B"
+    "sha256": "B40291D474D9B849CFB04B084E841B3039E6EC89416E3702731DD76BB45A11EE"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/PlayerbotLLMInterface.cpp",
@@ -18952,7 +18952,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "6ADF78375E49E32308FFA1A79E04C20FB1F99CE12CC690A15410BB4EF9906407"
+    "sha256": "53B296F21B507EF1696ABF2E70C1DEDA218B6F2A46345E804E82A182C20FFB5A"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/triggers/LootTriggers.cpp",
@@ -21644,7 +21644,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "C9014066FF0AF54EB91F88B612316DA342CE5864AA97F06FDCD9E58E6C1C2608"
+    "sha256": "DB0C017DFF7C8E482240E96C7D36196497FA2C7762C5CB541E5C56C93619C6FA"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/AiFactory.h",
@@ -24317,7 +24317,7 @@
       "death_reset",
       "threat"
     ],
-    "sha256": "E6C054CF125750AADA8C8F276F3A3210BD7401F8B9FBC658749003FF3882374A"
+    "sha256": "7C8CE9C1F9C4A8C1C38749FEB479FFB527FAAA521F51D41E66068CE463F70408"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/GuildAcceptQuestOrderAction.h",
@@ -24833,7 +24833,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "C38BDDDCAADF49790B7D1EFC663F6C77182C29661A1D5ECCA2F3B512C6959D1D"
+    "sha256": "FADD328F461254EBAFEA79A32B7FEB49D1CCDA36E1D0BEF44D37E32D09329331"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/StatsAction.cpp",

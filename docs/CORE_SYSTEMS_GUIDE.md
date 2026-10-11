@@ -360,3 +360,22 @@ the broader upstream quoting changes already exist here. The focused SQL test
 extracts the actual query and executes it on a disposable MySQL 8.4 account
 table, checking zero, negative and positive ranks. No production schema or
 account data is needed or changed.
+
+### Active follow-generator inspection (2026-10-11)
+
+Playerbot `ServerFacade::GetChaseTarget`, angle and offset inspect the active
+native chase/follow generator for both players and creatures. A combat victim
+is not the movement target. Unrelated or absent generators return no target
+and zero geometry; do not inspect a suspended generator beneath point movement.
+`TargetedMovementGeneratorMedium` exposes its existing follower reference and
+geometry without changing their ownership, native pathfinding or async update.
+
+Follow action admission, its update trigger and movement dispatch use the same
+`IsFollowing` comparison. The requested formation distance includes the target
+radius; the stored native offset does not. Differences within 0.01 yards and
+0.01 radians (including angle wraparound) retain the route; changed targets,
+formations or movement types issue a new native follow request. Failed path
+recovery still belongs to the native follow generator. The focused regression
+suite in `tests/playerbot-follow` covers these boundaries with deterministic
+motion services; it does not certify Stormwind navigation mesh geometry or
+live gameplay. Loot retry loops remain a separate investigation.
