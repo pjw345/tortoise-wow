@@ -18179,7 +18179,7 @@
       "spells",
       "death_reset"
     ],
-    "sha256": "255C12DFDD42B0C39F5339DB4451B26962FCE53B6C2F35666711BC5D666A9AD4"
+    "sha256": "5F6CA5E9E9965433B653106DC3F95064C3AA557804CF2310888E368BBDE04F6C"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/TravelRoutePolicy.h",
@@ -19946,7 +19946,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "99DD7B5CCF9E23DCE9E8D50ADEBC4B44CAB46D7800BE579E51F1767A086BD6B6"
+    "sha256": "9C32041710CDCBFA8332F8C9CA8757B1E42BC7103403AB9869CFB4710D8BEF07"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/LastSaidValue.h",
@@ -20044,7 +20044,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "860C7EAFC24AAD152BDD74CF39B702BDF3C612DA991AEBBF825AAE616117A6AB"
+    "sha256": "FE000B2F0C274AE0AAFD0FB1E6C4CC4DF337D145E72290C4F375093C2E1EED4E"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/ItemCountValue.cpp",
@@ -20062,7 +20062,7 @@
     "dependency_signals": [
       "threat"
     ],
-    "sha256": "EC88AFAA73C4822C1B69C2C080C2A4EE5E1ED61EB7E591E5B12F99EFBC35F9BD"
+    "sha256": "73964E35145FC7AE92EFE29F477442D9CD247EF0A9B60A4CFCA552BC54956BB4"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/OperatorValues.cpp",
@@ -21486,7 +21486,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "35EB4C7618C96AFBBCF03AE546E42F10DCB80D3B566196F984B1D9A3D7DD7F41"
+    "sha256": "4CA5EC63980F236167F8A15AF325CA43C46ED968995E0B0FA66D2B10507E0870"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ChatFilter.cpp",
@@ -21495,19 +21495,6 @@
     "loader_calls": [],
     "dependency_signals": [],
     "sha256": "FA909B00A94B0DEFA46F5032A91F66FA3C28C62D183F4401724F0049171E927C"
-  },
-  {
-    "file": "modules/mod-playerbots/src/playerbot/PlayerbotAI.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "ai_update",
-      "spells",
-      "death_reset",
-      "async"
-    ],
-    "sha256": "1E907D350487369C8F5C67ED71F5ECA1B360BF8EC2B7011BF700A365707F4129"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/PlayerbotFactory.h",
@@ -21576,7 +21563,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "6F63E9258878354571A6E6096F4D7924CB65199CBCC42073ABF4328B901CBA18"
+    "sha256": "F24A3D6FBB7D8514C7464C4470E0822ECACAA32B32CD8FC091748C828C0570DE"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/BotState.h",
@@ -24765,7 +24752,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "FAC6DAE5FE5A752804BECB253E700CB47417FB7E1EF709BD704AF7F1B4E49EEC"
+    "sha256": "778474F4D11B4D2933286A90470B5B47455B5F5CB09B5686BBB2AC6E021206D0"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/ListQuestsActions.cpp",
@@ -25063,7 +25050,7 @@
     "dependency_signals": [
       "threat"
     ],
-    "sha256": "B14B25E2E6FBBC58F4AF6E8F058CE68D6A5248C22F7025CC6105B373DFC48153"
+    "sha256": "3A18C1342CE71231C4492DCCC56159B66D38819C5A30A34414CE52C44ADD1886"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/BuffAction.h",
@@ -25721,7 +25708,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "9A89DC36FC66AD8606FFF1055BFC92B75612239AFA2C8267C9C644DBDD3ADA30"
+    "sha256": "8B058CB92D535B82B9722E031966753E214BEBECFFA20A8CE76DA915C35A517E"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/LootRollAction.cpp",
@@ -25877,5 +25864,19 @@
       "async"
     ],
     "sha256": "D0165095EF94E60100223945E4C2B8C2503EC409A40199965437651E150C46B5"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/PlayerbotAI.cpp",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "movement",
+      "death_reset",
+      "async"
+    ],
+    "sha256": "1EC5066218DBEFF2E7B4763F7E8F82EE24A0D5D483B477065BF7207825793E5E"
   }
 ]
