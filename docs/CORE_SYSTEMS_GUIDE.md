@@ -379,3 +379,16 @@ recovery still belongs to the native follow generator. The focused regression
 suite in `tests/playerbot-follow` covers these boundaries with deterministic
 motion services; it does not certify Stormwind navigation mesh geometry or
 live gameplay. Loot retry loops remain a separate investigation.
+
+### Hostiles near loot for grouped followers (2026-10-11)
+
+`LootObject::IsApproachSafe` applies the configured `LootHostileDistance` to
+grouped followers, including those with active human masters. Admission,
+selection and movement recheck the same live destination through the native
+`GetAllHostileNPCNonPetUnitsAroundWO` query. That query filters living hostile
+NPCs from the bot's perspective and excludes players and pets. Neutral/friendly
+units and dead corpses do not block loot. A newly unsafe selected target is
+deferred with the existing retry lifecycle and cleared before native movement.
+Ungrouped bots, group leaders and an explicitly zero safety radius retain their
+previous policy. This checks the destination area; it is not proof that every
+path to a safe destination is free of aggro or that navigation geometry is valid.

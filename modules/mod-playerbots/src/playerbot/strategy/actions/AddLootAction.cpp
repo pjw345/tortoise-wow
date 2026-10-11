@@ -206,22 +206,19 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid, bool explicit
 
     //check hostile units after distance checks, to avoid unnecessary calculations
 
-    if (isInGroup && !ai->IsGroupLeader() && !ai->HasActivePlayerMaster() &&
-        sPlayerbotAIConfig.lootHostileDistance > 0.0f)
+    Unit* blocker = nullptr;
+    if (!loot.IsApproachSafe(bot, &blocker))
     {
-        std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(wo, sPlayerbotAIConfig.lootHostileDistance);
-
-        if (!hostiles.empty())
+        if (blocker)
         {
             std::ostringstream out;
-            out << hostiles.front()->GetName() << " is blocking " << wo->GetName() << ", need to kill it or I will not loot";
+            out << blocker->GetName() << " is blocking " << wo->GetName() << ", need to kill it or I will not loot";
             ai->TellError(requester, out.str());
             if (debugLoot)
-                sLog.outLoot("bot=%s event=reject guid=%lu reason=hostile blocker=\"%s\" radius=%.0f count=%zu",
-                    bot->GetName(), guid.GetRawValue(), hostiles.front()->GetName(),
-                    sPlayerbotAIConfig.lootHostileDistance, hostiles.size());
-            return false;
+                sLog.outLoot("bot=%s event=reject guid=%lu reason=hostile blocker=\"%s\" radius=%.0f",
+                    bot->GetName(), guid.GetRawValue(), blocker->GetName(), sPlayerbotAIConfig.lootHostileDistance);
         }
+        return false;
     }
 
     uint8 usedBagSpacePercent = AI_VALUE(uint8, "bag space");
