@@ -163,7 +163,7 @@ bool AttackAction::Attack(Player* requester, Unit* target)
                     }
 
                     // Don't send the pet to attack if set to passive
-                    if (creatureAI->GetReactState() != REACT_PASSIVE)
+                    if (creatureAI->GetReactState() != REACT_PASSIVE || ai->ShouldAssistPlayerMaster())
                     {
                         creatureAI->AttackStart(target);
                     }
@@ -211,6 +211,9 @@ bool AttackAction::Attack(Player* requester, Unit* target)
 
 bool AttackAction::IsTargetValid(Player* requester, Unit* target)
 {
+    if (!ai->IsPlayerMasterAttackAllowed(target))
+        return false;
+
     if (!target)
     {
         if (verbose) 

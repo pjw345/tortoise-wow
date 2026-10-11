@@ -15,6 +15,12 @@ using namespace MaNGOS;
 
 std::list<ObjectGuid> PossibleAttackTargetsValue::Calculate()
 {
+    if (ai->ShouldAssistPlayerMaster())
+    {
+        Unit* target = ai->GetPlayerMasterAttackTarget();
+        return target ? std::list<ObjectGuid>{ target->GetObjectGuid() } : std::list<ObjectGuid>{};
+    }
+
     std::list<ObjectGuid> result;
     if (ai->AllowActivity(ALL_ACTIVITY))
     {

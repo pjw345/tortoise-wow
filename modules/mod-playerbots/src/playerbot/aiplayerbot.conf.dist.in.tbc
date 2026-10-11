@@ -1186,3 +1186,9 @@ AiPlayerbot.LLMDefaultPromptsFile = llm_character_card.txt
 
 # Mystery config value. Currently enables async bot pathfinding. Rarely crashes the server.
 # AiPlayerbot.TweakValue = 0
+
+# Grouped companions in PvE follow the real player's actual attack victim.
+# No selected-but-unattacked targets or independent add targeting. Area spells remain enabled.
+# Healing/defensive actions remain available; attacked companions warn privately.
+# Set 0 to restore autonomous target selection. Random/solo/PvP bots are unaffected.
+AiPlayerbot.AssistPlayerMaster = 1

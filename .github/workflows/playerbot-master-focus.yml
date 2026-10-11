@@ -1,0 +1,19 @@
+name: Playerbot master combat focus
+on:
+  push:
+    paths: ['modules/mod-playerbots/**', 'tests/playerbot-master-focus/**', '.github/workflows/playerbot-master-focus.yml']
+  pull_request:
+    paths: ['modules/mod-playerbots/**', 'tests/playerbot-master-focus/**', '.github/workflows/playerbot-master-focus.yml']
+permissions:
+  contents: read
+jobs:
+  native-policy:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S tests/playerbot-master-focus -B build/master-focus-tests
+      - run: cmake --build build/master-focus-tests --config Release
+      - run: ctest --test-dir build/master-focus-tests -C Release --output-on-failure

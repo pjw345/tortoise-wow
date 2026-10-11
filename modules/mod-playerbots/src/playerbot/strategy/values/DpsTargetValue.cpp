@@ -8,6 +8,9 @@ using namespace ai;
 
 Unit* DpsTargetValue::Calculate()
 {
+    if (ai->ShouldAssistPlayerMaster())
+        return ai->GetPlayerMasterAttackTarget();
+
     Unit* rti = RtiTargetValue::Calculate();
     if (rti) return rti;
 
@@ -43,6 +46,9 @@ protected:
 
 Unit* DpsAoeTargetValue::Calculate()
 {
+    if (ai->ShouldAssistPlayerMaster())
+        return ai->GetPlayerMasterAttackTarget();
+
     Unit* rti = RtiTargetValue::Calculate();
     if (rti) return rti;
 

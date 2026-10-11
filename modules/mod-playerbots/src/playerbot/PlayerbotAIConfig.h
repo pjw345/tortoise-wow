@@ -257,6 +257,7 @@ public:
     bool turnInRpg;
     bool globalSoundEffects;
     bool shareTargets;
+    bool assistPlayerMaster;
     std::list<uint32> randomBotGuilds;
 	std::list<uint32> pvpProhibitedZoneIds;
     bool enableGreet;
