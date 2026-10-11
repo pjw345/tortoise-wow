@@ -28,6 +28,19 @@ cleanup in that order. `BotCreationLifecycleTest` executes the production loops
 with real futures and mock account/player services; it is not a realm startup
 or database-persistence test.
 
+Playerbot travel-search futures remain owned by the AI context until result
+consumption or AI destruction. Their snapshot inputs do not remove their reads
+of global travel destinations and terrain. `PlayerbotWorldScript::OnShutdown`
+snapshots every attached AI from the native player registry (including headless
+and self-bot sessions), releases the registry lock, then calls
+`PlayerbotAI::WaitForTravelSearch` before World tears down sessions/maps.
+The hook drains even after bots have been disabled by a config reload.
+`PlayerbotAI` destruction also waits before deleting engines/context. Waiting
+preserves results and stored worker exceptions and does not instantiate unused
+values. Ordinary reset remains nonblocking; do not reuse a normal reset to join
+shutdown work. Run the focused native-future regression with
+`cmake -S tests/playerbot-shutdown -B build/shutdown-tests`, build it, then CTest.
+
 | Boundary | Current source entry points | Contract to preserve |
 | --- | --- | --- |
 | World lifecycle | [World.cpp](../src/game/World.cpp), `World::Update` at 2731 | Global services, transports, session/result processing and map orchestration are separate phases. World-thread maintenance must not mutate a map concurrently with its owner. |

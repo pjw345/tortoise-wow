@@ -368,3 +368,16 @@ foreach(test AhBotChatDispatchTest AhBotMarketTest AuctionSettlementTest)
   add_test(NAME ${test} COMMAND ${test})
   set_tests_properties(${test} PROPERTIES TIMEOUT 30)
 endforeach()
+
+extract_native_fragment("${TRAVEL_ROOT}/PlayerbotAI.cpp"
+    "void PlayerbotAI::WaitForTravelSearch()" "void PlayerbotAI::RevalidateMasterPointer()" TravelShutdownWait.inc)
+extract_native_fragment("${TRAVEL_ROOT}/PlayerbotScripts.cpp"
+    "void OnShutdown() override" "        // Was World::UpdatePlayerbotsTick(diff)." TravelShutdownHook.inc)
+add_executable(TravelShutdownLifecycleTest TravelShutdownLifecycleTest.cpp)
+target_compile_features(TravelShutdownLifecycleTest PRIVATE cxx_std_17)
+target_include_directories(TravelShutdownLifecycleTest PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+if(MSVC)
+    target_compile_options(TravelShutdownLifecycleTest PRIVATE /EHsc)
+endif()
+add_test(NAME TravelShutdownLifecycleTest COMMAND TravelShutdownLifecycleTest)
+set_tests_properties(TravelShutdownLifecycleTest PROPERTIES TIMEOUT 20)
