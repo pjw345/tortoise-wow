@@ -1,0 +1,98 @@
+[
+  {
+    "name": "taunt",
+    "text": "I’m sorry, I didn’t realize <target> were an expert in everything."
+  },
+  {
+    "name": "taunt",
+    "text": "I’m sorry, but <target>'s opinion is just not worth my time."
+  },
+  {
+    "name": "taunt",
+    "text": "It’s amusing how <target> thinks so highly of themselves when everyone else sees right through them."
+  },
+  {
+    "name": "taunt",
+    "text": "It’s cute how <target> tries to act like they know everything."
+  },
+  {
+    "name": "taunt",
+    "text": "What’s wrong with <target>?"
+  },
+  {
+    "name": "taunt",
+    "text": "<target> shouldn’t have done that!"
+  },
+  {
+    "name": "taunt",
+    "text": "Don’t talk to me like that, <target>!"
+  },
+  {
+    "name": "taunt",
+    "text": "What’s <target>'s problem?"
+  },
+  {
+    "name": "taunt",
+    "text": "I don’t want to see <target>'s face!"
+  },
+  {
+    "name": "hello",
+    "text": "It’s good to meet you."
+  },
+  {
+    "name": "hello",
+    "text": "What’s up?"
+  },
+  {
+    "name": "hello",
+    "text": "How’s it going?"
+  },
+  {
+    "name": "hello",
+    "text": "Hey, how’s your day going?"
+  },
+  {
+    "name": "hello",
+    "text": "Hey, I couldn’t help but notice you, how’s it going?"
+  },
+  {
+    "name": "hello",
+    "text": "Hi, I’m new around here. Have you been here long?"
+  },
+  {
+    "name": "hello",
+    "text": "Hello, could you tell me the time, please? I’m just making conversation."
+  },
+  {
+    "name": "hello",
+    "text": "I hope you’re having a productive day."
+  },
+  {
+    "name": "hello",
+    "text": "It’s an honor to be here with you."
+  },
+  {
+    "name": "goodbye",
+    "text": "Don’t do anything I wouldn’t do!"
+  },
+  {
+    "name": "goodbye",
+    "text": "Well, it’s been… interesting. See you around, I guess."
+  },
+  {
+    "name": "goodbye",
+    "text": "Alright, I’ll leave you to it. Don’t let the door hit you on the way out."
+  },
+  {
+    "name": "goodbye",
+    "text": "Good riddance. Don’t come back."
+  },
+  {
+    "name": "goodbye",
+    "text": "I’m done here. Take care… I guess."
+  },
+  {
+    "name": "goodbye",
+    "text": "Catch you later? No, don’t. Please."
+  }
+]

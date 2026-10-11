@@ -1,0 +1,34 @@
+name: Playerbot stock text migration
+on:
+  push:
+    paths: ['modules/mod-playerbots/sql/world/ai_playerbot_texts.sql', 'sql/database_updates/world/20261011150000_world.sql', 'tests/playerbot-texts/**', '.github/workflows/playerbot-texts.yml']
+  pull_request:
+    paths: ['modules/mod-playerbots/sql/world/ai_playerbot_texts.sql', 'sql/database_updates/world/20261011150000_world.sql', 'tests/playerbot-texts/**', '.github/workflows/playerbot-texts.yml']
+permissions:
+  contents: read
+jobs:
+  bot-texts:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image: mysql:8.4
+            client: mysql
+            admin: mysqladmin
+          - image: mariadb:11.8
+            client: mariadb
+            admin: mariadb-admin
+    services:
+      database:
+        image: ${{ matrix.image }}
+        env:
+          MYSQL_ROOT_PASSWORD: ci-test-only
+        options: >-
+          --health-cmd="${{ matrix.admin }} ping -uroot -pci-test-only"
+          --health-interval=5s --health-timeout=5s --health-retries=24
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tests/playerbot-texts/test_bot_texts.py
+        env:
+          DATABASE_CONTAINER_ID: ${{ job.services.database.id }}
+          DATABASE_CLIENT: ${{ matrix.client }}
