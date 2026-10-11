@@ -392,3 +392,23 @@ deferred with the existing retry lifecycle and cleared before native movement.
 Ungrouped bots, group leaders and an explicitly zero safety radius retain their
 previous policy. This checks the destination area; it is not proof that every
 path to a safe destination is free of aggro or that navigation geometry is valid.
+
+### Player-controlled companion combat focus
+
+`AiPlayerbot.AssistPlayerMaster` defaults to enabled for grouped companions with
+an active real player master on the same map/instance, outside PvP. The native
+master attack victim (not selection or a raid icon) is the allowed damage target.
+PossibleAttackTargetsValue and DPS/tank selectors share that target; AttackAction
+and unit/coordinate/pet spell dispatch recheck it. Offensive area spells are
+disabled in this mode to avoid hitting unrelated mobs. Positive spells and
+interrupts remain available, including healing. Pure healers do not gain an
+automatic melee assist. Existing attack delays still apply when enabled.
+
+UpdatePlayerMasterAssist clears stale target values/auto-attacks and interrupts
+disallowed in-progress casts using native APIs; pets attacking a different enemy
+are stopped and returned to follow. Bots warn their master privately when a live
+enemy attacks them, bounded to one attempt per ten seconds and the existing
+no-repeat/silent rules. Random, solo, bot-led and PvP behaviour is retained;
+setting the configuration to 0 restores autonomous player-companion targeting.
+Projectile spells already launched, existing damage-over-time effects and
+hostiles pulled by movement/healing are not undone by this targeting policy.

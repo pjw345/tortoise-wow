@@ -726,6 +726,8 @@ void PlayerbotAI::UpdateAI(uint32 elapsed, bool minimal)
         bot->StopMoving();
     }
 
+    UpdatePlayerMasterAssist();
+
     // Update facing
     SC_PHASE("UpdateAI.UpdateFaceTarget", bot ? bot->GetName() : "(null)");
     UpdateFaceTarget(elapsed, minimal);
@@ -897,6 +899,133 @@ bool PlayerbotAI::IsImmuneToSpell(uint32 spellId) const
 bool PlayerbotAI::IsInPve()
 {
     return !IsInPvp() && !IsInRaid();
+}
+
+bool PlayerbotAI::ShouldAssistPlayerMaster()
+{
+    return sPlayerbotAIConfig.assistPlayerMaster && HasActivePlayerMaster() &&
+        !IsRealPlayer() && bot->IsInWorld() && master && master->IsInWorld() &&
+        !IsInPvp() && IsSafe(master) &&
+        bot->IsInGroup(master) && master->GetMap() == bot->GetMap();
+}
+
+Unit* PlayerbotAI::GetPlayerMasterAttackTarget()
+{
+    if (!ShouldAssistPlayerMaster() || !sServerFacade.IsAlive(master))
+        return nullptr;
+
+    // Selection alone is not permission to pull. Use the native attack victim.
+    Unit* target = master->GetVictim();
+    if (!target || !IsSafe(bot, target) || target->GetMap() != bot->GetMap() ||
+        !sServerFacade.IsAlive(target) || sServerFacade.IsFriendlyTo(bot, target) ||
+        !bot->IsWithinDistInMap(target, sPlayerbotAIConfig.sightDistance, false))
+        return nullptr;
+
+    return target;
+}
+
+bool PlayerbotAI::IsPlayerMasterAttackAllowed(Unit* target)
+{
+    return !ShouldAssistPlayerMaster() || (target && target == GetPlayerMasterAttackTarget());
+}
+
+bool PlayerbotAI::IsPlayerMasterSpellAllowed(SpellEntry const* spell, Unit* target)
+{
+    if (!ShouldAssistPlayerMaster() || !spell || IsPositiveSpell(spell))
+        return true;
+
+    // An area spell can pull unrelated enemies even when aimed at the right mob.
+    if (spell->IsAreaOfEffectSpell())
+        return false;
+
+    // Interrupts remain available against adds as a defensive reaction.
+    if (IsSpellHaveEffect(spell, SPELL_EFFECT_INTERRUPT_CAST))
+        return true;
+
+    return IsPlayerMasterAttackAllowed(target);
+}
+
+void PlayerbotAI::UpdatePlayerMasterAssist()
+{
+    if (!ShouldAssistPlayerMaster())
+    {
+        Pet* pet = bot->GetPet();
+        if (pet && pet->GetObjectGuid() == playerMasterFocusPet && pet->AI() &&
+            pet->AI()->GetReactState() == REACT_PASSIVE)
+            pet->AI()->SetReactState(ReactStates(playerMasterFocusPetReact));
+        playerMasterFocusPet = ObjectGuid();
+        lastPlayerMasterAggroWarningMs = 0;
+        return;
+    }
+
+    Unit* target = GetPlayerMasterAttackTarget();
+    Unit* current = aiObjectContext->GetValue<Unit*>("current target")->Get();
+    if (current != target)
+    {
+        // Clear stale targeting through the existing values and assist actions.
+        bot->AttackStop();
+        aiObjectContext->GetValue<Unit*>("current target")->Set(nullptr);
+        aiObjectContext->GetValue<ObjectGuid>("attack target")->Set(ObjectGuid());
+        aiObjectContext->GetValue<Unit*>("dps target")->Reset();
+        aiObjectContext->GetValue<Unit*>("tank target")->Reset();
+        aiObjectContext->GetValue<Unit*>("dps aoe target")->Reset();
+    }
+    else if (bot->GetVictim() && bot->GetVictim() != target)
+        bot->AttackStop();
+
+    for (int type = CURRENT_MELEE_SPELL; type < CURRENT_MAX_SPELL; ++type)
+    {
+        Spell* spell = bot->GetCurrentSpell(CurrentSpellTypes(type));
+        if (spell && spell->CanBeInterrupted() &&
+            !IsPlayerMasterSpellAllowed(spell->m_spellInfo, GetUnit(spell->m_targets.getUnitTargetGuid())))
+        {
+            uint32 const id = spell->m_spellInfo->Id;
+            bot->InterruptSpell(CurrentSpellTypes(type));
+            SpellInterrupted(id);
+        }
+    }
+
+    Pet* pet = bot->GetPet();
+    if (pet && pet->AI())
+    {
+        if (pet->GetObjectGuid() != playerMasterFocusPet)
+        {
+            playerMasterFocusPet = pet->GetObjectGuid();
+            playerMasterFocusPetReact = uint8(pet->AI()->GetReactState());
+        }
+        // Explicit assist commands can still start attacks; passive prevents
+        // the pet's own AI from acquiring an add before the player does.
+        pet->AI()->SetReactState(REACT_PASSIVE);
+    }
+    if (pet && pet->GetVictim() && pet->GetVictim() != target)
+    {
+        pet->AttackStop();
+        pet->GetMotionMaster()->MoveFollow(bot, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+    }
+
+    Unit* attacker = nullptr;
+    for (Unit* unit : bot->getAttackers())
+    {
+        if (unit && IsSafe(bot, unit) && sServerFacade.IsAlive(unit) && unit->GetVictim() == bot)
+        {
+            attacker = unit;
+            break;
+        }
+    }
+    if (!attacker)
+    {
+        lastPlayerMasterAggroWarningMs = 0;
+        return;
+    }
+
+    uint32 const now = WorldTimer::getMSTime();
+    if (!lastPlayerMasterAggroWarningMs ||
+        WorldTimer::getMSTimeDiff(lastPlayerMasterAggroWarningMs, now) >= 10000)
+    {
+        lastPlayerMasterAggroWarningMs = now;
+        TellPlayerNoFacing(master, "I'm being attacked by " + std::string(attacker->GetName()) +
+            "! Please take aggro.", PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, true, true);
+    }
 }
 
 bool PlayerbotAI::IsInPvp()
@@ -5025,6 +5154,9 @@ bool PlayerbotAI::CastSpell(uint32 spellId, Unit* target, Item* itemTarget, bool
         }
     }
 
+    if (!IsPlayerMasterSpellAllowed(sServerFacade.LookupSpellInfo(spellId), target))
+        return false;
+
     Pet* pet = bot->GetPet();
     if (pet && pet->HasSpell(spellId))
     {
@@ -5418,6 +5550,9 @@ bool PlayerbotAI::CastSpell(uint32 spellId, GameObject* goTarget, Item* itemTarg
 
 bool PlayerbotAI::CastSpell(uint32 spellId, float x, float y, float z, Item* itemTarget, bool waitForSpell, uint32* outSpellDuration)
 {
+    if (!IsPlayerMasterSpellAllowed(sServerFacade.LookupSpellInfo(spellId), nullptr))
+        return false;
+
     if (!spellId || !sServerFacade.LookupSpellInfo(spellId) ||
         !std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z))
         return false;
@@ -5571,6 +5706,9 @@ bool PlayerbotAI::CastSpell(uint32 spellId, float x, float y, float z, Item* ite
 
 bool PlayerbotAI::CastPetSpell(uint32 spellId, Unit* target)
 {
+    if (!IsPlayerMasterSpellAllowed(sServerFacade.LookupSpellInfo(spellId), target))
+        return false;
+
     Pet* pet = bot->GetPet();
     if (pet && spellId && pet->HasSpell(spellId))
     {

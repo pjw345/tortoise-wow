@@ -43,6 +43,9 @@ protected:
 
 Unit* TankTargetValue::Calculate()
 {
+    if (ai->ShouldAssistPlayerMaster())
+        return ai->GetPlayerMasterAttackTarget();
+
     Unit* rti = RtiTargetValue::Calculate();
     if (rti) return rti;
 

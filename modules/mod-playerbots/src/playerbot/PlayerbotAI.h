@@ -615,6 +615,9 @@ public:
     // invariant tied to its value beyond "nonnegative").
     uint32 scboteHeartbeatAcc = 0;
     uint32 lastSpeedDiagnosticMs = 0;
+    uint32 lastPlayerMasterAggroWarningMs = 0;
+    ObjectGuid playerMasterFocusPet;
+    uint8 playerMasterFocusPetReact = 0;
 
     // One-shot "needs level/gear sync" flag. Set by OnBotSummoned
     // when the bot logs in; cleared by TickHeartbeat after the sync runs.
@@ -673,6 +676,11 @@ public:
     bool HasRealPlayerMaster() { return master && (!GetBotAI(master) || GetBotAI(master)->IsRealPlayer()); } 
     //Bot has a master that is actively playing.
     bool HasActivePlayerMaster() const { return master && !GetBotAI(master); }
+    bool ShouldAssistPlayerMaster();
+    Unit* GetPlayerMasterAttackTarget();
+    bool IsPlayerMasterAttackAllowed(Unit* target);
+    bool IsPlayerMasterSpellAllowed(SpellEntry const* spell, Unit* target);
+    void UpdatePlayerMasterAssist();
     //Checks if the bot is summoned as alt of a player
     bool IsAlt() { return HasRealPlayerMaster() && !sRandomPlayerbotMgr.IsRandomBot(bot); }
     //Get the group leader or the master of the bot.

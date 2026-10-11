@@ -987,3 +987,12 @@ real asynchronous and deferred futures. It checks pending headless/self-bot
 work, release of the registry lock before join, absent/invalid values, repeated
 drains and retained exceptions/results. It checks the host shutdown/map-unload
 ordering too. This is not a complete realm shutdown or gameplay test.
+
+### Companion aggro warnings
+
+Player-master combat focus adds a private gameplay warning through the existing
+TellPlayerNoFacing path when an enemy's native attack victim is the companion.
+There is no new log stream or global debug setting. Attempts are rate limited to
+ten seconds per bot; existing repeatDelay and silent strategy rules still apply.
+Disable AiPlayerbot.AssistPlayerMaster to restore the former targeting policy and
+disable these associated warnings. This warning is not a threat transfer/taunt.

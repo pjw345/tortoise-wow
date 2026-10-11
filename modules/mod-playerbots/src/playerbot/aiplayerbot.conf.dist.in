@@ -5099,3 +5099,9 @@ AiPlayerbot.BehaviorTraceMap = 0
 AiPlayerbot.BehaviorTraceX = -800
 AiPlayerbot.BehaviorTraceY = -530
 AiPlayerbot.BehaviorTraceRadius = 200
+
+# Grouped companions in PvE follow the real player's actual attack victim.
+# No selected-but-unattacked targets, independent adds or offensive area spells.
+# Healing/defensive actions remain available; attacked companions warn privately.
+# Set 0 to restore autonomous target selection. Random/solo/PvP bots are unaffected.
+AiPlayerbot.AssistPlayerMaster = 1

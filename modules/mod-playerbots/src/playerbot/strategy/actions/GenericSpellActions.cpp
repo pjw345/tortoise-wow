@@ -101,7 +101,7 @@ bool CastSpellAction::isPossible()
     }
 
     Unit* spellTarget = GetTarget();
-    if (!spellTarget)
+    if (!spellTarget || !ai->IsPlayerMasterSpellAllowed(sServerFacade.LookupSpellInfo(spellId), spellTarget))
         return false;
 
     bool canReach = false;
