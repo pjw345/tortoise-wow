@@ -996,3 +996,16 @@ There is no new log stream or global debug setting. Attempts are rate limited to
 ten seconds per bot; existing repeatDelay and silent strategy rules still apply.
 Disable AiPlayerbot.AssistPlayerMaster to restore the former targeting policy and
 disable these associated warnings. This warning is not a threat transfer/taunt.
+
+## Spell capability fallback correction (2026-10-12)
+
+Level-22/23 priests repeatedly logged greater-heal-on-party USELESS while their
+spellbooks contained Heal and Lesser Heal but not Greater Heal. The earlier
+static capability check in CastSpellAction::isUseful skipped the engine's native
+alternatives. Move that check into isPossible, before target/range/cast checks;
+the action becomes IMPOSSIBLE and normal alternatives can run. This adds no
+diagnostic stream, timer, config switch or class-specific replacement AI.
+Tests extract actual isUseful/isPossible methods and cover unknown/unlearned
+spells, learned spells, dynamic mount, utility/target rejection and policy/range
+rejection. Source audit is regenerated in CI. Full-server compilation and live
+healing/priority validation remain separate deployment gates.
