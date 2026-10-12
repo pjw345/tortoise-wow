@@ -100,6 +100,13 @@ bool CastSpellAction::isPossible()
         }
     }
 
+    // Capability misses are impossible, not useless: Engine must try the
+    // action node's alternatives (for example greater heal -> heal -> lesser
+    // heal). Mount remains a dynamic pseudo-action rather than a fixed spell.
+    if (spellName != "mount" &&
+        (!spellId || !sServerFacade.LookupSpellInfo(spellId) || !ai->HasSpell(spellId)))
+        return false;
+
     Unit* spellTarget = GetTarget();
     if (!spellTarget || !ai->IsPlayerMasterSpellAllowed(sServerFacade.LookupSpellInfo(spellId), spellTarget))
         return false;
@@ -148,11 +155,6 @@ bool CastSpellAction::isPossible()
 
 bool CastSpellAction::isUseful()
 {
-    // Reject static capability misses before target/range evaluation (ManTech
-    // 407f4cd5). Mount is a dynamic pseudo-action, not one fixed learned spell.
-    if (spellName != "mount" &&
-        (!spellId || !sServerFacade.LookupSpellInfo(spellId) || !ai->HasSpell(spellId)))
-        return false;
     if (ai->IsInVehicle() && !ai->IsInVehicle(false, false, true))
         return false;
 

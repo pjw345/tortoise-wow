@@ -169,13 +169,16 @@ screened against the complete no-LOS hostile set and the least movement is
 chosen; guard range still bounds repositioning. A pending resurrection request
 outranks automatic release, self-resurrection, spirit-healer and repop actions.
 
-The action engine evaluates `isUseful()` before `isPossible()`. Most spell
-actions therefore require a resolved, learned spell ID during usefulness
-checking. Paladin's generic blessing actions are deliberately dynamic: they
-select Might, Wisdom, Kings, Sanctuary or Light for the current target during
-`isPossible()`. Both the self and party variants must defer their capability
-check to that stage; fixed-spell manual blessing strategies retain the normal
-generic spell guard.
+The action engine evaluates `isUseful()` before `isPossible()`. A useless
+action does not enqueue its alternatives; an impossible action does. Missing,
+unresolved or unlearned spell capabilities must therefore fail `isPossible()`,
+not `isUseful()`, so the native action graph can fall back from greater heal to
+heal and lesser heal. `SpellCastUsefulValue` deliberately allows unresolved
+spells for this reason. Target/vehicle/current-cast usefulness checks remain
+native; capability rejection still occurs before range and actual casting.
+Mount and the generic Paladin blessing actions remain dynamic and retain their
+native spell selection. No class-specific heal fallback or priority override is
+introduced. Focused native-method tests are in `tests/playerbot-spell-fallback`.
 
 Playerbot `skill` chat commands search `SkillLineEntry::name`, whose vanilla
 DBC storage has `MAX_DBC_LOCALE` (eight) entries. `MAX_LOCALE` also includes
