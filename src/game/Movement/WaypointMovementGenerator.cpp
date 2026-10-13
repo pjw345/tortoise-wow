@@ -246,7 +246,17 @@ bool WaypointMovementGenerator<Creature>::Update(Creature &creature, const uint3
     }
     else
     {
-        if (creature.IsStopped())
+        // A zero-length spline is rejected by Launch and leaves the unit
+        // stopped. Only count this as arrival when it is already at the node;
+        // an interrupted spline elsewhere must retain the native retry delay.
+        WaypointNode const& node = i_path->at(i_currentNode);
+        float const dx = creature.GetPositionX() - node.x;
+        float const dy = creature.GetPositionY() - node.y;
+        float const dz = creature.GetPositionZ() - node.z;
+        bool const stoppedAtNode = creature.IsStopped() &&
+            creature.movespline->Finalized() &&
+            dx * dx + dy * dy + dz * dz <= 0.0001f;
+        if (creature.IsStopped() && !stoppedAtNode)
             Stop(STOP_TIME_FOR_PLAYER);
         else if (creature.movespline->Finalized())
         {

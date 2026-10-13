@@ -1,0 +1,19 @@
+name: Waypoint arrival
+on:
+  push:
+    paths: ['src/game/Movement/**', 'tests/waypoint-arrival/**', '.github/workflows/waypoint-arrival.yml']
+  pull_request:
+    paths: ['src/game/Movement/**', 'tests/waypoint-arrival/**', '.github/workflows/waypoint-arrival.yml']
+permissions:
+  contents: read
+jobs:
+  native-waypoint:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S tests/waypoint-arrival -B build/waypoint-tests
+      - run: cmake --build build/waypoint-tests --config Release
+      - run: ctest --test-dir build/waypoint-tests -C Release --output-on-failure

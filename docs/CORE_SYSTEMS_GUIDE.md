@@ -416,3 +416,7 @@ no-repeat/silent rules. Random, solo, bot-led and PvP behaviour is retained;
 setting the configuration to 0 restores autonomous player-companion targeting.
 Projectile spells already launched, existing damage-over-time effects and
 hostiles pulled by movement/healing are not undone by this targeting policy.
+
+## Stationary waypoint arrival
+
+Native waypoint Update handles stopped, finalized splines as arrival only when the creature is within the spline displacement tolerance (0.01 yards) of its current node. This allows a route beginning at spawn to advance after MoveSplineInit rejects a zero-length movement. Interrupted movement elsewhere retains the 30-second retry; immobility, distraction, waypoint waits and arrival scripts retain their existing paths. tests/waypoint-arrival extracts the production Update method for focused boundary checks; live escort completion still needs validation.
