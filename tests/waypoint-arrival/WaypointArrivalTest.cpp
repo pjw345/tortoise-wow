@@ -14,7 +14,8 @@ struct Creature {
  float GetPositionX() const { return x; } float GetPositionY() const { return y; } float GetPositionZ() const { return z; }
 };
 struct WaypointNode { float x=0,y=0,z=0; };
-template<class T> struct WaypointMovementGenerator {
+template<class T> struct WaypointMovementGenerator;
+template<> struct WaypointMovementGenerator<Creature> {
  std::map<uint32,WaypointNode> path{{1,{0,0,0}},{2,{10,0,0}}};
  std::map<uint32,WaypointNode>* i_path=&path;
  uint32 i_currentNode=1; int wait=0,arrivals=0,starts=0;
@@ -22,9 +23,9 @@ template<class T> struct WaypointMovementGenerator {
  bool Stopped() const { return wait>0; }
  void Stop(int time) { wait=time; }
  bool CanMove(int diff) { wait-=diff; return wait<=0; }
- bool OnArrived(T&) { ++arrivals;return arrivalCanContinue; }
- void StartMove(T&) { ++starts; }
- bool Update(T&,const uint32&);
+ bool OnArrived(Creature&) { ++arrivals;return arrivalCanContinue; }
+ void StartMove(Creature&) { ++starts; }
+ bool Update(Creature&,const uint32&);
 };
 #include "NativeWaypointUpdate.inc"
 void check(bool value,const char* label){if(!value)throw std::runtime_error(label);}
