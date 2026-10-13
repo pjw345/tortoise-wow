@@ -420,3 +420,6 @@ hostiles pulled by movement/healing are not undone by this targeting policy.
 ## Playerbot aggro warning timing
 
 UpdatePlayerMasterAssist waits for two seconds of continuously observed native attackers before warning the human master. Losing all attackers or leaving the assist scope resets this delay. Existing ten-second reminders, targeting, healing and pet behaviour are preserved; timing uses wrap-safe native millisecond differences. The focused tests/playerbot-master-focus fixture executes the production method, including transient aggro, repeat timing and timer wrap.
+## Stationary waypoint arrival
+
+Native waypoint Update handles stopped, finalized splines as arrival only when the creature is within the spline displacement tolerance (0.01 yards) of its current node. This allows a route beginning at spawn to advance after MoveSplineInit rejects a zero-length movement. Interrupted movement elsewhere retains the 30-second retry; immobility, distraction, waypoint waits and arrival scripts retain their existing paths. tests/waypoint-arrival extracts the production Update method for focused boundary checks; live escort completion still needs validation.
