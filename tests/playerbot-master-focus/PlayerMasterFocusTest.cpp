@@ -29,7 +29,7 @@ template<class T> struct Value { T value{}; int resets=0; T Get(){return value;}
 struct Context { std::map<std::string,Value<Unit*>> units; Value<ObjectGuid> attack; template<class T> Value<T>* GetValue(std::string n); };
 template<> Value<Unit*>* Context::GetValue<Unit*>(std::string n){return &units[n];}
 template<> Value<ObjectGuid>* Context::GetValue<ObjectGuid>(std::string){return &attack;}
-struct PlayerbotAI { Player *bot=nullptr,*master=nullptr; Context storage; Context* aiObjectContext=&storage; bool activeMaster=true,pvp=false,real=false,silent=false; uint32 lastPlayerMasterAggroWarningMs=0; ObjectGuid playerMasterFocusPet; uint8 playerMasterFocusPetReact=0; std::map<int,Unit*> world; std::vector<std::string> warnings; int interrupted=0;
+struct PlayerbotAI { Player *bot=nullptr,*master=nullptr; Context storage; Context* aiObjectContext=&storage; bool activeMaster=true,pvp=false,real=false,silent=false; bool playerMasterAggroObserved=false; uint32 playerMasterAggroStartedMs=0; uint32 lastPlayerMasterAggroWarningMs=0; ObjectGuid playerMasterFocusPet; uint8 playerMasterFocusPetReact=0; std::map<int,Unit*> world; std::vector<std::string> warnings; int interrupted=0;
  bool HasActivePlayerMaster(){return master && activeMaster;} bool IsRealPlayer(){return real;} bool IsInPvp(){return pvp;} bool IsSafe(Player* p){return p&&p->safe;} static bool IsSafe(Player*,Unit* p){return p&&p->safe;}
  Unit* GetUnit(ObjectGuid g){return world[g.value];} void SpellInterrupted(uint32){++interrupted;}
  bool TellPlayerNoFacing(Player*,std::string text,PlayerbotSecurityLevel,bool,bool){if(silent)return false;warnings.push_back(text);return true;}
@@ -72,9 +72,25 @@ int main(){try{
  check(ai.interrupted==1&&bot.spells[CURRENT_CHANNELED_SPELL]==&pendingHeal,"wrong damage interrupted; healing preserved");
  check(bot.spells[CURRENT_AUTOREPEAT_SPELL]==&pendingArea,"focused area cast continues despite attacking add");
  check(!pet.victim&&pet.motion.followed==1&&pet.brain.react==REACT_PASSIVE,"pet stopped and autonomous acquisition disabled");
- check(ai.warnings.size()==1&&ai.warnings[0].find("I'm being attacked by Add")!=std::string::npos,"private warning");
- ai.UpdatePlayerMasterAssist();check(ai.warnings.size()==1,"no per-tick warning spam");WorldTimer::now=10100;ai.UpdatePlayerMasterAssist();check(ai.warnings.size()==2,"bounded reminder");
- bot.attackers.clear();ai.UpdatePlayerMasterAssist();check(ai.lastPlayerMasterAggroWarningMs==0,"warning resets after aggro ends");
+ check(ai.warnings.empty(),"first attack does not warn immediately");
+ WorldTimer::now=2099;ai.UpdatePlayerMasterAssist();check(ai.warnings.empty(),"no warning before two seconds");
+ WorldTimer::now=2100;ai.UpdatePlayerMasterAssist();
+ check(ai.warnings.size()==1&&ai.warnings[0].find("I'm being attacked by Add")!=std::string::npos,"warning at two seconds");
+ ai.UpdatePlayerMasterAssist();check(ai.warnings.size()==1,"no per-tick warning spam");
+ WorldTimer::now=12099;ai.UpdatePlayerMasterAssist();check(ai.warnings.size()==1,"reminder waits ten seconds");
+ WorldTimer::now=12100;ai.UpdatePlayerMasterAssist();check(ai.warnings.size()==2,"bounded reminder");
+ bot.attackers.clear();ai.UpdatePlayerMasterAssist();check(!ai.playerMasterAggroObserved&&ai.lastPlayerMasterAggroWarningMs==0,"warning resets after aggro ends");
+ bot.attackers.insert(&add);WorldTimer::now=13000;ai.UpdatePlayerMasterAssist();
+ bot.attackers.clear();WorldTimer::now=14000;ai.UpdatePlayerMasterAssist();check(ai.warnings.size()==2,"brief attack remains quiet");
+ bot.attackers.insert(&add);WorldTimer::now=15000;ai.UpdatePlayerMasterAssist();
+ WorldTimer::now=16999;ai.UpdatePlayerMasterAssist();check(ai.warnings.size()==2,"new attack restarts delay");
+ WorldTimer::now=17000;ai.UpdatePlayerMasterAssist();check(ai.warnings.size()==3,"new sustained attack warns");
+ bot.attackers.clear();ai.UpdatePlayerMasterAssist();
+ WorldTimer::now=UINT32_MAX-999;bot.attackers.insert(&add);ai.UpdatePlayerMasterAssist();
+ WorldTimer::now=999;ai.UpdatePlayerMasterAssist();check(ai.warnings.size()==3,"timer wrap before delay");
+ WorldTimer::now=1000;ai.UpdatePlayerMasterAssist();check(ai.warnings.size()==4,"timer wrap completes delay");
+ ai.pvp=true;ai.UpdatePlayerMasterAssist();check(!ai.playerMasterAggroObserved,"leaving assist scope resets delay");ai.pvp=false;
+ bot.attackers.clear();ai.UpdatePlayerMasterAssist();
  ai.storage.units["current target"].value=&primary;bot.victim=&primary;master.victim=nullptr;ai.UpdatePlayerMasterAssist();check(!bot.victim,"stop when player stops");
  ai.pvp=true;ai.UpdatePlayerMasterAssist();check(pet.brain.react==REACT_DEFENSIVE,"pet react restored outside policy");
  std::cout<<"Native master-focus policy, target transitions, spell guards, pet lifecycle and warning cases passed\n";
