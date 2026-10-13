@@ -416,3 +416,7 @@ no-repeat/silent rules. Random, solo, bot-led and PvP behaviour is retained;
 setting the configuration to 0 restores autonomous player-companion targeting.
 Projectile spells already launched, existing damage-over-time effects and
 hostiles pulled by movement/healing are not undone by this targeting policy.
+
+## Playerbot aggro warning timing
+
+UpdatePlayerMasterAssist waits for two seconds of continuously observed native attackers before warning the human master. Losing all attackers or leaving the assist scope resets this delay. Existing ten-second reminders, targeting, healing and pet behaviour are preserved; timing uses wrap-safe native millisecond differences. The focused tests/playerbot-master-focus fixture executes the production method, including transient aggro, repeat timing and timer wrap.

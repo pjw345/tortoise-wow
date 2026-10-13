@@ -615,6 +615,8 @@ public:
     // invariant tied to its value beyond "nonnegative").
     uint32 scboteHeartbeatAcc = 0;
     uint32 lastSpeedDiagnosticMs = 0;
+    bool playerMasterAggroObserved = false;
+    uint32 playerMasterAggroStartedMs = 0;
     uint32 lastPlayerMasterAggroWarningMs = 0;
     ObjectGuid playerMasterFocusPet;
     uint8 playerMasterFocusPetReact = 0;

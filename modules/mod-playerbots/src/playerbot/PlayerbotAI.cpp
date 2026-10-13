@@ -959,6 +959,7 @@ void PlayerbotAI::UpdatePlayerMasterAssist()
             pet->AI()->GetReactState() == REACT_PASSIVE)
             pet->AI()->SetReactState(ReactStates(playerMasterFocusPetReact));
         playerMasterFocusPet = ObjectGuid();
+        playerMasterAggroObserved = false;
         lastPlayerMasterAggroWarningMs = 0;
         return;
     }
@@ -1019,11 +1020,22 @@ void PlayerbotAI::UpdatePlayerMasterAssist()
     }
     if (!attacker)
     {
+        playerMasterAggroObserved = false;
         lastPlayerMasterAggroWarningMs = 0;
         return;
     }
 
     uint32 const now = WorldTimer::getMSTime();
+    if (!playerMasterAggroObserved)
+    {
+        playerMasterAggroObserved = true;
+        playerMasterAggroStartedMs = now;
+    }
+    // Give the tank time to recover aggro before notifying. Re-check native
+    // attackers each update so an attack that ends during the delay stays quiet.
+    if (WorldTimer::getMSTimeDiff(playerMasterAggroStartedMs, now) < 2000)
+        return;
+
     if (!lastPlayerMasterAggroWarningMs ||
         WorldTimer::getMSTimeDiff(lastPlayerMasterAggroWarningMs, now) >= 10000)
     {
