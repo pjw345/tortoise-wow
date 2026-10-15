@@ -689,18 +689,22 @@ namespace ai
 
                 ai->Unmount();
 
-                ai->CastSpell(24355, bot);
+                if (!ai->CastSpell(24355, bot))
+                    return false;
                 SetDuration(drinkDuration);
                 bot->RemoveSpellCooldown(*pSpellInfo);
 
                 // Eat and drink at the same time
+                const bool alsoEat = AI_VALUE(bool, "should eat");
+                ai->BeginConsumableRecovery(false, true);
 
-                if (AI_VALUE(bool, "should eat"))
+                if (alsoEat)
                 {
                     const SpellEntry* pSpellInfo2 = sServerFacade.LookupSpellInfo(24005);
                     if (pSpellInfo2)
                     {
                         ai->AddAura(bot, 24005);
+                        ai->BeginConsumableRecovery(true, false);
                         bot->RemoveSpellCooldown(*pSpellInfo2);
                     }
                 }
@@ -766,17 +770,20 @@ namespace ai
 
                 ai->Unmount();
 
-                ai->CastSpell(24005, bot);
+                if (!ai->CastSpell(24005, bot))
+                    return false;
                 SetDuration(eatDuration);
                 bot->RemoveSpellCooldown(*pSpellInfo);
 
                 // Eat and drink at the same time
+                ai->BeginConsumableRecovery(true, false);
                 if (AI_VALUE(bool, "should drink"))
                 {
                     const SpellEntry* pSpellInfo2 = sServerFacade.LookupSpellInfo(24355);
                     if (pSpellInfo2)
                     {
                         ai->AddAura(bot, 24355);
+                        ai->BeginConsumableRecovery(false, true);
                         bot->RemoveSpellCooldown(*pSpellInfo2);
                     }
                 }

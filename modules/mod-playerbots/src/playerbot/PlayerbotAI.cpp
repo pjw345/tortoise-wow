@@ -1,6 +1,7 @@
 #include "PlayerbotMgr.h"
 #include "ahbot/AhBot.h"
 #include "playerbot/playerbot.h"
+#include "playerbot/strategy/actions/RevealGatheringItemAction.h"
 #include "playerbot/AiContextAugment.h"
 #include "playerbot/PerformanceMonitor.h"
 #include <stdarg.h>
@@ -375,6 +376,8 @@ void PlayerbotAI::UpdateAI(uint32 elapsed, bool minimal)
         isWaiting = false;
     }
 
+    UpdateConsumableRecovery();
+    UpdateGatheringPings(elapsed);
     CleanupExpiredValuesIfDue();
 
     // cancel logout in combat
@@ -1581,6 +1584,8 @@ void PlayerbotAI::HandleTeleportAck()
 
 void PlayerbotAI::Reset(bool full)
 {
+    recoveringFood = recoveringDrink = false;
+    gatheringPing = {};
     AiObjectContext* context = aiObjectContext;
 
     if (bot->IsTaxiFlying())
@@ -8540,6 +8545,86 @@ ItemIds PlayerbotAI::InventoryParseOutfitItems(std::string text)
     }
 
     return itemIds;
+}
+
+void PlayerbotAI::BeginConsumableRecovery(bool food, bool drink)
+{
+    recoveringFood = recoveringFood || food;
+    recoveringDrink = recoveringDrink || drink;
+}
+
+void PlayerbotAI::UpdateConsumableRecovery()
+{
+    if (!recoveringFood && !recoveringDrink)
+        return;
+
+    // Only the food/drink action's own wait may finish early. Do not wake
+    // arbitrary sitting bots, interrupt casts, or carry this into later work.
+    if (!aiInternalUpdateDelay || !bot->IsInWorld() || bot->IsBeingTeleported() ||
+        !bot->IsAlive() || !bot->IsSitState() || sServerFacade.IsInCombat(bot))
+    {
+        recoveringFood = recoveringDrink = false;
+        return;
+    }
+
+    if (bot->IsNonMeleeSpellCasted(true) ||
+        (recoveringFood && bot->GetHealth() < bot->GetMaxHealth()) ||
+        (recoveringDrink && bot->HasMana() && bot->GetPower(POWER_MANA) < bot->GetMaxPower(POWER_MANA)))
+        return;
+
+    recoveringFood = recoveringDrink = false;
+    if (isWaiting || (master && master->IsInWorld() && master->IsSitState()) ||
+        HasStrategy("stay", BotState::BOT_STATE_NON_COMBAT))
+        return;
+
+    // Native standing cancels food/drink auras and their animation/sound.
+    bot->SetStandState(UNIT_STAND_STATE_STAND);
+    SetAIInternalUpdateDelay(0);
+    isWaiting = false;
+}
+
+void PlayerbotAI::StartGatheringPings(GameObject* go)
+{
+    if (HasPendingGatheringPings() || !bot->GetGroup() || !ai::CanRevealGatheringItem(this, go))
+        return;
+    gatheringPing.guid = go->GetObjectGuid();
+    gatheringPing.map = bot->GetMapId();
+    gatheringPing.instance = bot->GetInstanceId();
+    gatheringPing.group = bot->GetGroup()->GetId();
+    gatheringPing.delay = 3000;
+    gatheringPing.remaining = 3;
+    Ping(go->GetPositionX(), go->GetPositionY());
+}
+
+void PlayerbotAI::UpdateGatheringPings(uint32 elapsed)
+{
+    if (!gatheringPing.remaining)
+        return;
+    if (!bot->IsInWorld() || bot->IsBeingTeleported() || !bot->IsAlive() ||
+        sServerFacade.IsInCombat(bot) || !bot->GetGroup() ||
+        bot->GetGroup()->GetId() != gatheringPing.group ||
+        bot->GetMapId() != gatheringPing.map || bot->GetInstanceId() != gatheringPing.instance ||
+        !HasStrategy("reveal", BotState::BOT_STATE_NON_COMBAT))
+    {
+        gatheringPing = {};
+        return;
+    }
+    if (elapsed < gatheringPing.delay)
+    {
+        gatheringPing.delay -= elapsed;
+        return;
+    }
+    // Resolve the GUID on the bot's owner each time; do not retain object
+    // pointers or catch up overdue repeats in a burst after a delayed update.
+    GameObject* go = GetGameObject(gatheringPing.guid);
+    if (!ai::CanRevealGatheringItem(this, go))
+    {
+        gatheringPing = {};
+        return;
+    }
+    Ping(go->GetPositionX(), go->GetPositionY());
+    --gatheringPing.remaining;
+    gatheringPing.delay = 3000;
 }
 
 void PlayerbotAI::Ping(float x, float y)

@@ -703,6 +703,7 @@ bool UseAction::UseItemInternal(Player* requester, uint32 itemId, Unit* unit, Ga
                 if (IsFood(proto) || IsDrink(proto))
                 {
                     SetDuration(24000);
+                    ai->BeginConsumableRecovery(IsFood(proto), IsDrink(proto));
                 }
                 else
                 {
@@ -809,7 +810,15 @@ bool UseAction::UseGameObject(Player* requester, Event& event, GameObject* gameO
 
     if (gameObject->GetGoType() == GAMEOBJECT_TYPE_CHEST)
     {
-        SET_AI_VALUE(LootObject, "loot target", LootObject(bot, guid));
+        LootObject loot(bot, guid);
+        // Group use commands reach every bot. An ineligible gatherer is not
+        // a failed loot attempt: leave its selected loot/work untouched.
+        if ((loot.skillId == SKILL_MINING || loot.skillId == SKILL_HERBALISM) &&
+            (!ai->HasSkill(static_cast<SkillType>(loot.skillId)) ||
+                bot->GetSkillValue(loot.skillId) < loot.reqSkillValue))
+            return false;
+
+        SET_AI_VALUE(LootObject, "loot target", loot);
 
         if (ai->DoSpecificAction("open loot", event, true))
         {

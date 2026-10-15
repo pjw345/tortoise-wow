@@ -469,6 +469,11 @@ public:
     bool PlayEmote(uint32 emote);
     bool PlayAttackEmote(float chanceDivider);
     void Ping(float x, float y);
+    void BeginConsumableRecovery(bool food, bool drink);
+    void UpdateConsumableRecovery();
+    bool HasPendingGatheringPings() const { return gatheringPing.remaining != 0; }
+    void StartGatheringPings(GameObject* go);
+    void UpdateGatheringPings(uint32 elapsed);
     void Poi(float x, float y, std::string icon_name = "This way", Player* player = nullptr, uint32 flags = 99, uint32 icon = 6 /* red flag */, uint32 icon_data = 0);
     Item * FindPoison() const;
     Item * FindConsumable(uint32 displayId) const;
@@ -850,6 +855,17 @@ protected:
     std::queue<ChatQueuedReply> chatReplies;
     std::mutex chatRepliesMutex;
     std::mutex updateExecutionMutex;
+    bool recoveringFood = false;
+    bool recoveringDrink = false;
+    struct GatheringPingState
+    {
+        ObjectGuid guid;
+        uint32 map = 0;
+        uint32 instance = 0;
+        uint32 group = 0;
+        uint32 delay = 0;
+        uint32 remaining = 0;
+    } gatheringPing;
     // Map/instance transitions invalidate movement and AI work calculated in
     // the previous world context. These atomics are also read by Arch2 worker
     // queues without touching mutable AI state.

@@ -6,6 +6,7 @@
 
 namespace ai
 {
+    bool CanRevealGatheringItem(PlayerbotAI* ai, GameObject* go);
     class RevealGatheringItemAction : public Action {
     public:
         RevealGatheringItemAction(PlayerbotAI* ai) : Action(ai, "reveal gathering item") {}

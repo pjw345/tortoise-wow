@@ -1009,3 +1009,14 @@ Tests extract actual isUseful/isPossible methods and cover unknown/unlearned
 spells, learned spells, dynamic mount, utility/target rejection and policy/range
 rejection. Source audit is regenerated in CI. Full-server compilation and live
 healing/priority validation remain separate deployment gates.
+
+
+## 2026-10-15 playtest follow-ups
+
+No new diagnostic streams were added. Consumable completion reads tracked
+resource state only while a successful food/drink wait is active; gathering
+repeat state is bounded to one node per bot and disabled with the existing
+reveal strategy. Native action/loot logs remain the opt-in investigation route.
+See docs/PLAYTEST_2026-10-15.md for confirmed player observations and outstanding
+collision, roaming, defense and engineering questions. Source/extracted-method
+checks must not be reported as in-game confirmation of these follow-up changes.

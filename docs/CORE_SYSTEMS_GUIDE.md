@@ -423,3 +423,42 @@ UpdatePlayerMasterAssist waits for two seconds of continuously observed native a
 ## Stationary waypoint arrival
 
 Native waypoint Update handles stopped, finalized splines as arrival only when the creature is within the spline displacement tolerance (0.01 yards) of its current node. This allows a route beginning at spawn to advance after MoveSplineInit rejects a zero-length movement. Interrupted movement elsewhere retains the 30-second retry; immobility, distraction, waypoint waits and arrival scripts retain their existing paths. tests/waypoint-arrival extracts the production Update method for focused boundary checks; live escort completion still needs validation.
+
+
+### Consumable completion and group profession commands (2026-10-15)
+
+Successful native food/drink use registers the resources being recovered with
+PlayerbotAI. UpdateConsumableRecovery runs during the serialized bot update,
+before the action delay gates engine work. At exact resource completion it uses
+SetStandState(STAND), whose native standing-interrupt semantics remove the drink
+and food effects, and releases only the consumable wait. Simultaneous eating
+must finish health recovery too. Explicit wait/stay and a seated human master
+remain authoritative; casts are not interrupted. Reset, expired wait, combat,
+death, standing and world/teleport transitions invalidate the tracked recovery.
+The normal item and item-cheat paths register only after accepted use/casting.
+This corrects the fixed 24-second normal item wait without changing regeneration,
+item costs, healing priorities, recovery start thresholds or unrelated waits.
+
+UseGameObject decodes the chest through native LootObject before selecting it.
+Mining/herbalism requirements the bot lacks (or has insufficient skill for) are
+silent skips, without changing its selected loot or attempting open loot. Other
+chests, lockpicking, eligible gatherers, missing-tool/open errors and existing
+quest-chest behavior retain their native paths and failure reports.
+
+### Bounded resource-node pings (2026-10-15)
+
+RevealGatheringItemAction and repeat validation share CanRevealGatheringItem:
+current spawn/loot state, range and native lock/profession requirements remain
+required. One selected node produces four native Ping packets, three seconds
+apart. A bounded GUID/map/instance/group-ID state lives on the bot; no retained
+object/group pointers, new threads, world scans or delayed raw-pointer callbacks
+are added. Each repeat resolves the node on the serialized AI owner. One repeat
+at most is sent per update; overdue updates never burst all missed pings.
+A new reveal does not replace an unfinished sequence. Combat, death, teleport,
+map/instance/group change or disabling reveal cancels repeats. Node availability,
+range and skill are rechecked when a repeat is due. This adds no gathering,
+movement or chat actions, and is controlled by the existing reveal strategy.
+
+The extracted native recovery, group object command and ping eligibility/timer
+methods are covered in tests/playerbot-recovery-loot. Full compilation and live
+playtesting remain separate validation stages.
