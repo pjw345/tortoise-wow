@@ -1020,3 +1020,7 @@ reveal strategy. Native action/loot logs remain the opt-in investigation route.
 See docs/PLAYTEST_2026-10-15.md for confirmed player observations and outstanding
 collision, roaming, defense and engineering questions. Source/extracted-method
 checks must not be reported as in-game confirmation of these follow-up changes.
+
+## Dead human leader combat focus (2026-10-16)
+
+Issue #35 dead-leader defense candidate adds no logging, polling or runtime switches. Existing diagnostics suffice. No build or compilation is permitted while worldserver runs; source indexes and compiled regression validation are pending a server-off validation window.

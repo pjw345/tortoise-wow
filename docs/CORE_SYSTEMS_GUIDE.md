@@ -462,3 +462,7 @@ movement or chat actions, and is controlled by the existing reveal strategy.
 The extracted native recovery, group object command and ping eligibility/timer
 methods are covered in tests/playerbot-recovery-loot. Full compilation and live
 playtesting remain separate validation stages.
+
+## Dead human leader combat focus (2026-10-16)
+
+Human-master combat focus requires a living master. A dead/ghost master exits focus mode, preserving native attacker selection, damage permission and pet reaction restoration; revival re-enters focus. This does not change command security, healing or resurrection rules.
