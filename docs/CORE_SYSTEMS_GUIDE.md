@@ -462,3 +462,51 @@ movement or chat actions, and is controlled by the existing reveal strategy.
 The extracted native recovery, group object command and ping eligibility/timer
 methods are covered in tests/playerbot-recovery-loot. Full compilation and live
 playtesting remain separate validation stages.
+
+
+### Owned profession consumables for human-led bots (2026-10-16)
+
+UseAction::FindLowestInventoryConsumable reads actual bag contents, applies native
+CanUseItem, spell/item cooldown and skip-spell checks, and orders eligible items
+by ItemLevel, RequiredLevel, RequiredSkillRank and ItemId. It does not create
+items or search the bank. Low-level Turtle potions use the generic consumable
+subclass (0): Minor Mana Potion 2455 and Weak Troll Blood 3382 are examples.
+The older FindPotionVisitor only admits potion/flask subclasses; the new owned
+selection path therefore classifies their actual on-use spell effects too.
+
+Human-led mana actions prefer the lowest usable owned mana potion. The reaction
+potions strategy queues inventory mana potion ahead of the existing dark-rune
+action. SayAction's low-mana branch also attempts that native item action before
+emitting its original throttled warning and propagates the child's duration, so
+Engine's outer action cannot replace a cast wait. Failed/unavailable use leaves
+the original warning path intact. Full mana, trading, unlearned required skills,
+level restrictions, disabled spells, item/spell cooldown and empty inventory
+prevent selection. Normal safe out-of-combat drinking and emergency healing
+potions are unchanged. PvP potion chance and native casting remain authoritative.
+A small successful potion may still leave the bot low; later warnings remain valid.
+
+ThrowGrenadeAction retains its existing AoE trigger/priority. For human-led bots
+it selects owned damaging engineering explosives instead of applying the legacy
+level-52/Engineering-175 fixed-grenade gate. It respects actual item requirements,
+range, LOS, the master's attack/spell policy and native breakable-CC detection.
+A fresh public PossibleTargetsValue query around the prospective blast checks
+nearby unfriendly units against the group's attackers, rejecting a new pull or
+CC break. Healers and already-casting bots do not use optional explosives.
+Free bots retain their old grenade and potion selection paths.
+
+A low-priority non-combat buff-potion action handles lasting, positive general
+regen/stat/armor buffs such as Weak Troll Blood. The bot must be alive, stationary,
+unmounted, not sitting/casting/in combat, and sufficiently recovered. Native
+HasMorePowerfulSpellActive/ListLessPowerfulSpells plus exact aura IDs preserve
+active stronger, equal and weaker doses until they expire. Intellect/mana effects
+require mana; Strength/Agility buffs are not selected for ranged casters/healers.
+Food, short tactical/protection/invisibility effects and unsupported spell effects
+are excluded rather than guessed useful. There is no blanket consume-all command.
+Native shared potion cooldowns still apply, including after a preparation buff.
+
+UseInventoryItemOnly forces these owned actions to bind the actual Item to the
+native spell even if item cheats are enabled, so charges/stacks are consumed and
+persisted by the core. Other uses and free-bot cheat policy are unchanged. No
+health/mana is directly granted and no combat, cooldown or aura checks are bypassed.
+The production-method tests are in tests/playerbot-consumables. Adapters do not
+replace a full release build or live cast/consumption/role validation.

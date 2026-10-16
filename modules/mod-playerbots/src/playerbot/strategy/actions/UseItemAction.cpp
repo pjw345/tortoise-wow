@@ -8,6 +8,9 @@
 #include "playerbot/strategy/values/ItemUsageValue.h"
 #include "playerbot/TravelMgr.h"
 #include "CheckMountStateAction.h"
+#include "playerbot/strategy/values/PossibleTargetsValue.h"
+#include "playerbot/strategy/values/PossibleAttackTargetsValue.h"
+#include <tuple>
 #include "TellLosAction.h"
 #include "playerbot/strategy/values/ItemUsageValue.h"
 #include "playerbot/strategy/values/ItemCountValue.h"
@@ -410,7 +413,7 @@ bool UseAction::UseItemInternal(Player* requester, uint32 itemId, Unit* unit, Ga
 
     // If bot has no item cheat (or other conditions) it needs to own the item to cast
     Item* itemUsed = nullptr;
-    if (RequiresItemToUse(proto, ai, bot))
+    if (UseInventoryItemOnly() || RequiresItemToUse(proto, ai, bot))
     {
         std::list<Item*> items = AI_VALUE2(std::list<Item*>, "inventory items", ChatHelper::formatQItem(itemId));
         if (!items.empty())
@@ -1018,6 +1021,191 @@ bool UseAction::OpenItem(Player* requester, Item* item)
         return true;
 }
 
+
+bool UseAction::IsUsefulInventoryBuff(SpellEntry const* spell)
+{
+    if (!spell->IsPositiveSpell() || !spell->IsSpellAppliesAura() || spell->GetDuration() < 60000 ||
+        bot->HasAura(spell->Id) || bot->HasMorePowerfulSpellActive(spell))
+        return false;
+
+    std::vector<uint32> weaker;
+    if (sSpellMgr.ListLessPowerfulSpells(spell->Id, weaker))
+        for (uint32 id : weaker)
+            if (bot->HasAura(id))
+                return false; // Let an existing lower-tier dose finish too.
+
+    bool useful = false;
+    bool const physical = !PlayerbotAI::IsHeal(bot) && (!ai->IsRanged(bot) || bot->getClass() == CLASS_HUNTER);
+    for (int i = 0; i < MAX_EFFECT_INDEX; ++i)
+    {
+        if (!spell->Effect[i])
+            continue;
+        // General, lasting self buffs only: not food, movement, invisibility,
+        // protection/absorb, transformations, procs or emergency consumables.
+        if (spell->Effect[i] != SPELL_EFFECT_APPLY_AURA || spell->CalculateSimpleValue(SpellEffectIndex(i)) <= 0)
+            return false;
+        switch (spell->EffectApplyAuraName[i])
+        {
+            case SPELL_AURA_MOD_REGEN:
+            case SPELL_AURA_MOD_REGEN_DURING_COMBAT:
+            case SPELL_AURA_MOD_HEALTH_REGEN_IN_COMBAT:
+            case SPELL_AURA_MOD_HEALTH_REGEN_PERCENT:
+            case SPELL_AURA_MOD_INCREASE_HEALTH:
+                useful = true;
+                break;
+            case SPELL_AURA_MOD_POWER_REGEN:
+            case SPELL_AURA_MOD_POWER_REGEN_PERCENT:
+            case SPELL_AURA_MOD_INCREASE_ENERGY:
+                if (!bot->HasMana() || spell->EffectMiscValue[i] != POWER_MANA)
+                    return false;
+                useful = true;
+                break;
+            case SPELL_AURA_MOD_STAT:
+                if (spell->EffectMiscValue[i] == STAT_INTELLECT && !bot->HasMana())
+                    return false;
+                if ((spell->EffectMiscValue[i] == STAT_STRENGTH || spell->EffectMiscValue[i] == STAT_AGILITY) && !physical)
+                    return false;
+                useful = true;
+                break;
+            case SPELL_AURA_MOD_RESISTANCE:
+                if (spell->EffectMiscValue[i] != SPELL_SCHOOL_MASK_NORMAL)
+                    return false;
+                useful = true;
+                break;
+            default:
+                return false;
+        }
+    }
+    return useful;
+}
+
+bool UseAction::IsSafeInventoryExplosive(SpellEntry const* spell, Unit* target)
+{
+    if (!target || !target->IsAlive() || !sServerFacade.IsInCombat(target) ||
+        !ai->IsPlayerMasterAttackAllowed(target) || !ai->IsPlayerMasterSpellAllowed(spell, target) ||
+        PossibleAttackTargetsValue::HasBreakableCC(target, bot) || !bot->IsWithinLOSInMap(target))
+        return false;
+
+    SpellRangeEntry const* range = sSpellRangeStore.LookupEntry(spell->rangeIndex);
+    float const distance = bot->GetDistance(target);
+    if (!range || distance < Spells::GetSpellMinRange(range) || distance > Spells::GetSpellMaxRange(range))
+        return false;
+
+    float radius = 0.0f;
+    for (int i = 0; i < MAX_EFFECT_INDEX; ++i)
+        radius = std::max(radius, Spells::GetSpellRadius(sSpellRadiusStore.LookupEntry(spell->EffectRadiusIndex[i])));
+
+    if (radius > 0.0f)
+    {
+        PossibleTargetsValue nearby(ai, "explosive safety targets",
+            distance + radius + bot->GetCombatReach() + target->GetCombatReach(), true);
+        std::list<ObjectGuid> const attackers = AI_VALUE(std::list<ObjectGuid>, "attackers");
+        for (ObjectGuid guid : nearby.Calculate())
+        {
+            Unit* unit = ai->GetUnit(guid);
+            if (!unit || !unit->IsAlive() || !target->IsWithinDistInMap(unit, radius))
+                continue;
+            if (PossibleAttackTargetsValue::HasBreakableCC(unit, bot) ||
+                std::find(attackers.begin(), attackers.end(), unit->GetObjectGuid()) == attackers.end())
+                return false;
+        }
+    }
+    return true;
+}
+
+uint32 UseAction::FindLowestInventoryConsumable(InventoryConsumable kind)
+{
+    uint32 selected = 0;
+    std::tuple<uint32, uint32, uint32, uint32> best;
+    auto const items = ai->InventoryParseItems("inventory", IterateItemsMask::ITERATE_ITEMS_IN_BAGS);
+    auto const& skipSpells = AI_VALUE(std::set<uint32>&, "skip spells list");
+    for (Item* item : items)
+    {
+        if (!item || !item->GetCount() || item->IsInTrade())
+            continue;
+        ItemPrototype const* proto = item->GetProto();
+        if (!proto || bot->CanUseItem(proto) != EQUIP_ERR_OK || HasItemCooldown(proto->ItemId))
+            continue;
+        bool const explosive = proto->Class == ITEM_CLASS_TRADE_GOODS && proto->SubClass == ITEM_SUBCLASS_EXPLOSIVES;
+        bool const potion = proto->Class == ITEM_CLASS_CONSUMABLE &&
+            (proto->SubClass == ITEM_SUBCLASS_CONSUMABLE || proto->SubClass == ITEM_SUBCLASS_POTION ||
+                proto->SubClass == ITEM_SUBCLASS_ELIXIR || proto->SubClass == ITEM_SUBCLASS_FLASK);
+        if (kind == InventoryConsumable::Explosive ? !explosive : !potion)
+            continue;
+
+        bool supported = false;
+        bool rejected = false;
+        for (int i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
+        {
+            auto const& data = proto->Spells[i];
+            if (!data.SpellId)
+                continue;
+            if (skipSpells.find(data.SpellId) != skipSpells.end())
+            {
+                rejected = true;
+                break;
+            }
+#ifdef MANGOSBOT_ZERO
+            if (data.SpellTrigger != ITEM_SPELLTRIGGER_ON_USE && data.SpellTrigger != ITEM_SPELLTRIGGER_ON_NO_DELAY_USE)
+#else
+            if (data.SpellTrigger != ITEM_SPELLTRIGGER_ON_USE)
+#endif
+                continue;
+            SpellEntry const* spell = sServerFacade.LookupSpellInfo(data.SpellId);
+            if (!spell)
+            {
+                rejected = true;
+                break;
+            }
+            bool match = false;
+            if (kind == InventoryConsumable::Mana)
+            {
+                if (bot->HasMana() && bot->GetPower(POWER_MANA) < bot->GetMaxPower(POWER_MANA) && spell->IsPositiveSpell())
+                    for (int effect = 0; effect < MAX_EFFECT_INDEX; ++effect)
+                        match = match || (spell->Effect[effect] == SPELL_EFFECT_ENERGIZE && spell->EffectMiscValue[effect] == POWER_MANA);
+            }
+            else if (kind == InventoryConsumable::Buff)
+                match = IsUsefulInventoryBuff(spell);
+            else
+                match = spell->HasEffect(SPELL_EFFECT_SCHOOL_DAMAGE) && IsSafeInventoryExplosive(spell, GetTarget());
+            if (!match)
+            {
+                rejected = true;
+                break;
+            }
+            supported = true;
+        }
+        if (!supported || rejected)
+            continue;
+        auto const tier = std::make_tuple(proto->ItemLevel, proto->RequiredLevel, proto->RequiredSkillRank, proto->ItemId);
+        if (!selected || tier < best)
+        {
+            selected = proto->ItemId;
+            best = tier;
+        }
+    }
+    return selected;
+}
+
+uint32 UseManaPotionAction::GetItemId()
+{
+    if (ai->HasActivePlayerMaster())
+        return FindLowestInventoryConsumable(InventoryConsumable::Mana);
+    return UsePotionAction::GetItemId();
+}
+
+bool UseInventoryManaPotionAction::isUseful()
+{
+    return ai->HasActivePlayerMaster() && !bot->IsNonMeleeSpellCasted(true) && UseManaPotionAction::isUseful();
+}
+
+bool UseBuffPotionAction::isUseful()
+{
+    return ai->HasActivePlayerMaster() && bot->IsAlive() && !sServerFacade.IsInCombat(bot) &&
+        !bot->IsMounted() && !bot->IsSitState() && !sServerFacade.isMoving(bot) &&
+        !bot->IsNonMeleeSpellCasted(true) && bot->GetHealthPercent() >= 90.0f &&
+        (!bot->HasMana() || bot->GetPowerPercent() >= 85.0f) && UseItemIdAction::isUseful();
+}
 
 bool UseAction::HasItemCooldown(uint32 itemId) const
 {

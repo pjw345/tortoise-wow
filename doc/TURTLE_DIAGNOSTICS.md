@@ -1020,3 +1020,14 @@ reveal strategy. Native action/loot logs remain the opt-in investigation route.
 See docs/PLAYTEST_2026-10-15.md for confirmed player observations and outstanding
 collision, roaming, defense and engineering questions. Source/extracted-method
 checks must not be reported as in-game confirmation of these follow-up changes.
+
+
+## 2026-10-16 inventory consumable policy
+
+No diagnostic stream or always-on polling was added. Owned consumable selection
+runs in existing action evaluations; persistent buffs are considered by the
+existing often trigger, and explosive proximity is checked only for relevant
+owned candidate spells. Native action/cast/aura/inventory logs remain the opt-in
+verification path. Automatic owned mana/buff/explosive selection is scoped to
+bots with an active human master; existing strategy, silence and spell-skip
+controls remain available. See docs/CONSUMABLES_ACCEPTANCE_2026-10-16.md.
