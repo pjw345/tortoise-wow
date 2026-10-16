@@ -124,6 +124,8 @@ namespace ai
             creators["healthstone"] = [](PlayerbotAI* ai) { return new UseHealthstoneAction(ai); };
             creators["healing potion"] = [](PlayerbotAI* ai) { return new UseHealingPotionAction(ai); };
             creators["mana potion"] = [](PlayerbotAI* ai) { return new UseManaPotionAction(ai); };
+            creators["inventory mana potion"] = [](PlayerbotAI* ai) { return new UseInventoryManaPotionAction(ai); };
+            creators["buff potion"] = [](PlayerbotAI* ai) { return new UseBuffPotionAction(ai); };
             creators["food"] = [](PlayerbotAI* ai) { return new EatAction(ai); };
             creators["drink"] = [](PlayerbotAI* ai) { return new DrinkAction(ai); };
             creators["tank assist"] = [](PlayerbotAI* ai) { return new TankAssistAction(ai); };

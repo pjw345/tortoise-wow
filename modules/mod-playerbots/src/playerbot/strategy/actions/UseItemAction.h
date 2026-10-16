@@ -48,7 +48,12 @@ namespace ai
         
         //void TellConsumableUse(Player* requester, Item* item, std::string action, float percent);
 
+        virtual bool UseInventoryItemOnly() const { return false; }
         bool HasItemCooldown(uint32 itemId) const;
+        enum class InventoryConsumable { Mana, Explosive, Buff };
+        uint32 FindLowestInventoryConsumable(InventoryConsumable kind);
+        bool IsUsefulInventoryBuff(SpellEntry const* spell);
+        bool IsSafeInventoryExplosive(SpellEntry const* spell, Unit* target);
 
     private:
         bool UseItemInternal(Player* requester, uint32 itemId, Unit* target, GameObject* gameObjectTarget, Item* itemTarget);
@@ -166,7 +171,25 @@ namespace ai
     class UseManaPotionAction : public UsePotionAction
     {
     public:
-        UseManaPotionAction(PlayerbotAI* ai) : UsePotionAction(ai, "mana potion", SPELL_EFFECT_ENERGIZE) {}
+        UseManaPotionAction(PlayerbotAI* ai, std::string name = "mana potion") : UsePotionAction(ai, name, SPELL_EFFECT_ENERGIZE) {}
+        uint32 GetItemId() override;
+        bool UseInventoryItemOnly() const override { return ai->HasActivePlayerMaster(); }
+    };
+
+    class UseInventoryManaPotionAction : public UseManaPotionAction
+    {
+    public:
+        UseInventoryManaPotionAction(PlayerbotAI* ai) : UseManaPotionAction(ai, "inventory mana potion") {}
+        bool isUseful() override;
+    };
+
+    class UseBuffPotionAction : public UseItemIdAction
+    {
+    public:
+        UseBuffPotionAction(PlayerbotAI* ai) : UseItemIdAction(ai, "buff potion") {}
+        bool UseInventoryItemOnly() const override { return true; }
+        bool isUseful() override;
+        uint32 GetItemId() override { return FindLowestInventoryConsumable(InventoryConsumable::Buff); }
     };
 
     class UseHearthStoneAction : public UseAction
@@ -546,6 +569,7 @@ namespace ai
     {
     public:
         ThrowGrenadeAction(PlayerbotAI* ai) : UseTargetedItemIdAction(ai, "throw grenade") {}
+        bool UseInventoryItemOnly() const override { return ai->HasActivePlayerMaster(); }
 
         virtual std::string GetTargetName() override { return "current target"; }
 
@@ -563,6 +587,10 @@ namespace ai
             if (!UseTargetedItemIdAction::isUseful())
                 return false;
 
+            if (ai->HasActivePlayerMaster())
+                return sServerFacade.IsInCombat(bot) && !PlayerbotAI::IsHeal(bot) &&
+                    !bot->IsNonMeleeSpellCasted(true) && GetItemId() != 0;
+
             if (!target->IsNonMeleeSpellCasted(false) && target->IsStopped())
                 return false;
 
@@ -573,7 +601,9 @@ namespace ai
         }
 
         virtual uint32 GetItemId() override
-        { 
+        {
+            if (ai->HasActivePlayerMaster())
+                return FindLowestInventoryConsumable(InventoryConsumable::Explosive);
             if (bot->GetSkillValue(202) >= 325)
                 return 23737;
             if (bot->GetSkillValue(202) >= 260)

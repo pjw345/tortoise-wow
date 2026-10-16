@@ -45,7 +45,7 @@ void UsePotionsStrategy::InitCombatTriggers(std::list<TriggerNode*> &triggers)
 
     triggers.push_back(new TriggerNode(
         "low mana",
-        NextAction::array(0, new NextAction("dark rune", ACTION_HIGH), NULL)));
+        NextAction::array(0, new NextAction("inventory mana potion", ACTION_HIGH + 1), new NextAction("dark rune", ACTION_HIGH), NULL)));
 
     triggers.push_back(new TriggerNode(
         "has poison debuff",

@@ -23,6 +23,15 @@ SayAction::SayAction(PlayerbotAI* ai) : Action(ai, "say"), Qualified()
 
 bool SayAction::Execute(Event& event)
 {
+    // Keep the normal throttled warning if no real, usable mana potion can
+    // be cast. A successful native item action gets the first opportunity.
+    if (qualifier == "low mana" && ai->HasActivePlayerMaster() && sServerFacade.IsInCombat(bot) &&
+        ai->DoSpecificAction("inventory mana potion", event, true))
+    {
+        if (Action* potion = ai->GetAiObjectContext()->GetAction("inventory mana potion"))
+            SetDuration(potion->GetDuration());
+        return true;
+    }
     std::string text = "";
     std::map<std::string, std::string> placeholders;
     Unit* target = AI_VALUE(Unit*, "tank target");
