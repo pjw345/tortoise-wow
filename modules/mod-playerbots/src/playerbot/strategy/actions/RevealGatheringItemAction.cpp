@@ -30,9 +30,34 @@ private:
     float i_range;
 };
 
+bool ai::CanRevealGatheringItem(PlayerbotAI* ai, GameObject* go)
+{
+    Player* bot = ai->GetBot();
+    if (!go || !go->GetGOInfo() || !sServerFacade.isSpawned(go) ||
+        go->IsInUse() || go->getLootState() != GO_READY ||
+        !bot->IsWithinDistInMap(go, sPlayerbotAIConfig.grindDistance) ||
+        sServerFacade.IsDistanceLessOrEqualThan(sServerFacade.GetDistance2d(bot, go), sPlayerbotAIConfig.gatheringDistance))
+        return false;
+
+    if (LockEntry const* lockInfo = sLockStore.LookupEntry(go->GetGOInfo()->GetLockId()))
+    {
+        for (int i = 0; i < 8; ++i)
+        {
+            if (lockInfo->Type[i] != LOCK_KEY_SKILL)
+                continue;
+            uint32 skillId = SkillByLockType(LockType(lockInfo->Index[i]));
+            uint32 reqSkillValue = std::max(uint32(2), lockInfo->Skill[i]);
+            if ((skillId == SKILL_MINING || skillId == SKILL_HERBALISM) &&
+                ai->HasSkill(static_cast<SkillType>(skillId)) && bot->GetSkillValue(skillId) >= reqSkillValue)
+                return true;
+        }
+    }
+    return go->GetGoType() == GAMEOBJECT_TYPE_FISHINGNODE && ai->HasSkill(SKILL_FISHING);
+}
+
 bool RevealGatheringItemAction::Execute(Event& event)
 {
-    if (!bot->GetGroup())
+    if (!bot->GetGroup() || ai->HasPendingGatheringPings())
         return false;
 
     std::list<GameObject*> targets;
@@ -44,29 +69,7 @@ bool RevealGatheringItemAction::Execute(Event& event)
     for(std::list<GameObject*>::iterator tIter = targets.begin(); tIter != targets.end(); ++tIter)
     {
         GameObject* go = *tIter;
-        if (!go || !sServerFacade.isSpawned(go) ||
-                sServerFacade.IsDistanceLessOrEqualThan(sServerFacade.GetDistance2d(bot, go), sPlayerbotAIConfig.gatheringDistance))
-            continue;
-
-        if (LockEntry const *lockInfo = sLockStore.LookupEntry(go->GetGOInfo()->GetLockId()))
-        {
-            for (int i = 0; i < 8; ++i)
-            {
-                if (lockInfo->Type[i] == LOCK_KEY_SKILL)
-                {
-                    uint32 skillId = SkillByLockType(LockType(lockInfo->Index[i]));
-                    uint32 reqSkillValue = std::max((uint32)2, lockInfo->Skill[i]);
-                    if ((skillId == SKILL_MINING || skillId == SKILL_HERBALISM) &&
-                            ai->HasSkill((SkillType)skillId) && uint32(bot->GetSkillValue(skillId)) >= reqSkillValue)
-                    {
-                        result.push_back(go);
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (go->GetGoType() == GAMEOBJECT_TYPE_FISHINGNODE && ai->HasSkill(SKILL_FISHING))
+        if (CanRevealGatheringItem(ai, go))
             result.push_back(go);
     }
 
@@ -91,7 +94,7 @@ bool RevealGatheringItemAction::Execute(Event& event)
     }
 
     // everything is fine, do it
-    ai->Ping(go->GetPositionX(), go->GetPositionY());
+    ai->StartGatheringPings(go);
     bot->Say(msg.str(), LANG_UNIVERSAL);
     return true;
 }
