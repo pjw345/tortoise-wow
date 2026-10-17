@@ -11,7 +11,8 @@ namespace ai
     public:
         ExternalEventHelper(AiObjectContext* aiObjectContext) : aiObjectContext(aiObjectContext) {}
 
-        bool ParseChatCommand(std::string command, Player* owner = NULL)
+        // Recognition-only mode never fires triggers or treats ordinary item links as commands.
+        bool ParseChatCommand(std::string command, Player* owner = NULL, bool execute = true)
         {
             std::string linkCommand = ChatHelper::parseValue("command", command);
             bool forceCommand = false;
@@ -22,7 +23,7 @@ namespace ai
                 forceCommand = true;
             }
 
-            if (HandleCommand(command, "", owner, forceCommand))
+            if (HandleCommand(command, "", owner, forceCommand, execute))
                 return true;
 
             size_t i = std::string::npos;
@@ -37,9 +38,12 @@ namespace ai
 
                 i = found - 1;
 
-                if (HandleCommand(name, param, owner, forceCommand))
+                if (HandleCommand(name, param, owner, forceCommand, execute))
                     return true;
             }
+
+            if (!execute)
+                return false;
 
             if (!ChatHelper::parseable(command))
                 return false;
@@ -79,11 +83,14 @@ namespace ai
             return true;
         }
 
-        bool HandleCommand(std::string name, std::string param, Player* owner = NULL, bool forceCommand = false)
+        bool HandleCommand(std::string name, std::string param, Player* owner = NULL, bool forceCommand = false, bool execute = true)
         {
             Trigger* trigger = aiObjectContext->GetTrigger(name);
             if (!trigger)
                 return false;
+
+            if (!execute)
+                return true;
 
             if(!forceCommand)
                 trigger->ExternalEvent(param, owner);

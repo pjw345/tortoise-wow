@@ -1024,3 +1024,8 @@ checks must not be reported as in-game confirmation of these follow-up changes.
 ## Dead human leader combat focus (2026-10-16)
 
 Issue #35 dead-leader defense candidate adds no logging, polling or runtime switches. Existing diagnostics suffice. No build or compilation is permitted while worldserver runs; source indexes and compiled regression validation are pending a server-off validation window.
+
+
+## Bot command conversation separation (2026-10-17)
+
+Command/conversation separation adds no logging, polling, background workers or configuration. Recognition runs only for incoming real-player messages in the existing packet handler. Native command execution, security and command replies remain unchanged. Compiled and gameplay verification await a server-off build window.
