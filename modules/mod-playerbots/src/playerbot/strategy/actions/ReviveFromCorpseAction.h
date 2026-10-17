@@ -7,6 +7,7 @@ namespace ai
     {
 	public:
 		ReviveFromCorpseAction(PlayerbotAI* ai) : MovementAction(ai, "revive from corpse") {}
+        static bool IsSafeToAutoResurrect(PlayerbotAI* ai, Player* bot);
         virtual bool Execute(Event& event) override;
     };
 

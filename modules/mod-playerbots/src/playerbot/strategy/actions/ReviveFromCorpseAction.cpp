@@ -7,8 +7,37 @@
 #include "playerbot/TravelMgr.h"
 #include "playerbot/ServerFacade.h"
 #include "playerbot/strategy/values/DeadValues.h"
+#include "playerbot/strategy/values/PossibleTargetsValue.h"
 
 using namespace ai;
+
+bool ReviveFromCorpseAction::IsSafeToAutoResurrect(PlayerbotAI* ai, Player* bot)
+{
+    if (!ai->HasActivePlayerMaster() || ai->IsRealPlayer() || bot->InBattleGround())
+        return true;
+
+    Player* master = ai->GetMaster();
+    if (!master || !ai->IsSafe(master) || !master->IsInWorld() || master->IsBeingTeleported() ||
+        master->GetMap() != bot->GetMap() || !bot->IsInGroup(master) ||
+        !sServerFacade.IsAlive(master) || sServerFacade.IsInCombat(master) ||
+        !bot->IsWithinDistInMap(master, sPlayerbotAIConfig.spellDistance, false) ||
+        !bot->IsWithinLOSInMap(master))
+        return false;
+
+    // Fresh unvalidated discovery is deliberate: ghost attackability/visibility
+    // and the combat-target cache must not hide enemies at the revival position.
+    PossibleTargetsValue nearby(ai, "corpse recovery safety", sPlayerbotAIConfig.sightDistance, true);
+    nearby.Qualify(std::to_string(static_cast<uint32>(sPlayerbotAIConfig.sightDistance + 1.0f)) + ":1");
+    std::list<ObjectGuid> hostiles;
+    for (ObjectGuid guid : nearby.Calculate())
+    {
+        Unit* unit = ai->GetUnit(guid);
+        if (unit && ai->IsSafe(unit) && sServerFacade.IsAlive(unit) &&
+            sServerFacade.IsHostileTo(unit, bot))
+            hostiles.push_back(guid);
+    }
+    return WorldPosition(bot).getUnitsAggro(hostiles, bot) == 0;
+}
 
 bool ReviveFromCorpseAction::Execute(Event& event)
 {
@@ -53,6 +82,9 @@ bool ReviveFromCorpseAction::Execute(Event& event)
         }
     }
 
+    if (!IsSafeToAutoResurrect(ai, bot))
+        return false;
+
     sLog.outDetail("[BOT CORPSE] %s: revive from corpse - RECLAIMING corpse now", bot->GetName());
     sLog.outDetail("Bot #%d %s:%d <%s> revives at body", bot->GetGUIDLow(), bot->GetTeam() == ALLIANCE ? "A" : "H", bot->GetLevel(), bot->GetName());
 
@@ -60,6 +92,8 @@ bool ReviveFromCorpseAction::Execute(Event& event)
     WorldPacket packet(CMSG_RECLAIM_CORPSE);
     packet << bot->GetObjectGuid();
     bot->GetSession()->HandleReclaimCorpseOpcode(packet);
+    if (!sServerFacade.IsAlive(bot))
+        return false; // Native range/ghost/state checks still own the actual reclaim.
 
     SET_AI_VALUE(bool, "corpse run", false);
     // Deliberately NOT resetting "death count" here. BestGraveyardValue only
@@ -93,6 +127,23 @@ bool FindCorpseAction::Execute(Event& event)
     bool manualCorpseRun = AI_VALUE(bool, "corpse run");
 
     Player* master = ai->GetGroupMaster();
+    if (ai->HasActivePlayerMaster() && !ai->IsRealPlayer() && !manualCorpseRun)
+    {
+        Player* leader = ai->GetMaster();
+        if (!leader || !ai->IsSafe(leader) || !leader->IsInWorld() || leader->IsBeingTeleported() ||
+            leader->GetMap() != bot->GetMap() || !bot->IsInGroup(leader))
+        {
+            if (!bot->IsStopped())
+                ai->StopMoving();
+            return false;
+        }
+        float const regroupDistance = std::min(ai->GetRange("follow"), sPlayerbotAIConfig.spellDistance);
+        if (!bot->IsWithinDistInMap(leader, regroupDistance, false))
+            return MoveNear(leader, regroupDistance);
+        if (!bot->IsStopped())
+            ai->StopMoving();
+        return false; // Yield to guarded native corpse reclaim when close enough.
+    }
     if (master && !manualCorpseRun)
     {
         float masterTargetDist = AI_VALUE2(float, "distance", "master target");

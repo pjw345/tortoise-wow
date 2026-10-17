@@ -241,6 +241,10 @@ namespace ai
     public:
         bool Execute(Event& event) override
         {
+            // Explicit owner requests retain native self-resurrection semantics.
+            if (event.getOwner() != ai->GetMaster() &&
+                !ReviveFromCorpseAction::IsSafeToAutoResurrect(ai, bot))
+                return false;
             WorldPacket packet(CMSG_SELF_RES);
             bot->GetSession()->HandleSelfResOpcode(packet);
             return true;
