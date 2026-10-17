@@ -532,3 +532,22 @@ even with item cheats: native Spell owns cooldown, cast time and consumption.
 No parallel scheduler, persistence or inventory mutation is introduced. Existing
 action diagnostics remain available. Extracted policy tests are separate from
 full core compilation and in-game item consumption acceptance.
+
+
+## Wand-to-spell handoff (2026-10-17)
+
+Turtle Unit::_UpdateAutoRepeatSpell renews the spell GCD for every wand shot.
+Higher action priority alone cannot preempt this: CanCastSpell uses the native
+strict CheckCast, which rejects an active GCD before the spell reaches casting.
+CastSpellAction therefore adds the existing interrupt-current-spell action,
+qualified as wand-only, to its prerequisites for a known, policy-allowed,
+non-auto-repeat spell while a wand is active. Native reach prerequisites remain.
+The qualified interrupt cancels only the wand slot, copies the spell ID before
+native cancellation, and waits at least the remaining ranged swing/configured
+GCD plus reaction delay. It does not clear cooldowns or claim the heal/DPS spell
+was cast. The original action remains queued and rechecks all native cast rules.
+Unknown spells still use alternatives; policy-blocked damage does not stop a
+low-mana healer's wand; hunter auto shot and unqualified interruption are unchanged.
+Focused source-extracted tests: tests/playerbot-wand-handoff. This addresses a
+source-level starvation mechanism; live healing, target/fleeing acceptance and
+Alon's DPS/backup-healer configuration remain separate and unverified.

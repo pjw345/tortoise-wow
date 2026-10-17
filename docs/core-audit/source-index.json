@@ -23509,7 +23509,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "E8A1D8F471EEA2348EF1670B8B19E6C44D8AF556F62D8E6D5BD52FF666C4E4DD"
+    "sha256": "6F8CEE4A05E4DB6843D8478D6704A688B71AE7E09939BD3A453A6350185C8061"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/UnstuckAction.cpp",
@@ -25708,7 +25708,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "0913DAA264F5EC1FAE16A2BC24E9E2780377D427509F6D1310E382377B8D390B"
+    "sha256": "B5FFD22811E1DA0F28DAA82E6E55730EFBD5792180A6A23FF23D7A9062F15669"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/LootRollAction.cpp",

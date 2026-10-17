@@ -1062,3 +1062,12 @@ and fresh local blast-safety checks occur when the existing grenade action is
 evaluated; cooldown/range/item requirements fail before the scan. Diagnostics use
 the existing action log. No builds/compilation on the live VM while worldserver
 runs; local extracted tests, CI, full build and gameplay are reported separately.
+
+
+## Wand handoff validation (2026-10-17)
+
+No new runtime logging or background scans. Existing action logs can show the
+qualified interrupt prerequisite followed by the actual heal/DPS outcome.
+The focused tests extract production prerequisite/interrupt methods, native
+wand update and native GCD checks to cover starvation and handoff without
+changing live bot settings. No diagnostic toggle is enabled by this change.
