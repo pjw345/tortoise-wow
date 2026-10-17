@@ -1034,3 +1034,8 @@ Command/conversation separation adds no logging, polling, background workers or 
 ## Defensive master focus and fleeing enemies (2026-10-17)
 
 Defensive master focus and fleeing-target retention add no diagnostics, timers, global scans or persistent state. Reuse current target, native attackers and fleeing unit state. Source, regression, full build and gameplay validation are reported separately.
+
+
+## No pursuit of fleeing enemies (2026-10-17)
+
+Fleeing-pursuit fix adds one transient per-bot target GUID, cleared by normal movement setup and StopMoving. No DB persistence, logging, polling or background work. It lets the normal AI update cancel a hazard-routed offensive path when its target starts fleeing. No change to follow-owner, friendly-healing movement or bot escape/flee actions is intended.

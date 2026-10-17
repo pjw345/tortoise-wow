@@ -55,6 +55,9 @@ bool MovementAction::MoveNear(uint32 mapId, float x, float y, float z, float dis
 
 bool MovementAction::MoveNear(WorldObject* target, float distance)
 {
+    if (Unit* unit = dynamic_cast<Unit*>(target))
+        if (!ai->CanPlayerMasterChase(unit))
+            return false;
     if (!target)
         return false;
 
@@ -2289,6 +2292,8 @@ bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool idle, 
 
 bool MovementAction::MoveTo(Unit* target, float distance)
 {
+    if (!ai->CanPlayerMasterChase(target))
+        return false;
     if (!target || !target->IsInWorld())
     {
         //ai->TellError("Seems I am stuck");
@@ -2394,6 +2399,7 @@ bool MovementAction::Follow(Unit* target, float distance)
 
 void MovementAction::UpdateMovementState()
 {
+    ai->SetPlayerMasterPursuitTarget(nullptr);
     if (bot->IsInWater() || sServerFacade.IsUnderwater(bot))
     {
 		bot->m_movementInfo.AddMovementFlag(MOVEFLAG_SWIMMING);
@@ -2639,6 +2645,9 @@ WorldPosition CalculatePerpendicularPoint(const WorldPosition& A, const WorldPos
 
 bool MovementAction::ChaseTo(WorldObject* obj, float distance, float angle)
 {
+    Unit* pursuit = dynamic_cast<Unit*>(obj);
+    if (pursuit && !ai->CanPlayerMasterChase(pursuit))
+        return false;
     if (!ai->CanMove())
     {
         sLog.outDetail("[BOT CHASE] %s: CanMove() blocked", bot->GetName());
@@ -2671,6 +2680,7 @@ bool MovementAction::ChaseTo(WorldObject* obj, float distance, float angle)
         angle = GetFollowAngle() / 3 + obj->GetOrientation() + M_PI;
 
     UpdateMovementState();
+    ai->SetPlayerMasterPursuitTarget(pursuit);
 
     bot->HandleEmoteState(0);
     if (!bot->IsStandState())

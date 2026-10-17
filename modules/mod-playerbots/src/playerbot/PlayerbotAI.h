@@ -624,6 +624,7 @@ public:
     bool playerMasterAggroObserved = false;
     uint32 playerMasterAggroStartedMs = 0;
     uint32 lastPlayerMasterAggroWarningMs = 0;
+    ObjectGuid playerMasterPursuitTarget;
     ObjectGuid playerMasterFocusPet;
     uint8 playerMasterFocusPetReact = 0;
 
@@ -684,6 +685,8 @@ public:
     bool HasRealPlayerMaster() { return master && (!GetBotAI(master) || GetBotAI(master)->IsRealPlayer()); } 
     //Bot has a master that is actively playing.
     bool HasActivePlayerMaster() const { return master && !GetBotAI(master); }
+    bool CanPlayerMasterChase(Unit* target);
+    void SetPlayerMasterPursuitTarget(Unit* target) { playerMasterPursuitTarget = target ? target->GetObjectGuid() : ObjectGuid(); }
     bool ShouldAssistPlayerMaster();
     Unit* GetPlayerMasterAttackTarget();
     bool IsPlayerMasterAttackAllowed(Unit* target);
