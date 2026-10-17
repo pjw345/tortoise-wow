@@ -1039,3 +1039,8 @@ Defensive master focus and fleeing-target retention add no diagnostics, timers, 
 ## No pursuit of fleeing enemies (2026-10-17)
 
 Fleeing-pursuit fix adds one transient per-bot target GUID, cleared by normal movement setup and StopMoving. No DB persistence, logging, polling or background work. It lets the normal AI update cancel a hazard-routed offensive path when its target starts fleeing. No change to follow-owner, friendly-healing movement or bot escape/flee actions is intended.
+
+
+## Safe party corpse recovery (2026-10-17)
+
+Safe party corpse recovery adds no logs, timers, persistent state or background work. Its fresh local hostile scan occurs only when a human-owned bot attempts automatic resurrection; nearby/group/state checks fail before scanning. Existing corpse diagnostics remain the controls. New policy gates the actual reclaim as well as ghost movement, avoiding time-based automatic solo revival; native handler rejection is propagated.
