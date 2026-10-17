@@ -98,6 +98,7 @@ namespace ai
             creators["has aggro"] = [](PlayerbotAI* ai) { return new HasAggroTrigger(ai); };
 
             creators["ranged light aoe"] = [](PlayerbotAI* ai) { return new RangedLightAoeTrigger(ai); };
+            creators["owned explosive"] = [](PlayerbotAI* ai) { return new OwnedExplosiveTrigger(ai); };
             creators["ranged medium aoe"] = [](PlayerbotAI* ai) { return new RangedMediumAoeTrigger(ai); };
             creators["ranged high aoe"] = [](PlayerbotAI* ai) { return new RangedHighAoeTrigger(ai); };
             creators["ranged very high aoe"] = [](PlayerbotAI* ai) { return new RangedVeryHighAoeTrigger(ai); };
