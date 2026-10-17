@@ -908,6 +908,7 @@ bool PlayerbotAI::ShouldAssistPlayerMaster()
 {
     return sPlayerbotAIConfig.assistPlayerMaster && HasActivePlayerMaster() &&
         !IsRealPlayer() && bot->IsInWorld() && master && master->IsInWorld() &&
+        sServerFacade.IsAlive(master) &&
         !IsInPvp() && IsSafe(master) &&
         bot->IsInGroup(master) && master->GetMap() == bot->GetMap();
 }

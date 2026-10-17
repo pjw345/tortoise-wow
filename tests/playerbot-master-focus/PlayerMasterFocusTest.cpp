@@ -49,7 +49,13 @@ int main(){try{
  primary.safe=false;check(!ai.GetPlayerMasterAttackTarget(),"unsafe target");primary.safe=true;
  primary.map=reinterpret_cast<void*>(2);check(!ai.GetPlayerMasterAttackTarget(),"other instance");primary.map=bot.map;
  bot.near=false;check(!ai.GetPlayerMasterAttackTarget(),"out of sight range");bot.near=true;
- master.alive=false;check(!ai.GetPlayerMasterAttackTarget(),"dead master waits");master.alive=true;
+ master.alive=false;
+ check(!ai.ShouldAssistPlayerMaster()&&!ai.GetPlayerMasterAttackTarget(),"dead or ghost master leaves focus mode");
+ check(ai.IsPlayerMasterAttackAllowed(&add),"dead leader restores native attack permission");
+ SpellEntry defensiveDamage;check(ai.IsPlayerMasterSpellAllowed(&defensiveDamage,&add),"dead leader restores native damage permission");
+ ai.storage.units["current target"].value=&add;bot.victim=&add;
+ ai.UpdatePlayerMasterAssist();check(bot.victim==&add&&ai.storage.units["current target"].value==&add,"dead leader does not repeatedly erase native combat target");
+ master.alive=true;check(ai.ShouldAssistPlayerMaster()&&!ai.IsPlayerMasterAttackAllowed(&add),"revived leader restores focus restriction");
  bot.grouped=false;check(!ai.ShouldAssistPlayerMaster(),"solo unchanged");bot.grouped=true;
  ai.activeMaster=false;check(!ai.ShouldAssistPlayerMaster(),"bot-led unchanged");ai.activeMaster=true;
  ai.pvp=true;check(!ai.ShouldAssistPlayerMaster()&&ai.IsPlayerMasterAttackAllowed(&add),"PvP unchanged");ai.pvp=false;
