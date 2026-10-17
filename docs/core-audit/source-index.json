@@ -24003,7 +24003,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "484203646EF4E59E69A500DAABC8BE1AC907A2E68BB66A72EA8723FE94E86AC3"
+    "sha256": "D86BCE29F6454DA3E2C4EC2684E4C1AC61815F49B575FAA6FB040861B0CD894F"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/RandomBotUpdateAction.h",
@@ -24736,7 +24736,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "FB0D900D5DA7A73478AB743632E92120F8551ECEAFCEB2B5CB52A0E7CF9034D4"
+    "sha256": "9E70D99FFCB3E57EF1ADF68605FC5B22AC8564BC82B52D7881C2D4FA60C53BE3"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/ChooseRpgTargetAction.h",
@@ -25040,7 +25040,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "2CCC0B185B53174D612FA73AE6C059F9A2A946DE607D06E044BDB37316A1EF94"
+    "sha256": "567B777A08D529CE5A584B192542466DF44E1AAA3C5E884C1DA9F1A37AD9CEFF"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/AttackAction.cpp",
