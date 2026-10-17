@@ -2038,6 +2038,12 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
             }
 #endif
 
+            // Command execution has its own ingress/security path. Do not also
+            // record commands as conversation or queue stock/LLM replies to them.
+            Player* speaker = sObjectMgr.GetPlayer(guid1);
+            if (lang == LANG_ADDON || (speaker && IsRealPlayer(speaker) && IsBotCommandMessage(message)))
+                return;
+
             bool isAiChat = sPlayerbotAIConfig.llmEnabled > 0 && (HasStrategy("ai chat", BotState::BOT_STATE_NON_COMBAT) || sPlayerbotAIConfig.llmEnabled == 3);
 
             if (m_recordIncommingMessages)
@@ -9255,6 +9261,42 @@ bool PlayerbotAI::HasPlayerRelation()
         }
     }
 
+    return false;
+}
+
+bool PlayerbotAI::IsBotCommandMessage(std::string message)
+{
+    if (message.find("BOT\t") == 0)
+        return true;
+
+    std::vector<std::string> commands;
+    split(commands, message, sPlayerbotAIConfig.commandSeparator.c_str());
+    ExternalEventHelper helper(aiObjectContext);
+    for (std::string command : commands)
+    {
+        if (!sPlayerbotAIConfig.commandPrefix.empty())
+        {
+            if (command.find(sPlayerbotAIConfig.commandPrefix) != 0)
+                continue;
+            command = command.substr(sPlayerbotAIConfig.commandPrefix.size());
+        }
+        command = trim(command);
+        if (command.size() >= 3 && command[0] == '#' && command[2] == ' ' &&
+            std::string("wprag").find(command[1]) != std::string::npos)
+            command = command.substr(3);
+        command = chatFilter.Filter(trim(command));
+        if (command.empty())
+            continue;
+
+        if (helper.ParseChatCommand(command, nullptr, false))
+            return true;
+
+        // Direct HandleCommand branches do not pass through the trigger registry.
+        if (command == "reset" || command == "logout" || command == "logout cancel" ||
+            command.find("do ") == 0 || command.find("d ") == 0 ||
+            command.find("debug ") == 0 || command.find("queue ") == 0 || command.find("wait ") == 0)
+            return true;
+    }
     return false;
 }
 

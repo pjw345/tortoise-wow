@@ -6193,7 +6193,7 @@
       "movement",
       "death_reset"
     ],
-    "sha256": "87177B77C56E938AA0CAE578211DA00700F101B9A39D73D373A7BB02525CC336"
+    "sha256": "9CA2AB3832E831C1E67CB0A17B62F55C8B2F06001E8E0F1EF620C37020651AA1"
   },
   {
     "file": "src/game/Group/GroupRefManager.h",
@@ -18179,7 +18179,7 @@
       "spells",
       "death_reset"
     ],
-    "sha256": "5F6CA5E9E9965433B653106DC3F95064C3AA557804CF2310888E368BBDE04F6C"
+    "sha256": "30647BCE32872C6F1A439F29B1BFC188A094473999DD8D3864A841B6473C16E1"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/TravelRoutePolicy.h",
@@ -18364,7 +18364,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "CBE7D259FD30CBB7E7670F8F4E459887F00703488863B68C3553DC303D31C598"
+    "sha256": "F418216E6D50B57A3DACAB6594388CDEB1ABBCF41564A7F35C5E04C4891229E1"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/Multiplier.h",
@@ -22439,7 +22439,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "A75BF63F0E66458D4C8471BBAA61889917479A28E961B99FB5665D97ECE18BA8"
+    "sha256": "C10AB95B76049E3355C8E64B6F97812882D50179CCFFCFC716CF5725A2BA9D87"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/generic/ClassStrategy.cpp",
@@ -22567,7 +22567,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "45725B242A24E1F5DA0EA0906CF6582E57E477833D73056B43E5C7940E34F090"
+    "sha256": "950453CB221DC22418E6DCD7E78C12FB943FBF6E3306201D394F3B6C11F40E68"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/generic/ReactionStrategy.h",
@@ -23947,7 +23947,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "852904E230E8440419AD3D245B2D78396CE7111BFD9B9773F77E1092F0A65832"
+    "sha256": "FE340CA260F29386FB1D87D69C816442745F7DF1E1CCA1B19DDCBB1D51453825"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/AvoidCreatureListAction.h",
@@ -24670,7 +24670,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "F7F9948E0F2BA1D3AF5ABFBAE12F644031651D6EE2A86ED327CFC206186314A0"
+    "sha256": "6A6DEAE6C9F4CB16077D71C3DEEAD443372315A8769D768519D36727BF5C8620"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/GuildManagementActions.h",
@@ -24776,7 +24776,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "985E464F97076111AEE6317DB54D9242D30C859EF80877E1D30351C3C21FD46D"
+    "sha256": "11B4C860E29FEED5909200302CC478F01F0C53D3AE531BC3E91898645BF02B35"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/TellLosAction.cpp",
@@ -25556,7 +25556,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "75B16DAD91A1A8363389F93BEE6FE54FCD1414525CA4D8425800661C5F6C2FAE"
+    "sha256": "6820E95C61AE8AF84EB25F3DC0552A1E17362C1D6046CDD06D366534063F84E5"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/LeaveGroupAction.cpp",
@@ -25600,7 +25600,7 @@
     "dependency_signals": [
       "async"
     ],
-    "sha256": "C3417501822178B5CBDFDEB4A478418D3507109262D9B52FD82C7E445FE40C80"
+    "sha256": "8D998387CCC03B2E2EB832FBF7E8F379CA0143003455E6A06735A7E830D867B0"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/SendMailAction.h",
@@ -25632,7 +25632,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "909ED79798A7BF4D8BE3A006E72750E7D443E3B8BC7DEF42D4E0A4C7DD0D9FF9"
+    "sha256": "3723DD0BBB19076C930023491349DF85FA5CFEE9CB81747E65FC0E5379A10995"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/TellItemCountAction.cpp",
@@ -25708,7 +25708,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "8B058CB92D535B82B9722E031966753E214BEBECFFA20A8CE76DA915C35A517E"
+    "sha256": "0913DAA264F5EC1FAE16A2BC24E9E2780377D427509F6D1310E382377B8D390B"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/LootRollAction.cpp",
@@ -25877,6 +25877,6 @@
       "death_reset",
       "async"
     ],
-    "sha256": "9804AEA78BFD83FA4424C36E83035314D7E1DE9CCAC9CCAE3ECA1CA17A19E938"
+    "sha256": "8A8F7D496DAED9EF87246A3BD19084CE67C364E647525CA5E6F670B9E69A5DD2"
   }
 ]

@@ -466,3 +466,8 @@ playtesting remain separate validation stages.
 ## Dead human leader combat focus (2026-10-16)
 
 Human-master combat focus requires a living master. A dead/ghost master exits focus mode, preserving native attacker selection, damage permission and pet reaction restoration; revival re-enters focus. This does not change command security, healing or resurrection rules.
+
+
+## Bot command conversation separation (2026-10-17)
+
+Outgoing chat-packet observation excludes addon-language traffic and recognised real-player bot commands before conversation recording and stock/LLM reply queues. ExternalEventHelper recognition mode shares native command lookup/splitting but never fires an ExternalEvent; normal execution and security remain unchanged. Ordinary item/quest links remain conversation-eligible.
