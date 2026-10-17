@@ -1052,3 +1052,13 @@ The 50 percent healer spell damage guard adds no logs, configuration, scans or
 persistent state. It uses the existing spell policy and native effect classifiers.
 Priest offdps wand fallback uses the existing very-often trigger. Source policy
 tests and a full build do not establish in-game healing or consumable acceptance.
+
+
+## Owned engineering explosives (2026-10-17)
+
+No new logging, configuration or background task. A five-second native trigger
+only applies to human-owned non-healer PvE combat with the AoE strategy. Inventory
+and fresh local blast-safety checks occur when the existing grenade action is
+evaluated; cooldown/range/item requirements fail before the scan. Diagnostics use
+the existing action log. No builds/compilation on the live VM while worldserver
+runs; local extracted tests, CI, full build and gameplay are reported separately.

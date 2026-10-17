@@ -19018,7 +19018,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "26ADCAB1F186893E4AF730BE106421ADF9C2EFF71A1709B6EEF00B0881D97804"
+    "sha256": "0071FBA0702A120599858D1E85AD472D848C0D3C04A8B11613D1A300B1DDFA90"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/triggers/GuildTriggers.cpp",
@@ -19034,7 +19034,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "7DB955DD4AA95262A3079FE92EA9C3F9AC32294793B595E94AF224A91F52F064"
+    "sha256": "F2F6EC2F1B3244AB4F24C4CBF8B4DF6B26A9BFAC34827AB223D6909B69E10142"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/triggers/WorldPacketTriggerContext.h",
@@ -22447,7 +22447,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "1F699A24A3187485023B0AAF4F3CA96488D279314A949DEA08178BAC8C6FC5D8"
+    "sha256": "A486C8E2C743312C6C3851967032CF5BCFB551A2AA961DD457062A73F876BDD9"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/generic/QuestStrategies.h",
@@ -24670,7 +24670,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "EAE5692690C0A01D738262D1645225A0B8DAB001B87E590DB2428D554E1C5F94"
+    "sha256": "765D7067CC05D60817796F4D0B296B3E7054DD93A14BD1441F4C788D0A624351"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/GuildManagementActions.h",
@@ -25556,7 +25556,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "1D1D9A07546662C030AE337AAD3F197B78DDB899398AD52FDC6DCEF2288FF237"
+    "sha256": "9CBE9EE7F46880CA6EDF59124C9CF3D676550FCF4061CCF22933B57F358FF005"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/LeaveGroupAction.cpp",

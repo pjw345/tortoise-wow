@@ -1,0 +1,19 @@
+name: Owned engineering explosives
+on:
+  pull_request:
+  push:
+    branches: [playerbots-development]
+jobs:
+  focused:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: cmake -S tests/playerbot-owned-explosives -B build-owned-explosives
+      - run: cmake --build build-owned-explosives --config Release
+      - run: ctest --test-dir build-owned-explosives -C Release --output-on-failure
