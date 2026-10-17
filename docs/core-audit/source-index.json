@@ -18179,7 +18179,7 @@
       "spells",
       "death_reset"
     ],
-    "sha256": "30647BCE32872C6F1A439F29B1BFC188A094473999DD8D3864A841B6473C16E1"
+    "sha256": "8337845F252B47354919964932183866E0D0BF942995AA097554524027FEB6A7"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/TravelRoutePolicy.h",
@@ -24251,7 +24251,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "1CD5BCC93D09AD129631B99197FD495618CBC1B6C2829091B1A3B15370377DE0"
+    "sha256": "7BBDDEAB798044399EED306EB5A5DDBA2E93ED16855B17C6B853C2DE7C937B16"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/EquipAction.cpp",
@@ -24304,7 +24304,7 @@
       "death_reset",
       "threat"
     ],
-    "sha256": "44C1D17CD5CF3C612219B8B5BE780DF62E3CAE3A692DCE83B63822CE5CF4953F"
+    "sha256": "D427F1C1A9C477D49FF14948D0F6ED42521C83CA06FADBC09DF626A098071C5A"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/GuildAcceptQuestOrderAction.h",
@@ -25877,6 +25877,6 @@
       "death_reset",
       "async"
     ],
-    "sha256": "204EF6BD3F34C4656706EA376E26B8F4826BB480CA297C8D5FCB84CA5C2C3B8C"
+    "sha256": "0200008D9222340DBE90D3C1B6156E67972F84D78BD76EDFD4E8E6F126164C4E"
   }
 ]
