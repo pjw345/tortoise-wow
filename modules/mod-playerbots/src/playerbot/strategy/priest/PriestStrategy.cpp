@@ -613,7 +613,7 @@ void PriestOffdpsStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
         NextAction::array(0, new NextAction("smite", ACTION_NORMAL + 1), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "no mana",
+        "very often",
         NextAction::array(0, new NextAction("shoot", ACTION_NORMAL), NULL)));
 }
 
@@ -1194,7 +1194,7 @@ void PriestOffdpsStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
         NextAction::array(0, new NextAction("smite", ACTION_NORMAL + 1), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "no mana",
+        "very often",
         NextAction::array(0, new NextAction("shoot", ACTION_NORMAL), NULL)));
 }
 
@@ -1767,7 +1767,7 @@ void PriestOffdpsStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
         NextAction::array(0, new NextAction("smite", ACTION_NORMAL + 1), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "no mana",
+        "very often",
         NextAction::array(0, new NextAction("shoot", ACTION_NORMAL), NULL)));
 }
 

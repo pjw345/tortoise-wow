@@ -984,6 +984,18 @@ bool PlayerbotAI::IsPlayerMasterAttackAllowed(Unit* target)
 
 bool PlayerbotAI::IsPlayerMasterSpellAllowed(SpellEntry const* spell, Unit* target)
 {
+    // Reserve healing mana. Ordinary melee and wand auto-repeat remain available.
+    if (spell && HasActivePlayerMaster() && !IsRealPlayer() && IsHeal(bot) && bot->HasMana() &&
+        bot->GetPowerPercent() <= 50.0f && !spell->IsAutoRepeatRangedSpell())
+    {
+        for (int i = 0; i < MAX_EFFECT_INDEX; ++i)
+        {
+            if (Spells::IsDirectDamageEffect(spell->Effect[i]) ||
+                (Spells::IsEffectAppliesAura(spell->Effect[i]) &&
+                    Spells::IsDamagingAuraEffect(spell->EffectApplyAuraName[i])))
+                return false;
+        }
+    }
     if (spell && !IsPositiveSpell(spell) && !CanPlayerMasterChase(target) && !IsRanged(bot))
         return false;
     if (!ShouldAssistPlayerMaster() || !spell || IsPositiveSpell(spell))

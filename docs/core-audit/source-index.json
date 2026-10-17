@@ -22993,7 +22993,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "F9887B3A33E49B5759698BED34EC14CEA52D83BE7B3D85A4C6AF65497DEFA7BC"
+    "sha256": "0FDB036919CE0B474A77354216CD187E326B7D1A9814C7FBEF138428DDC41DAD"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/priest/PriestMultipliers.cpp",
@@ -25877,6 +25877,6 @@
       "death_reset",
       "async"
     ],
-    "sha256": "0200008D9222340DBE90D3C1B6156E67972F84D78BD76EDFD4E8E6F126164C4E"
+    "sha256": "1D5970F5170792F7A2EDFA5C59B23233C5F1A057D0A79D9FAA778F8240D41185"
   }
 ]

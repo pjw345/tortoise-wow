@@ -1044,3 +1044,11 @@ Fleeing-pursuit fix adds one transient per-bot target GUID, cleared by normal mo
 ## Safe party corpse recovery (2026-10-17)
 
 Safe party corpse recovery adds no logs, timers, persistent state or background work. Its fresh local hostile scan occurs only when a human-owned bot attempts automatic resurrection; nearby/group/state checks fail before scanning. Existing corpse diagnostics remain the controls. New policy gates the actual reclaim as well as ghost movement, avoiding time-based automatic solo revival; native handler rejection is propagated.
+
+
+## Healer mana reserve (2026-10-17)
+
+The 50 percent healer spell damage guard adds no logs, configuration, scans or
+persistent state. It uses the existing spell policy and native effect classifiers.
+Priest offdps wand fallback uses the existing very-often trigger. Source policy
+tests and a full build do not establish in-game healing or consumable acceptance.
