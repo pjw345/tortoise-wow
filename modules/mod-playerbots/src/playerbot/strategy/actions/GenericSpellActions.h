@@ -451,7 +451,7 @@ namespace ai
         virtual ActionThreatType getThreatType() override { return ActionThreatType::ACTION_THREAT_NONE; }
     };
 
-    class InterruptCurrentSpellAction : public Action
+    class InterruptCurrentSpellAction : public Action, public Qualified
     {
     public:
         InterruptCurrentSpellAction(PlayerbotAI* ai) : Action(ai, "interrupt current spell") {}
