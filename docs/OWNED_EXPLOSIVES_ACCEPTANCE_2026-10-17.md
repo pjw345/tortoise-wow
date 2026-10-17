@@ -30,3 +30,11 @@ Gameplay acceptance after a server-off build:
 4. Move the target out of range/LOS; verify no throw/chase caused by this action.
 5. Verify healing, fleeing restrictions, mana reserve and ordinary free-bot/PvP
    behavior. Potions remain a separate unresolved gameplay investigation.
+
+
+Read-only world-data check (2026-10-17): item 4358 requires Engineering 1, 4365
+requires 75 and 4374 requires 120. Spells 4054/4061 use damage effect 2 at implicit
+target 16 (enemy AoE at destination), range index 4 / radius index 8. Spell 4066
+adds aura effect 6 at the same destination target, range index 3 / radius index 15.
+This confirms these three basic explosives match the supported native target
+geometry; it does not confirm a successful in-game throw or consumption.
