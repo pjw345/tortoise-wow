@@ -43,6 +43,7 @@
 #include "strategy/ItemVisitors.h"
 #include "strategy/values/LootValues.h"
 #include "strategy/values/AttackersValue.h"
+#include "strategy/values/PossibleAttackTargetsValue.h"
 #include "Transports/Transport.h"
 #include "Guild/GuildMgr.h"
 #include "Chat/ChannelMgr.h"
@@ -918,14 +919,49 @@ Unit* PlayerbotAI::GetPlayerMasterAttackTarget()
     if (!ShouldAssistPlayerMaster() || !sServerFacade.IsAlive(master))
         return nullptr;
 
-    // Selection alone is not permission to pull. Use the native attack victim.
-    Unit* target = master->GetVictim();
-    if (!target || !IsSafe(bot, target) || target->GetMap() != bot->GetMap() ||
-        !sServerFacade.IsAlive(target) || sServerFacade.IsFriendlyTo(bot, target) ||
-        !bot->IsWithinDistInMap(target, sPlayerbotAIConfig.sightDistance, false))
-        return nullptr;
+    auto canAttack = [this](Unit* target)
+    {
+        return target && IsSafe(bot, target) && target->GetMap() == bot->GetMap() &&
+            sServerFacade.IsAlive(target) && !sServerFacade.IsFriendlyTo(bot, target) &&
+            PossibleAttackTargetsValue::IsPossibleTarget(target, bot, sPlayerbotAIConfig.sightDistance, false) &&
+            bot->IsWithinLOSInMap(target);
+    };
 
-    return target;
+    // A low-health runner remains the current focus despite leader target changes.
+    // An unsafe/CC'd runner pauses attacks rather than authorising a replacement pull.
+    Unit* current = aiObjectContext->GetValue<Unit*>("current target")->Get();
+    if (current && IsSafe(bot, current) && current->GetMap() == bot->GetMap() &&
+        sServerFacade.IsAlive(current) && !sServerFacade.IsFriendlyTo(bot, current) &&
+        current->HasUnitState(UNIT_STAT_FLEEING))
+        return canAttack(current) ? current : nullptr;
+
+    // Native attackers already includes combat involving the bot, group and pets.
+    // Do not use possible attack targets here: that value calls this policy.
+    std::list<ObjectGuid> attackers = aiObjectContext->GetValue<std::list<ObjectGuid>>("attackers")->Get();
+    auto engaged = [&attackers](Unit* target)
+    {
+        return target && std::find(attackers.begin(), attackers.end(), target->GetObjectGuid()) != attackers.end();
+    };
+
+    Unit* selected = GetUnit(master->GetSelectionGuid());
+    if (canAttack(selected) && (selected == master->GetVictim() || engaged(selected)))
+        return selected;
+
+    // Retain the existing attack victim when no selected unit resolves.
+    Unit* victim = master->GetVictim();
+    if (!selected && canAttack(victim))
+        return victim;
+
+    // Defensive fallback never acquires an idle hostile merely because it is selected.
+    if (engaged(current) && canAttack(current))
+        return current;
+    for (ObjectGuid guid : attackers)
+    {
+        Unit* target = GetUnit(guid);
+        if (canAttack(target))
+            return target;
+    }
+    return nullptr;
 }
 
 bool PlayerbotAI::IsPlayerMasterAttackAllowed(Unit* target)
@@ -974,7 +1010,13 @@ void PlayerbotAI::UpdatePlayerMasterAssist()
     {
         // Clear stale targeting through the existing values and assist actions.
         bot->AttackStop();
-        aiObjectContext->GetValue<Unit*>("current target")->Set(nullptr);
+        // Preserve a paused runner in the existing current-target value. Clearing
+        // it here would lose the fleeing lock on the following update.
+        bool const pausedRunner = !target && current && IsSafe(bot, current) &&
+            current->GetMap() == bot->GetMap() && sServerFacade.IsAlive(current) &&
+            !sServerFacade.IsFriendlyTo(bot, current) && current->HasUnitState(UNIT_STAT_FLEEING);
+        if (!pausedRunner)
+            aiObjectContext->GetValue<Unit*>("current target")->Set(nullptr);
         aiObjectContext->GetValue<ObjectGuid>("attack target")->Set(ObjectGuid());
         aiObjectContext->GetValue<Unit*>("dps target")->Reset();
         aiObjectContext->GetValue<Unit*>("tank target")->Reset();

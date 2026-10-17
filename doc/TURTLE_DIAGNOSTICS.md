@@ -1029,3 +1029,8 @@ Issue #35 dead-leader defense candidate adds no logging, polling or runtime swit
 ## Bot command conversation separation (2026-10-17)
 
 Command/conversation separation adds no logging, polling, background workers or configuration. Recognition runs only for incoming real-player messages in the existing packet handler. Native command execution, security and command replies remain unchanged. Compiled and gameplay verification await a server-off build window.
+
+
+## Defensive master focus and fleeing enemies (2026-10-17)
+
+Defensive master focus and fleeing-target retention add no diagnostics, timers, global scans or persistent state. Reuse current target, native attackers and fleeing unit state. Source, regression, full build and gameplay validation are reported separately.
