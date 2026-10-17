@@ -471,3 +471,8 @@ Human-master combat focus requires a living master. A dead/ghost master exits fo
 ## Bot command conversation separation (2026-10-17)
 
 Outgoing chat-packet observation excludes addon-language traffic and recognised real-player bot commands before conversation recording and stock/LLM reply queues. ExternalEventHelper recognition mode shares native command lookup/splitting but never fires an ExternalEvent; normal execution and security remain unchanged. Ordinary item/quest links remain conversation-eligible.
+
+
+## Defensive master focus and fleeing enemies (2026-10-17)
+
+Human-master PvE focus now prefers an existing fleeing combat target; then an attackable selected enemy already engaged by the master/group; then the current/native group attackers for defense. Selection alone never authorises a pull. Native attackability, tapping, immunity and CC checks plus sight range/LOS remain enforced. Unsafe fleeing pursuit pauses rather than switching; death/end of fleeing releases the lock. The native attackers value is used directly to avoid recursion through possible attack targets. Existing healing priorities, security and PvP/free-bot behaviour are unchanged.
