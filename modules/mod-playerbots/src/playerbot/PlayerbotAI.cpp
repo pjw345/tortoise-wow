@@ -905,6 +905,16 @@ bool PlayerbotAI::IsInPve()
     return !IsInPvp() && !IsInRaid();
 }
 
+bool PlayerbotAI::CanPlayerMasterChase(Unit* target)
+{
+    // Fleeing enemies may only be finished from the existing ranged position.
+    // Keep this restriction when the human master is dead too.
+    return !(sPlayerbotAIConfig.assistPlayerMaster && HasActivePlayerMaster() &&
+        !IsRealPlayer() && !IsInPvp() && target && IsSafe(bot, target) &&
+        target->GetMap() == bot->GetMap() && sServerFacade.IsAlive(target) &&
+        !sServerFacade.IsFriendlyTo(bot, target) && target->HasUnitState(UNIT_STAT_FLEEING));
+}
+
 bool PlayerbotAI::ShouldAssistPlayerMaster()
 {
     return sPlayerbotAIConfig.assistPlayerMaster && HasActivePlayerMaster() &&
@@ -921,7 +931,8 @@ Unit* PlayerbotAI::GetPlayerMasterAttackTarget()
 
     auto canAttack = [this](Unit* target)
     {
-        return target && IsSafe(bot, target) && target->GetMap() == bot->GetMap() &&
+        return target && (CanPlayerMasterChase(target) || IsRanged(bot)) &&
+            IsSafe(bot, target) && target->GetMap() == bot->GetMap() &&
             sServerFacade.IsAlive(target) && !sServerFacade.IsFriendlyTo(bot, target) &&
             PossibleAttackTargetsValue::IsPossibleTarget(target, bot, sPlayerbotAIConfig.sightDistance, false) &&
             bot->IsWithinLOSInMap(target);
@@ -930,7 +941,7 @@ Unit* PlayerbotAI::GetPlayerMasterAttackTarget()
     // A low-health runner remains the current focus despite leader target changes.
     // An unsafe/CC'd runner pauses attacks rather than authorising a replacement pull.
     Unit* current = aiObjectContext->GetValue<Unit*>("current target")->Get();
-    if (current && IsSafe(bot, current) && current->GetMap() == bot->GetMap() &&
+    if (IsRanged(bot) && current && IsSafe(bot, current) && current->GetMap() == bot->GetMap() &&
         sServerFacade.IsAlive(current) && !sServerFacade.IsFriendlyTo(bot, current) &&
         current->HasUnitState(UNIT_STAT_FLEEING))
         return canAttack(current) ? current : nullptr;
@@ -966,11 +977,15 @@ Unit* PlayerbotAI::GetPlayerMasterAttackTarget()
 
 bool PlayerbotAI::IsPlayerMasterAttackAllowed(Unit* target)
 {
+    if (!CanPlayerMasterChase(target) && !IsRanged(bot))
+        return false;
     return !ShouldAssistPlayerMaster() || (target && target == GetPlayerMasterAttackTarget());
 }
 
 bool PlayerbotAI::IsPlayerMasterSpellAllowed(SpellEntry const* spell, Unit* target)
 {
+    if (spell && !IsPositiveSpell(spell) && !CanPlayerMasterChase(target) && !IsRanged(bot))
+        return false;
     if (!ShouldAssistPlayerMaster() || !spell || IsPositiveSpell(spell))
         return true;
 
@@ -992,6 +1007,19 @@ bool PlayerbotAI::IsPlayerMasterSpellAllowed(SpellEntry const* spell, Unit* targ
 
 void PlayerbotAI::UpdatePlayerMasterAssist()
 {
+    Unit* pursuit = GetUnit(playerMasterPursuitTarget);
+    Unit* nativeChase = sServerFacade.GetChaseTarget(bot);
+    if ((pursuit && !CanPlayerMasterChase(pursuit)) ||
+        (nativeChase && !CanPlayerMasterChase(nativeChase)))
+        StopMoving();
+    if (!CanPlayerMasterChase(bot->GetVictim()) && !IsRanged(bot))
+        bot->AttackStop();
+    Pet* companion = bot->GetPet();
+    if (companion && !CanPlayerMasterChase(companion->GetVictim()))
+    {
+        companion->AttackStop();
+        companion->GetMotionMaster()->MoveFollow(bot, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+    }
     if (!ShouldAssistPlayerMaster())
     {
         Pet* pet = bot->GetPet();
@@ -1012,7 +1040,7 @@ void PlayerbotAI::UpdatePlayerMasterAssist()
         bot->AttackStop();
         // Preserve a paused runner in the existing current-target value. Clearing
         // it here would lose the fleeing lock on the following update.
-        bool const pausedRunner = !target && current && IsSafe(bot, current) &&
+        bool const pausedRunner = IsRanged(bot) && !target && current && IsSafe(bot, current) &&
             current->GetMap() == bot->GetMap() && sServerFacade.IsAlive(current) &&
             !sServerFacade.IsFriendlyTo(bot, current) && current->HasUnitState(UNIT_STAT_FLEEING);
         if (!pausedRunner)
@@ -9230,6 +9258,7 @@ bool PlayerbotAI::CanMove()
 
 void PlayerbotAI::StopMoving()
 {
+    playerMasterPursuitTarget = ObjectGuid();
     if (bot->IsTaxiFlying())
         return;
 

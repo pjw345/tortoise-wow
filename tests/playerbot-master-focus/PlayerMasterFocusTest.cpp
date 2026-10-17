@@ -20,11 +20,11 @@ struct Spell { SpellEntry* m_spellInfo=nullptr; bool canInterrupt=true; struct {
 struct Motion { int followed=0; template<class T> void MoveFollow(T*,float,float){++followed;} };
 struct CreatureAI { ReactStates react=REACT_DEFENSIVE; ReactStates GetReactState(){return react;} void SetReactState(ReactStates r){react=r;} };
 struct Pet;
-struct Unit { ObjectGuid guid; bool alive=true,friendly=false,safe=true,world=true,near=true,los=true,cc=false,attackable=true,fleeing=false; void* map=reinterpret_cast<void*>(1); Unit* victim=nullptr; std::string name="Add"; int stops=0; bool HasUnitState(int){return fleeing;} bool IsWithinLOSInMap(Unit*u){return u->los;} Unit* GetVictim(){return victim;} void AttackStop(){victim=nullptr;++stops;} void* GetMap(){return map;} bool IsInWorld(){return world;} bool IsWithinDistInMap(Unit*,float,bool){return near;} ObjectGuid GetObjectGuid(){return guid;} char const* GetName(){return name.c_str();} };
+struct Unit { ObjectGuid guid; bool alive=true,friendly=false,safe=true,world=true,near=true,los=true,cc=false,attackable=true,fleeing=false; void* map=reinterpret_cast<void*>(1); Unit* chase=nullptr; Unit* victim=nullptr; std::string name="Add"; int stops=0; bool HasUnitState(int){return fleeing;} bool IsWithinLOSInMap(Unit*u){return u->los;} Unit* GetVictim(){return victim;} void AttackStop(){victim=nullptr;++stops;} void* GetMap(){return map;} bool IsInWorld(){return world;} bool IsWithinDistInMap(Unit*,float,bool){return near;} ObjectGuid GetObjectGuid(){return guid;} char const* GetName(){return name.c_str();} };
 struct Player : Unit { ObjectGuid selection; ObjectGuid GetSelectionGuid(){return selection;} bool grouped=true; Pet* pet=nullptr; std::set<Unit*> attackers; std::map<int,Spell*> spells; bool IsInGroup(Player*){return grouped;} Pet* GetPet(){return pet;} std::set<Unit*>& getAttackers(){return attackers;} Spell* GetCurrentSpell(CurrentSpellTypes t){return spells[t];} void InterruptSpell(CurrentSpellTypes t){spells[t]=nullptr;} };
 struct Pet:Unit { CreatureAI brain; Motion motion; CreatureAI* AI(){return &brain;} Motion* GetMotionMaster(){return &motion;} };
 struct PossibleAttackTargetsValue {static bool IsPossibleTarget(Unit*u,Player*,float,bool){return u->near&&u->attackable&&!u->cc;}};
-struct Facade { bool IsAlive(Unit* u){return u->alive;} bool IsFriendlyTo(Unit*,Unit* u){return u->friendly;} }sServerFacade;
+struct Facade { Unit* GetChaseTarget(Unit*u){return u->chase;}  bool IsAlive(Unit* u){return u->alive;} bool IsFriendlyTo(Unit*,Unit* u){return u->friendly;} }sServerFacade;
 struct Config { bool assistPlayerMaster=true; float sightDistance=60; }sPlayerbotAIConfig;
 struct WorldTimer { static uint32 now; static uint32 getMSTime(){return now;} static uint32 getMSTimeDiff(uint32 a,uint32 b){return b-a;} }; uint32 WorldTimer::now=100;
 enum class PlayerbotSecurityLevel { PLAYERBOT_SECURITY_ALLOW_ALL };
@@ -33,10 +33,11 @@ struct Context { std::map<std::string,Value<Unit*>> units; Value<ObjectGuid> att
 template<> Value<Unit*>* Context::GetValue<Unit*>(std::string n){return &units[n];}
 template<> Value<ObjectGuid>* Context::GetValue<ObjectGuid>(std::string){return &attack;}
 template<> Value<std::list<ObjectGuid>>* Context::GetValue<std::list<ObjectGuid>>(std::string){return &attackers;}
-struct PlayerbotAI { Player *bot=nullptr,*master=nullptr; Context storage; Context* aiObjectContext=&storage; bool activeMaster=true,pvp=false,real=false,silent=false; bool playerMasterAggroObserved=false; uint32 playerMasterAggroStartedMs=0; uint32 lastPlayerMasterAggroWarningMs=0; ObjectGuid playerMasterFocusPet; uint8 playerMasterFocusPetReact=0; std::map<int,Unit*> world; std::vector<std::string> warnings; int interrupted=0;
+struct PlayerbotAI { Player *bot=nullptr,*master=nullptr; Context storage; Context* aiObjectContext=&storage; bool activeMaster=true,pvp=false,real=false,silent=false,ranged=false; bool playerMasterAggroObserved=false; uint32 playerMasterAggroStartedMs=0; uint32 lastPlayerMasterAggroWarningMs=0; ObjectGuid playerMasterPursuitTarget; int movementStops=0; ObjectGuid playerMasterFocusPet; uint8 playerMasterFocusPetReact=0; std::map<int,Unit*> world; std::vector<std::string> warnings; int interrupted=0;
  bool HasActivePlayerMaster(){return master && activeMaster;} bool IsRealPlayer(){return real;} bool IsInPvp(){return pvp;} bool IsSafe(Player* p){return p&&p->safe;} static bool IsSafe(Player*,Unit* p){return p&&p->safe;}
  Unit* GetUnit(ObjectGuid g){return world[g.value];} void SpellInterrupted(uint32){++interrupted;}
  bool TellPlayerNoFacing(Player*,std::string text,PlayerbotSecurityLevel,bool,bool){if(silent)return false;warnings.push_back(text);return true;}
+ bool IsRanged(Player*){return ranged;} void StopMoving(){++movementStops;bot->chase=nullptr;playerMasterPursuitTarget=ObjectGuid();} bool CanPlayerMasterChase(Unit*);
  bool ShouldAssistPlayerMaster(); Unit* GetPlayerMasterAttackTarget(); bool IsPlayerMasterAttackAllowed(Unit*); bool IsPlayerMasterSpellAllowed(SpellEntry const*,Unit*); void UpdatePlayerMasterAssist();
 };
 #include "NativeMasterFocus.inc"
@@ -112,7 +113,7 @@ int main(){try{
  check(ai.GetPlayerMasterAttackTarget()==&primary,"selected engaged group enemy takes priority without master autoattack");
  master.selection=ObjectGuid();ai.storage.units["current target"].value=&primary;
  check(ai.GetPlayerMasterAttackTarget()==&primary,"defense retains current engaged target");
- primary.fleeing=true;master.selection=add.guid;master.victim=&add;
+ ai.ranged=true;primary.fleeing=true;master.selection=add.guid;master.victim=&add;
  check(ai.GetPlayerMasterAttackTarget()==&primary,"fleeing current target survives leader switch");
  check(ai.IsPlayerMasterAttackAllowed(&primary)&&!ai.IsPlayerMasterAttackAllowed(&add),"attack guard shares fleeing lock");
  bot.victim=&primary;ai.UpdatePlayerMasterAssist();check(bot.victim==&primary,"update does not stop fleeing target attack");
@@ -126,6 +127,25 @@ int main(){try{
  add.cc=true;primary.cc=true;check(!ai.GetPlayerMasterAttackTarget(),"defense excludes crowd-controlled targets");add.cc=primary.cc=false;
  add.attackable=false;primary.attackable=false;check(!ai.GetPlayerMasterAttackTarget(),"defense excludes native unattackable targets");add.attackable=primary.attackable=true;
  ai.storage.attackers.value.clear();check(!ai.GetPlayerMasterAttackTarget(),"no group attackers: no autonomous pull");
+ // Melee never pursues/attacks a runner; ranged finishers cannot chase it either.
+ master.selection=primary.guid;master.victim=&primary;primary.fleeing=true;ai.ranged=false;
+ ai.storage.units["current target"].value=&primary;ai.storage.attackers.value={primary.guid,add.guid};
+ check(!ai.CanPlayerMasterChase(&primary)&&ai.CanPlayerMasterChase(&add),"runner movement blocked; other targets unaffected");
+ check(!ai.IsPlayerMasterAttackAllowed(&primary)&&!ai.IsPlayerMasterSpellAllowed(&damage,&primary),"melee runner damage denied");
+ check(ai.GetPlayerMasterAttackTarget()==&add,"melee defends another attacker instead of locking runner");
+ ai.playerMasterPursuitTarget=primary.guid;bot.victim=&primary;bot.chase=&primary;int stopped=ai.movementStops;
+ pet.victim=&primary;int followed=pet.motion.followed;
+ ai.UpdatePlayerMasterAssist();check(ai.movementStops==stopped+1&&!bot.chase&&pet.motion.followed>followed,"active native/path pursuit and pet attack cancelled");
+ check(ai.playerMasterPursuitTarget==ObjectGuid(),"StopMoving clears pursuit provenance");
+ ai.ranged=true;ai.storage.units["current target"].value=&primary;
+ check(ai.GetPlayerMasterAttackTarget()==&primary&&ai.IsPlayerMasterAttackAllowed(&primary)&&!ai.CanPlayerMasterChase(&primary),"ranged keeps attack target without movement permission");
+ ai.playerMasterPursuitTarget=primary.guid;bot.chase=nullptr;stopped=ai.movementStops;
+ ai.UpdatePlayerMasterAssist();check(ai.movementStops==stopped+1,"hazard-routed pursuit cancelled without native chase reference");
+ master.alive=false;ai.ranged=false;check(!ai.IsPlayerMasterAttackAllowed(&primary)&&!ai.CanPlayerMasterChase(&primary),"dead leader does not reopen melee pursuit");master.alive=true;
+ primary.friendly=true;check(ai.CanPlayerMasterChase(&primary)&&ai.IsPlayerMasterSpellAllowed(&heal,&primary),"friendly healing movement remains allowed");primary.friendly=false;
+ ai.activeMaster=false;check(ai.CanPlayerMasterChase(&primary),"free bot pursuit unchanged");ai.activeMaster=true;
+ ai.pvp=true;check(ai.CanPlayerMasterChase(&primary),"PvP pursuit unchanged");ai.pvp=false;
+ primary.fleeing=false;check(ai.CanPlayerMasterChase(&primary),"pursuit allowed after fleeing ends");
  ai.pvp=true;ai.UpdatePlayerMasterAssist();check(pet.brain.react==REACT_DEFENSIVE,"pet react restored outside policy");
  std::cout<<"Native master-focus policy, target transitions, spell guards, pet lifecycle and warning cases passed\n";
 }catch(std::exception const& e){std::cerr<<e.what()<<'\n';return 1;} }

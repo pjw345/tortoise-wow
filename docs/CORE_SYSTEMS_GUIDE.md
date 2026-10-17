@@ -476,3 +476,8 @@ Outgoing chat-packet observation excludes addon-language traffic and recognised 
 ## Defensive master focus and fleeing enemies (2026-10-17)
 
 Human-master PvE focus now prefers an existing fleeing combat target; then an attackable selected enemy already engaged by the master/group; then the current/native group attackers for defense. Selection alone never authorises a pull. Native attackability, tapping, immunity and CC checks plus sight range/LOS remain enforced. Unsafe fleeing pursuit pauses rather than switching; death/end of fleeing releases the lock. The native attackers value is used directly to avoid recursion through possible attack targets. Existing healing priorities, security and PvP/free-bot behaviour are unchanged.
+
+
+## No pursuit of fleeing enemies (2026-10-17)
+
+Human-owned companions never pursue hostile fleeing units. Melee bots exclude runners from attack/damage selection and may defend against other engaged attackers. Ranged bots retain a fleeing target but must use existing casting/shooting range and LOS from their position. Reach/ChaseTo/MoveNear/MoveTo unit paths share the restriction; active chase is cancelled by the existing StopMoving API. A transient pursuit GUID records the target behind hazard-routed MovePath, whose generator has no target; movement updates clear it and ChaseTo sets it, StopMoving clears it. Pet attacks on runners are cancelled too. The no-pursuit check remains active while the human master is dead; native PvP and free-bot rules remain unchanged.

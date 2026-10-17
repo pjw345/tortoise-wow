@@ -37,6 +37,8 @@ namespace ai
         virtual bool Execute(Event& event) override
 		{
             Unit* target = GetTarget();
+            if (!ai->CanPlayerMasterChase(target))
+                return false;
             if (target)
             {
                 UpdateMovementState();
@@ -98,6 +100,8 @@ namespace ai
             if (!ai->HasStrategy("stay", ai->GetState()))
             {
                 Unit* target = GetTarget();
+                if (!ai->CanPlayerMasterChase(target))
+                    return false;
                 if (target)
                 {
                     // A target that can never legally be attacked (friendly, wrong
