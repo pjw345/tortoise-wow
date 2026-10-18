@@ -19,6 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "BattleLog.h"
 #include <atomic>
 #include <unordered_map>
 #include <cmath>
@@ -858,6 +859,7 @@ void Playerbot_OnPlayerDestroyed(Player const* player);
 
 Player::~Player()
 {
+    BattleLog::Depart(this, "player_destroyed");
     // Clear all pointers to this player in all zone scripts
     if (m_uint32Values)
         sZoneScriptMgr.OnPlayerGettingDestroyed(this);
@@ -1658,6 +1660,7 @@ void Player::Update(uint32 update_diff, uint32 p_time)
     //used to implement delayed far teleports
     SetCanDelayTeleport(true);
     Unit::Update(update_diff, p_time);
+    BattleLog::Observe(this);
     if (i_AI)
         i_AI->UpdateAI(p_time);
     SetCanDelayTeleport(false);
@@ -3047,6 +3050,7 @@ void Player::AddToWorld()
 
 void Player::RemoveFromWorld()
 {
+    BattleLog::Depart(this, "player_left_world");
     if (m_transport)
         SendDestroyGroupMembers(true);
 

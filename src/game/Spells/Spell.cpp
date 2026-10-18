@@ -20,6 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "BattleLog.h"
 #include "Spell.h"
 #include "Database/DatabaseEnv.h"
 #include "WorldPacket.h"
@@ -3513,6 +3514,7 @@ SpellCastResult Spell::prepare(SpellCastTargets targets, Aura* triggeredByAura, 
 SpellCastResult Spell::prepare(Aura* triggeredByAura, uint32 chance)
 {
     m_spellState = SPELL_STATE_PREPARING;
+    BattleLog::Cast(this, "cast_attempt");
     m_delayed = m_spellInfo->speed > 0.0f 
         || (m_spellInfo->IsCCSpell() && m_targets.getUnitTarget() && m_targets.getUnitTarget()->IsPlayer());
 
@@ -3625,6 +3627,7 @@ SpellCastResult Spell::prepare(Aura* triggeredByAura, uint32 chance)
                 m_casterUnit->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_ON_CAST_SPELL);
         }
 
+        BattleLog::Cast(this, "cast_start");
         OnSpellLaunch();
 
         bool channeled = m_spellInfo->IsChanneledSpell();
@@ -3904,6 +3907,7 @@ void Spell::cast(bool skipCheck)
     SendSpellCooldown();
 
     TakePower();
+    BattleLog::Cast(this, "cast_launch");
     TakeReagents();                                         // we must remove reagents before HandleEffects to allow place crafted item in same slot
     TakeAmmo();
 
@@ -4493,6 +4497,7 @@ void Spell::finish(bool ok)
         return;
 
     m_spellState = SPELL_STATE_FINISHED;
+    BattleLog::Cast(this, "cast_finish", ok ? 0 : 1);
 
     // BotActionLog hook: cast result. `ok` is true on success,
     // false on cancel/interrupt/fail.
@@ -4605,6 +4610,7 @@ void Spell::finish(bool ok)
 
 void Spell::SendCastResult(SpellCastResult result)
 {
+    BattleLog::Cast(this, "cast_result", int(result));
     if (!m_caster->IsPlayer())
         return;
 
@@ -5266,10 +5272,12 @@ void Spell::TakeCastItem()
     {
         uint32 count = 1;
         Item* castItem = m_CastItem;
+        uint32 battleItem = castItem->GetEntry(), battleCount = castItem->GetCount();
         // prevent crash at access to deleted m_targets.getItemTarget
         ClearCastItem();
         // Destroying the item involved in a spell interrupts the spell. So delete the item once we cleared the spell cast item.
         ((Player*)m_caster)->DestroyItemCount(castItem, count, true);
+        BattleLog::ItemSpent(this, battleItem, battleCount, battleCount - (1 - count));
         if (m_forceConsumeItem)
             ((Player*)m_caster)->SaveInventoryAndGoldToDB();
     }
@@ -5302,7 +5310,9 @@ void Spell::TakePower()
             return;
         }
 
+        uint32 battleBefore = m_casterUnit->GetHealth();
         m_casterUnit->ModifyHealth(-(int32)m_powerCost);
+        BattleLog::Resource(this, POWER_HEALTH, battleBefore, m_casterUnit->GetHealth(), m_casterUnit->GetMaxHealth());
         return;
     }
 
@@ -5314,7 +5324,9 @@ void Spell::TakePower()
 
     Powers powerType = Powers(m_spellInfo->powerType);
 
+    uint32 battleBefore = m_casterUnit->GetPower(powerType);
     m_casterUnit->ModifyPower(powerType, -(int32)m_powerCost);
+    BattleLog::Resource(this, int(powerType), battleBefore, m_casterUnit->GetPower(powerType), m_casterUnit->GetMaxPower(powerType));
 
     // Set the five second timer
     if (powerType == POWER_MANA && m_powerCost > 0)

@@ -1,4 +1,5 @@
 
+#include "BattleLog.h"
 #include "playerbot/playerbot.h"
 #include <stdarg.h>
 #include <iomanip>
@@ -357,6 +358,17 @@ bool Engine::DoNextAction(Unit* unit, int depth, bool minimal, bool isStunned)
         return false;
     uint64 const mapGeneration = bot->GetMapWorkGeneration();
     uint32 const transitionGeneration = ai->GetTransitionGeneration();
+    if (state == BotState::BOT_STATE_COMBAT && BattleLog::NeedsContext(bot))
+    {
+        std::ostringstream context;
+        context << "combat_strategies=";
+        for (std::string_view strategy : ai->GetStrategies(BotState::BOT_STATE_COMBAT))
+            context << strategy << ',';
+        context << ";healer=" << ai->IsHeal(bot) << ";ranged=" << ai->IsRanged(bot)
+                << ";engineering=" << bot->GetSkillValue(SKILL_ENGINEERING)
+                << ";alchemy=" << bot->GetSkillValue(SKILL_ALCHEMY);
+        BattleLog::Context(bot, context.str());
+    }
     LogAction("--- AI Tick ---");
     if (sPlayerbotAIConfig.logValuesPerTick)
         LogValues();
@@ -526,6 +538,9 @@ bool Engine::DoNextAction(Unit* unit, int depth, bool minimal, bool isStunned)
                         }
                         auto pmo4 = sPerformanceMonitor.start(PERF_MON_ACTION, "Execute", ai);
                         actionExecuted = ListenAndExecute(action, event);
+                        if (BattleLog::Enabled() && bot->IsInWorld() && !bot->IsBeingTeleported() &&
+                            bot->GetMapWorkGeneration() == mapGeneration && ai->GetTransitionGeneration() == transitionGeneration)
+                            BattleLog::Decision(bot, nullptr, actionNode->getName(), actionExecuted ? "executed" : "failed");
                         pmo4.reset();
 
 #ifdef PLAYERBOT_ELUNA
@@ -579,6 +594,8 @@ bool Engine::DoNextAction(Unit* unit, int depth, bool minimal, bool isStunned)
                             }
                         }
                         LogAction("A:%s - IMPOSSIBLE", action->getName().c_str());
+                        if (BattleLog::Enabled())
+                            BattleLog::Decision(bot, nullptr, actionNode->getName(), "impossible");
                         MultiplyAndPush(actionNode->getAlternatives(), relevance + 0.03, false, event, "alt");
                     }
                 }

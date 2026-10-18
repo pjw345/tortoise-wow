@@ -1,0 +1,29 @@
+name: Party battle log
+on:
+  pull_request:
+    paths:
+      - 'src/game/**'
+      - 'modules/mod-playerbots/**'
+      - 'tests/party-battle-log/**'
+      - 'tools/summarize-battle-log.py'
+      - 'tools/battle-log-result-codes.json'
+      - '.github/workflows/party-battle-log.yml'
+  push:
+    branches: [playerbots-development]
+permissions:
+  contents: read
+jobs:
+  recorder-and-reports:
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: cmake -S tests/party-battle-log -B build-party-battle-log
+      - run: cmake --build build-party-battle-log --config Release
+      - run: ctest --test-dir build-party-battle-log -C Release --output-on-failure

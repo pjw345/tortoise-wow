@@ -20,6 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "BattleLog.h"
 #include "Common.h"
 #include "BotMovementDiagnostics.h"
 #include "Database/DatabaseEnv.h"
@@ -6155,6 +6156,9 @@ void Aura::PeriodicTick(SpellEntry const* sProto, AuraType auraType, uint32 data
 
             uint32 const originalAmount = pdamage;
 
+            if (target->GetHealth() == target->GetMaxHealth())
+                BattleLog::Heal(pCaster, target, pdamage, 0, spellProto, false, true);
+
             // Don't heal target if it is already at max health. We still need
             // to do procs on the tick, however
             if (target->GetHealth() == target->GetMaxHealth())
@@ -6170,6 +6174,7 @@ void Aura::PeriodicTick(SpellEntry const* sProto, AuraType auraType, uint32 data
                               GetCasterGuid().GetString().c_str(), target->GetGuidStr().c_str(), pdamage, GetId());
 
             int32 gain = target->ModifyHealth(pdamage);
+            BattleLog::Heal(pCaster, target, pdamage, gain, spellProto, false, true);
             SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0.0f);
             target->SendPeriodicAuraLog(&pInfo);
 
@@ -7403,9 +7408,17 @@ void SpellAuraHolder::Update(uint32 diff)
                     target && (target->GetCharmerOrOwnerGuid() == GetCasterGuid())))
                 {
                     if (powertype == POWER_HEALTH && int32(caster->GetHealth()) > manaPerSecond)
+                    {
+                        uint32 battleBefore = caster->GetHealth();
                         caster->ModifyHealth(-manaPerSecond);
+                        BattleLog::AuraCost(caster, target, m_spellProto, int(powertype), battleBefore, caster->GetHealth(), caster->GetMaxHealth());
+                    }
                     else if (int32(caster->GetPower(powertype)) >= manaPerSecond)
+                    {
+                        uint32 battleBefore = caster->GetPower(powertype);
                         caster->ModifyPower(powertype, -manaPerSecond);
+                        BattleLog::AuraCost(caster, target, m_spellProto, int(powertype), battleBefore, caster->GetPower(powertype), caster->GetMaxPower(powertype));
+                    }
                     else
                     {
                         if (target)

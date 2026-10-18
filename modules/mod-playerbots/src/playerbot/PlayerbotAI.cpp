@@ -1,3 +1,4 @@
+#include "BattleLog.h"
 #include "PlayerbotMgr.h"
 #include "ahbot/AhBot.h"
 #include "playerbot/playerbot.h"
@@ -4940,6 +4941,7 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, Unit* target, uint8 effectMask, b
     spell->m_targets.setItemTarget(spell->GetCastItem());
 
     SpellCastResult result = spell->CheckCast(true);
+    BattleLog::Check(bot, target, spellid, int(result));
     delete spell;
 	//if (oldSel)
 	//	bot->SetSelectionGuid(oldSel);

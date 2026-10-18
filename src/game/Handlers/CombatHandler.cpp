@@ -19,6 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "BattleLog.h"
 #include "Common.h"
 #include "Log.h"
 #include "WorldPacket.h"
@@ -61,7 +62,8 @@ void WorldSession::HandleAttackSwingOpcode(WorldPacket & recv_data)
         return;
     }
 
-    _player->Attack(pEnemy, true);
+    if (_player->Attack(pEnemy, true))
+        BattleLog::Attack(_player, pEnemy, true);
 }
 
 void WorldSession::HandleAttackStopOpcode(WorldPacket & /*recv_data*/)

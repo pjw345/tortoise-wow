@@ -2450,3 +2450,16 @@ ElunaErrorLogFile = "ElunaErrors.log"
 SOAP.Enabled = 0
 SOAP.IP = 127.0.0.1
 SOAP.Port = 7878
+
+# Opt-in, unsampled party battle capture. No combat/AI changes.
+# Starts on a human's attack/accepted hostile cast; ends when the party is idle.
+# PlayerGuid=0 permits any human initiator; otherwise use the character low GUID.
+# Writes LogsDir/battles/battle-*.jsonl; rotation deletes only owned closed logs.
+# Reloading configuration/shutdown/roster changes produce incomplete trailers.
+BattleLog.Enabled = 0
+BattleLog.PlayerGuid = 0
+BattleLog.MaxFileMiB = 8
+BattleLog.MaxEvents = 50000
+BattleLog.MaxFiles = 100
+BattleLog.MaxSessions = 8
+BattleLog.MaxMinutes = 30

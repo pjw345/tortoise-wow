@@ -480,7 +480,7 @@
       "timers",
       "threat"
     ],
-    "sha256": "75AA3C467ACD814C993BC9B574B164CFE8938EF6AD84380D334E51F08A9B4723"
+    "sha256": "C4DE8FCF8ED983A7076A41438621460FCE28A08D0DBEFA875253CBFE22FCC66D"
   },
   {
     "file": "src/game/Spells/SpellMgr.cpp",
@@ -516,7 +516,7 @@
     "dependency_signals": [
       "timers"
     ],
-    "sha256": "72886A5C6DE028BA10D1C84C037D38D50F2537014939E447267ED59E00B76643"
+    "sha256": "51E54497BB3DD1940CACE8FBFE868DDC05FE5437787BAFABAC130CC0ED859D74"
   },
   {
     "file": "src/shared/Auth/Hmac.h",
@@ -593,7 +593,7 @@
       "movement",
       "timers"
     ],
-    "sha256": "ECB5CA08FB8D1A7E7B65EB9852BF43979A8D1A73CB45AE3A26E02450404B7B71"
+    "sha256": "3C936C36D262C723DD541E2276B57A5A6457EA13AAA683C20F23DCCE94CD6653"
   },
   {
     "file": "src/game/Spells/SpellEntry.h",
@@ -2674,7 +2674,7 @@
     "dependency_signals": [
       "threat"
     ],
-    "sha256": "D8A97E3DF3C7A0DDE051E924AC3F2F342ADCDBF516E1D42A80457498D638537C"
+    "sha256": "0662B81624B595B2CBB9EEFFCD52D08EE3DEDEC7EBB9565EAC679EEED8903A23"
   },
   {
     "file": "src/game/Protocol/WorldSocketMgr.cpp",
@@ -3862,7 +3862,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "B461FE3426B2D58CE3DC65F41A063F2ABD4FA058CBA2B5B4BC6FC481AD111723"
+    "sha256": "34E8B1E72C012865D6D6F2AFF813E5EDCD5A85F37EFDC41F8818A499068F6D0B"
   },
   {
     "file": "src/game/Handlers/NPCHandler.cpp",
@@ -4439,7 +4439,7 @@
       "timers",
       "async"
     ],
-    "sha256": "BC06C9E636E0EC918EB2CD3FAC763C2BF32DDED8C42BE30DFD4722C20FA59D15"
+    "sha256": "90E65D8DE749FD8130E356E398178DDC70E6642B074D0DEE1A01D8515478CDA1"
   },
   {
     "file": "src/game/QuestDef.cpp",
@@ -5336,7 +5336,7 @@
       "movement",
       "death_reset"
     ],
-    "sha256": "1E1B546CC33ABCEA9FEBBDE04DE3FE48FFDF0764A867658B273F64B4D193E381"
+    "sha256": "E66F29700E5F398AD8C9703A56982F9810C864938772ABB04486079137DBF611"
   },
   {
     "file": "src/game/Anticheat/Warden/WardenWin.cpp",
@@ -5873,7 +5873,7 @@
       "timers",
       "threat"
     ],
-    "sha256": "CF0A6B59356265EE0FDAC652C775468BF1C3924FA860E1D60F05C8336F53C176"
+    "sha256": "FEFC43608EA36CC71EBFABCDBF5C1E890394BB92DFDB45CB23BAA0BBEEAA24C9"
   },
   {
     "file": "src/game/Objects/TemporarySummon.h",
@@ -5917,7 +5917,7 @@
       "timers",
       "threat"
     ],
-    "sha256": "373417215733D55590575D0232CE1EF811ADC755F8D20EAEF81006181642BED0"
+    "sha256": "C169A690EE879B03EBEF515659480D86F8177A6CE8CF013757B01FBFA157D729"
   },
   {
     "file": "src/game/Objects/UnitDefines.h",
@@ -5960,7 +5960,7 @@
       "summons",
       "death_reset"
     ],
-    "sha256": "FAC6B8FD61547A6D79F0C7FA95D7A4BCA6E71B54775B8FDB456C53F54CAA136D"
+    "sha256": "623E0FD383056625C66AEA239004BCB64DFA16AB57F388FCADBA30EAE504B5BC"
   },
   {
     "file": "src/game/Objects/Item.h",
@@ -6026,7 +6026,7 @@
       "timers",
       "threat"
     ],
-    "sha256": "FC140A8AA658EF8AEADA1CCA96CC3361A7589EC0BF4460161867953B96EEB831"
+    "sha256": "442EB4F084A29E95CD9A4D49EC049AEA6C16F2961ADFC551BC2B528F94FF9C3D"
   },
   {
     "file": "src/game/Objects/UpdateFields.h",
@@ -18418,7 +18418,7 @@
     "dependency_signals": [
       "death_reset"
     ],
-    "sha256": "FDDC0861FBA8C23F49D50BB3339B389880D5C032E8262FEFCD0DB9D3ABB043B5"
+    "sha256": "204059769D9D65EB48CABCC4EB1025AA125A7194053FE454DAA99734E96A8462"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/Action.cpp",
@@ -24304,7 +24304,7 @@
       "death_reset",
       "threat"
     ],
-    "sha256": "D427F1C1A9C477D49FF14948D0F6ED42521C83CA06FADBC09DF626A098071C5A"
+    "sha256": "2D0452E89C5AF3D6B58C80DBF866030A2E55679C23C175D89EE7BB42807F6AE7"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/GuildAcceptQuestOrderAction.h",
@@ -25877,6 +25877,32 @@
       "death_reset",
       "async"
     ],
-    "sha256": "1D5970F5170792F7A2EDFA5C59B23233C5F1A057D0A79D9FAA778F8240D41185"
+    "sha256": "D8C9CC208593F7D8967FD4FD9E4216C382CA5136C14DB9363A251D182CD5E139"
+  },
+  {
+    "file": "src/game/BattleLog.cpp",
+    "cmake_listed": true,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "3F8517EAF6D2324BDB54E97C9FCA32231A2944B816754DA475BDE05B690545C4"
+  },
+  {
+    "file": "src/game/BattleLog.h",
+    "cmake_listed": false,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "8046AA7669FC145845ADF44B05C857D461D79E13A58104AE44F438C685D1780D"
+  },
+  {
+    "file": "src/game/BattleSessionRecorder.h",
+    "cmake_listed": false,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [
+      "death_reset"
+    ],
+    "sha256": "06493460387C0AFA78628A43F59C7CC6C6B138EAA5CD5E647E034866242263FD"
   }
 ]

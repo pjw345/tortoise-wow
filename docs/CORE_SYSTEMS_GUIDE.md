@@ -551,3 +551,30 @@ low-mana healer's wand; hunter auto shot and unqualified interruption are unchan
 Focused source-extracted tests: tests/playerbot-wand-handoff. This addresses a
 source-level starvation mechanism; live healing, target/fleeing acceptance and
 Alon's DPS/backup-healer configuration remain separate and unverified.
+
+
+## Party battle sessions (2026-10-18)
+
+BattleLog hooks native attack intent, accepted casts, resource mutation, damage,
+healing, threat and movement without selecting AI targets or changing actions.
+A human attack starts one party window; native combat flags across all roster
+members and observed pets end it. Recorder state contains scalar snapshots only
+and is serialized across map owners. Cross-map state is not dereferenced; gaps,
+roster changes, logout, shutdown and caps mark captures incomplete.
+Ordinary fleeing and assistance movement are distinct native states and both
+are observed. Full contracts, controls and reporting: PARTY_BATTLE_LOG.md.
+
+### Casts already active at battle opening (2026-10-18)
+
+The first live captures exposed spells prepared before the human attack whose
+diagnostic cast ID was unset. Their native mana loss and damage were visible,
+but cast-specific launch/cost events were dropped. The adapter now attaches a
+diagnostic ID at the first relevant later phase and records `cast_attached`;
+it does not replay preparation, invent a start time, or charge power again.
+Item destruction retains the supplied item entry even after native item-pointer
+clearing. No session is opened by attachment, and no AI decision is changed.
+Reports distinguish structural completion from resource attribution, warn about
+initial/attached casts and unattributed pool loss, and withhold efficiency ratios
+for affected characters. Pool loss is not assumed to be spell cost. Existing raw
+captures cannot recover missing cast phases. Focused adapter/report tests run on
+Windows; the full native build and gameplay validation await a server-off window.
