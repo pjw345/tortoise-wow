@@ -5336,7 +5336,7 @@
       "movement",
       "death_reset"
     ],
-    "sha256": "23880E8AC07C9B1A2680CDF776C665DE3ADBA3F87DFD7EB1FE654A3EF371F22E"
+    "sha256": "E66F29700E5F398AD8C9703A56982F9810C864938772ABB04486079137DBF611"
   },
   {
     "file": "src/game/Anticheat/Warden/WardenWin.cpp",
@@ -5917,7 +5917,7 @@
       "timers",
       "threat"
     ],
-    "sha256": "EB4F1D44B3FA6EED432FE55C435C24697CC9E49C91217F705A8E5A4E76B427BE"
+    "sha256": "C169A690EE879B03EBEF515659480D86F8177A6CE8CF013757B01FBFA157D729"
   },
   {
     "file": "src/game/Objects/UnitDefines.h",
@@ -24304,7 +24304,7 @@
       "death_reset",
       "threat"
     ],
-    "sha256": "502A6F98AF2542D26EA59D331786F2F86E9220DA556A17661241F91BDBE6097F"
+    "sha256": "2D0452E89C5AF3D6B58C80DBF866030A2E55679C23C175D89EE7BB42807F6AE7"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/GuildAcceptQuestOrderAction.h",
@@ -25885,7 +25885,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "435A28DF8603B1AF71D03F8BFB22719B5E264ECB3561ED5FEB73E7F67711A802"
+    "sha256": "E8B701CE845AB8B52724555CB78DD64E398275C3BF104A96DF60BBDF69D8DC5E"
   },
   {
     "file": "src/game/BattleLog.h",
@@ -25903,6 +25903,6 @@
     "dependency_signals": [
       "death_reset"
     ],
-    "sha256": "3BBE4E278A90E518915386C4046547E7A73E47B07B9F498D623A9D6952D36862"
+    "sha256": "10A469F5F8C920533E84C1744FE7EB31A0708448863BBE8146A356C9468B5A58"
   }
 ]
