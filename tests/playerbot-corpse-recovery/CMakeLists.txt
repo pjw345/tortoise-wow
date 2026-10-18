@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(PlayerbotCorpseRecovery LANGUAGES CXX)
 enable_testing()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+ ../../modules/mod-playerbots/src/playerbot/strategy/actions/ReviveFromCorpseAction.cpp
+ ../../modules/mod-playerbots/src/playerbot/strategy/actions/ReleaseSpiritAction.h
+ ../../modules/mod-playerbots/src/playerbot/strategy/values/DeadValues.cpp)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/extract.py" "${CMAKE_CURRENT_BINARY_DIR}" RESULT_VARIABLE result)
 if(NOT result EQUAL 0)

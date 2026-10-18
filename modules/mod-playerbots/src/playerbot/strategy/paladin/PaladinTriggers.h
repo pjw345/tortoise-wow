@@ -426,6 +426,30 @@ namespace ai
         }
     };
 
+    class HammerOfJusticeRunnerTrigger : public Trigger
+    {
+    public:
+        HammerOfJusticeRunnerTrigger(PlayerbotAI* ai) : Trigger(ai, "hammer of justice on runner", 1) {}
+        bool IsActive() override
+        {
+            return ai->GetPlayerMasterFleeingControlTarget(sServerFacade.LookupSpellInfo(
+                AI_VALUE2(uint32, "spell id", "hammer of justice"))) != nullptr;
+        }
+    };
+
+    class OwnedPartyHealEmergencyTrigger : public Trigger
+    {
+    public:
+        OwnedPartyHealEmergencyTrigger(PlayerbotAI* ai) : Trigger(ai, "owned party heal emergency", 1) {}
+        bool IsActive() override
+        {
+            if (!ai->UsesCoordinatedPartyHealing() || ai->IsHeal(bot) ||
+                !ai->HasStrategy("offheal", BotState::BOT_STATE_COMBAT)) return false;
+            Unit* target = AI_VALUE(Unit*, "party member to heal");
+            return target && ai->IsBackupPartyHealAllowed(target);
+        }
+    };
+
     class HammerOfJusticeInterruptSpellTrigger : public InterruptSpellTrigger
     {
     public:

@@ -14,3 +14,8 @@ for signature in ('bool AttachCast(', 'void Resource(', 'void ItemSpent('):
         end += 1
     methods.append(source[start:end])
 Path(sys.argv[1]).write_text('\n'.join(methods) + '\n', encoding='utf-8', newline='\n')
+
+start=source.index('void Observe(Player* p)');opening=source.index('{',start);end=opening+1;depth=1
+while depth:
+    depth+=(source[end]=='{')-(source[end]=='}');end+=1
+Path(sys.argv[1]).with_name('ObserveMethod.h').write_text(source[start:end],encoding='utf-8',newline='\n')

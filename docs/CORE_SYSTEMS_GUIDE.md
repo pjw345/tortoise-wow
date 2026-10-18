@@ -639,3 +639,54 @@ Coordination itself still requires a group. Explicit `preheal` keeps its native
 patient/cast policy and does not acquire automatic full-health cancellation;
 manual heal-interrupt configuration remains authoritative. Extracted lifecycle
 checks cover group-less login, later grouping, preheal, free bots and PvP.
+
+## Combat and recovery refinement from Alin captures (2026-10-18)
+
+The 348673fe playtest exposed a graveyard/corpse direction loop, unavailable
+emergency Flash of Light after grouping, and near-full prepared heals whose
+GetDamage remains zero. This revision addresses those responsible native paths.
+
+An explicit playerbot `revive` sets transient `spirit healer requested` in the
+existing AI context and cancels `corpse run` movement. The existing dead-engine
+`should spirit healer` trigger continues the requested action at its native
+priority until recovery; find-corpse and body reclaim yield while it is active.
+A new `corpse run` cancels the graveyard request and cached continuation value.
+The alive transition clears both instructions, including after an accepted player
+resurrection. No new scheduler, saved DB field or resurrection bypass is added.
+The existing spirit-healer travel, resurrection sickness/durability penalties and
+reclaim safety remain; released-ghost automatic spell selection is not changed.
+
+Owned offheal Paladins install an emergency trigger even before invitation and
+evaluate group/role/availability at runtime. Fast healing is eligible at the
+configured lowHealth threshold or one estimated lethal melee swing, rather than
+waiting until criticalHealth. Pending primary healing still owns the patient;
+ready primary healers suppress backup. The availability scan uses the rank the
+healer's native spell-id resolver actually selects, rather than an affordable
+lower rank its actions will not cast. Routine healing remains the priests' job.
+Native spell checks still own mana, range, LOS, cooldowns and actual success.
+
+Prepared direct-heal estimation is shared by pending coverage and cancellation.
+Above 90 percent health, a cast with less than half its conservative direct-heal
+estimate needed (including melee pressure) may be cancelled by the existing
+reaction, rechecking at execution. No RNG, script, modifier-charge mutation or
+Spell pointer is passed to bonus helpers. No direct estimate is invented for
+Turtle dummy heals, HoTs, shields or channels. This does not select lower ranks
+or promise perfect future-health prediction.
+
+Paladins may use pure stun control on a native engaged fleeing attacker already
+within spell range and LOS. The existing Hammer of Justice snare action is used;
+the spell-policy exception rejects damage and preserves CC/tapping/attackability.
+No attack-focus, chase or reach restriction is relaxed. Native cooldown, mana and
+immunity checks decide whether the spell actually casts. Free bots/PvP are kept
+on their existing paths. Automatic Blink is suppressed for human-owned PvE bots
+until landing-position safety exists; explicit cast commands remain available.
+
+Battle observation skips a same-map near-teleport acknowledgement and resumes
+the same encounter, while actual departure/far teleport still closes it. This
+does not retain or dereference units belonging to another map owner.
+
+Regression coverage compiles extracted production recovery commands/guards,
+healing estimates/selector/interrupts/emergency trigger, master focus/control,
+Blink and battle observation. These tests stub native geometry/handlers and do
+not establish gameplay success or all-encounter balance. Alin's full-party wipes,
+runner-control opportunities and one-command graveyard recovery need playtesting.

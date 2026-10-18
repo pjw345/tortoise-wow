@@ -83,6 +83,8 @@ PaladinStrategy::PaladinStrategy(PlayerbotAI* ai) : ClassStrategy(ai)
 void PaladinStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
 {
     ClassStrategy::InitCombatTriggers(triggers);
+    triggers.push_back(new TriggerNode("hammer of justice on runner",
+        NextAction::array(0, new NextAction("hammer of justice on snare target", ACTION_INTERRUPT), NULL)));
 
     triggers.push_back(new TriggerNode(
         "critical health",
@@ -455,9 +457,10 @@ void PaladinBoostRaidStrategy::InitNonCombatTriggers(std::list<TriggerNode*>& tr
 void PaladinOffhealStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
 {
     OffhealStrategy::InitCombatTriggers(triggers);
-    if (ai->UsesCoordinatedPartyHealing())
-        triggers.push_back(new TriggerNode("party member critical health",
-            NextAction::array(0, new NextAction("flash of light on party", ACTION_MEDIUM_HEAL), NULL)));
+    // Install before group invitation; the trigger/action evaluate ownership,
+    // patient urgency and primary-healer availability at execution time.
+    triggers.push_back(new TriggerNode("owned party heal emergency",
+        NextAction::array(0, new NextAction("flash of light on party", ACTION_CRITICAL_HEAL), NULL)));
 
     triggers.push_back(new TriggerNode(
         "party member critical health",
@@ -689,6 +692,8 @@ void PaladinBlessingRaidStrategy::InitNonCombatTriggers(std::list<TriggerNode*>&
 void PaladinStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
 {
     ClassStrategy::InitCombatTriggers(triggers);
+    triggers.push_back(new TriggerNode("hammer of justice on runner",
+        NextAction::array(0, new NextAction("hammer of justice on snare target", ACTION_INTERRUPT), NULL)));
 
     triggers.push_back(new TriggerNode(
         "critical health",
@@ -1250,6 +1255,8 @@ void PaladinBlessingRaidStrategy::InitNonCombatTriggers(std::list<TriggerNode*>&
 void PaladinStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
 {
     ClassStrategy::InitCombatTriggers(triggers);
+    triggers.push_back(new TriggerNode("hammer of justice on runner",
+        NextAction::array(0, new NextAction("hammer of justice on snare target", ACTION_INTERRUPT), NULL)));
 
     triggers.push_back(new TriggerNode(
         "critical health",

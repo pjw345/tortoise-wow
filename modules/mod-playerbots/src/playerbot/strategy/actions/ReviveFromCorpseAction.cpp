@@ -1,6 +1,7 @@
 
 #include "playerbot/playerbot.h"
 #include "ReviveFromCorpseAction.h"
+#include "playerbot/BotActionLog.h"
 #include "playerbot/PlayerbotFactory.h"
 #include "playerbot/PlayerbotAIConfig.h"
 #include "playerbot/FleeManager.h"
@@ -62,7 +63,7 @@ bool ReviveFromCorpseAction::Execute(Event& event)
         }
     }
 
-    if (!corpse)
+    if (!corpse || AI_VALUE(bool, "spirit healer requested"))
         return false;
 
     if (corpse->GetGhostTime() + bot->GetCorpseReclaimDelay(corpse->GetType() == CORPSE_RESURRECTABLE_PVP) > time(nullptr))
@@ -83,7 +84,10 @@ bool ReviveFromCorpseAction::Execute(Event& event)
     }
 
     if (!IsSafeToAutoResurrect(ai, bot))
+    {
+        botdiag::BotActionLog::Write(ai, "RECOVERY", "phase=reclaim result=blocked reason=leader_or_aggro_safety");
         return false;
+    }
 
     sLog.outDetail("[BOT CORPSE] %s: revive from corpse - RECLAIMING corpse now", bot->GetName());
     sLog.outDetail("Bot #%d %s:%d <%s> revives at body", bot->GetGUIDLow(), bot->GetTeam() == ALLIANCE ? "A" : "H", bot->GetLevel(), bot->GetName());
@@ -124,6 +128,8 @@ bool FindCorpseAction::Execute(Event& event)
     // Manual override: the master commanded "corpse run", so ignore the wait-for-master gate
     // below and run to the corpse regardless of master proximity. Useful when the master cannot
     // resurrect the bot (no res spell / too low level) and would otherwise leave it waiting.
+    // A graveyard request owns recovery until completion or a new corpse-run command.
+    if (AI_VALUE(bool, "spirit healer requested")) return false;
     bool manualCorpseRun = AI_VALUE(bool, "corpse run");
 
     Player* master = ai->GetGroupMaster();
@@ -344,6 +350,16 @@ bool SpiritHealerAction::Execute(Event& event)
         return false;
     }
 
+    if (event.getSource() == "revive")
+    {
+        SET_AI_VALUE(bool, "corpse run", false);
+        SET_AI_VALUE(bool, "spirit healer requested", true);
+        RESET_AI_VALUE(bool, "should spirit healer");
+        ai->StopMoving();
+    }
+
+    botdiag::BotActionLog::Write(ai, "RECOVERY", "phase=graveyard requested=%u corpse_run=%u source=%s",
+        uint32(AI_VALUE(bool, "spirit healer requested")), uint32(AI_VALUE(bool, "corpse run")), event.getSource().c_str());
     uint32 dCount = AI_VALUE(uint32, "death count");
     GuidPosition grave = AI_VALUE(GuidPosition, "best graveyard");
 
@@ -391,6 +407,7 @@ bool SpiritHealerAction::Execute(Event& event)
         bot->SpawnCorpseBones();
         bot->SaveToDB();
         SET_AI_VALUE(bool, "corpse run", false);
+        SET_AI_VALUE(bool, "spirit healer requested", false);
         // Deliberately NOT resetting "death count" here. BestGraveyardValue only
         // switches to a graveyard outside the current zone once the count reaches
         // DEATH_COUNT_BEFORE_TRYING_ANOTHER_GRAVEYARD - but a bot resurrecting is

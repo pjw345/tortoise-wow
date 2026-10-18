@@ -291,6 +291,7 @@ namespace ai
             creators["party member without water"] = [](PlayerbotAI* ai) { return new PartyMemberWithoutWaterValue(ai); };
             creators["death count"] = [](PlayerbotAI* ai) { return new DeathCountValue(ai); };
             creators["corpse run"] = [](PlayerbotAI* ai) { return new CorpseRunValue(ai); };
+            creators["spirit healer requested"] = [](PlayerbotAI* ai) { return new ManualSetValue<bool>(ai, false, "spirit healer requested"); };
 
             creators["rpg target"] = [](PlayerbotAI* ai) { return new RpgTargetValue(ai); };
             creators["ignore rpg target"] = [](PlayerbotAI* ai) { return new IgnoreRpgTargetValue(ai); };

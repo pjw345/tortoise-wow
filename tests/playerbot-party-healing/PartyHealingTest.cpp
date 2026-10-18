@@ -13,10 +13,10 @@ constexpr int SPELL_EFFECT_HEAL=10,SPELL_EFFECT_HEAL_MAX_HEALTH=67,POWER_MANA=0,
 enum SpellEffectIndex { EFFECT_INDEX_0,EFFECT_INDEX_1,EFFECT_INDEX_2 };
 enum CurrentSpellTypes { CURRENT_MELEE_SPELL,CURRENT_GENERIC_SPELL,CURRENT_AUTOREPEAT_SPELL,CURRENT_CHANNELED_SPELL,CURRENT_MAX_SPELL };
 enum class BotState { BOT_STATE_COMBAT,BOT_STATE_NON_COMBAT };
-struct ObjectGuid { int id=0;bool operator!=(ObjectGuid b)const{return id!=b.id;}bool operator==(ObjectGuid b)const{return id==b.id;} };
+struct ObjectGuid { int id=0;uint32 GetCounter(){return id;}bool operator!=(ObjectGuid b)const{return id!=b.id;}bool operator==(ObjectGuid b)const{return id==b.id;} };
 struct SpellEntry
 {
-    uint32 Id=1,SpellFamilyName=0,SpellIconID=0,Category=0,rangeIndex=1;int powerType=0;uint32 cost=100;
+    std::string SpellName[1]={"heal"};uint32 Id=1,SpellFamilyName=0,SpellIconID=0,Category=0,rangeIndex=1;int powerType=0;uint32 cost=100;
     int Effect[3]={SPELL_EFFECT_HEAL,0,0};bool channel=false;
     bool IsChanneledSpell()const{return channel;}
     bool HasEffect(int value)const{for(int e:Effect)if(e==value)return true;return false;}
@@ -58,8 +58,11 @@ struct Player:Unit
 };
 struct GroupReference {Player* member=nullptr;GroupReference* nextRef=nullptr;Player* getSource(){return member;}GroupReference* next(){return nextRef;}};
 struct Group {GroupReference* first=nullptr;GroupReference* GetFirstMember(){return first;}};
+template<class T>struct FakeValue {T Get(){return 1;}};
+struct FakeContext {template<class T>FakeValue<T>* GetValue(char const*,std::string const&){static FakeValue<T> v;return &v;}};
 struct PlayerbotAI
 {
+    FakeContext* GetAiObjectContext(){static FakeContext c;return &c;}
     Player* bot=nullptr;bool owned=true,real=false,pvp=false,offheal=false,preheal=false;uint32 interrupted=0;
     bool HasActivePlayerMaster(){return owned;}bool IsRealPlayer(){return real;}bool IsInPvp(){return pvp;}
     bool HasStrategy(std::string name,BotState){return (offheal&&name=="offheal")||(preheal&&name=="preheal");}
@@ -67,15 +70,22 @@ struct PlayerbotAI
     static bool IsHealSpell(SpellEntry const* s){return s->HasEffect(SPELL_EFFECT_HEAL)||(s->SpellFamilyName==SPELLFAMILY_PALADIN&&(s->SpellIconID==70||s->SpellIconID==242));}
     void SpellInterrupted(uint32 id){interrupted=id;}void TellPlayerNoFacing(Player*,std::string){}
     bool UsesCoordinatedPartyHealing();uint32 GetPartyHealingPressure(Unit*);uint32 GetPendingPartyHealing(Unit*);
+    uint32 GetPreparedPartyHealing(Player*,Spell*,Unit*);
     bool IsPartyHealCovered(Unit*);bool IsBackupPartyHealAllowed(Unit*);
 };
+Player* mappedHealer=nullptr;PlayerbotAI* mappedAI=nullptr;
+PlayerbotAI* GetBotAI(Player* p){return p==mappedHealer?mappedAI:nullptr;}
+namespace botdiag {struct BotActionLog {template<class...T>static void Write(T...) {}};}
 struct Facade {std::map<uint32,SpellEntry*> spells;SpellRangeEntry range;SpellEntry const* LookupSpellInfo(uint32 id){return spells[id];}SpellRangeEntry const* LookupSpellRangeEntry(uint32){return &range;}}sServerFacade;
-struct {uint32 criticalHealth=20,globalCoolDown=1500,reactDelay=100;}sPlayerbotAIConfig;
+struct {uint32 criticalHealth=20,lowHealth=40,globalCoolDown=1500,reactDelay=100;}sPlayerbotAIConfig;
 struct Event {};
 struct CastAuraSpellAction {bool baseUseful=true;int executed=0;bool isUseful(){return baseUseful;}bool Execute(Event&){++executed;return true;}};
 struct CastHealingSpellAction:CastAuraSpellAction {PlayerbotAI* ai;Player* bot;Unit* patient;uint32 GetSpellID(){return 1;}Unit* GetTarget(){return patient;}bool isUseful();bool Execute(Event&);};
 struct HealTargetFullHealthTrigger {PlayerbotAI* ai;Player* bot;HealTargetFullHealthTrigger(PlayerbotAI* a):ai(a),bot(a->bot){}Player* GetMaster(){return nullptr;}bool IsActive();};
 struct InterruptCurrentSpellAction {PlayerbotAI* ai;Player* bot;std::string qualifier="heal";std::string GetQualifier(){return qualifier;}std::string getQualifier(){return qualifier;}void SetDuration(uint32){}bool isUseful();bool Execute(Event&);};
+struct Trigger {PlayerbotAI* ai;Player* bot;Trigger(PlayerbotAI* a,char const*,int):ai(a),bot(a->bot){}virtual bool IsActive(){return false;}};
+Unit* selectedPatient=nullptr;
+#define AI_VALUE(type,name) selectedPatient
 #include "NativeHealing.inc"
 void check(bool ok,char const* reason){if(!ok)throw std::runtime_error(reason);}
 int main(){try{
@@ -107,9 +117,20 @@ int main(){try{
     a.healer=false;ai.offheal=true;b.casts.clear();b.known[1]=1;sServerFacade.spells[1]=&heal;
     check(!ai.IsBackupPartyHealAllowed(&patient),"ready priest owns routine heal");
     b.mana=0;check(!ai.IsBackupPartyHealAllowed(&patient),"moderate injury is not backup emergency even without priest mana");
+    selectedPatient=&patient;OwnedPartyHealEmergencyTrigger emergency(&ai);
+    a.group=nullptr;check(!emergency.IsActive(),"pre-invite emergency trigger remains inactive");a.group=&g;
+    patient.hp=350;check(emergency.IsActive(),"same installed trigger responds after grouping");
+    patient.hp=350;check(ai.IsBackupPartyHealAllowed(&patient),"fast backup offered before critical when priests cannot afford healing");
     patient.hp=100;b.mana=700;
     check(!ai.IsBackupPartyHealAllowed(&patient),"available priest still owns critical patient");
     b.mana=499;check(!ai.IsBackupPartyHealAllowed(&patient),"primary below 50 percent may still heal");
+    PlayerbotAI primaryAI;primaryAI.bot=&b;mappedHealer=&b;mappedAI=&primaryAI;
+    // Native actions select rank 1 in this fake context; an affordable obsolete
+    // rank 2 must not reserve a patient away from the backup.
+    b.known.clear();b.known[2]=1;SpellEntry lowerRank;lowerRank.cost=1;sServerFacade.spells[2]=&lowerRank;
+    check(ai.IsBackupPartyHealAllowed(&patient),"affordable rank not selected by native actions cannot block backup");
+    b.known.clear();b.known[1]=1;check(!ai.IsBackupPartyHealAllowed(&patient),"selected affordable heal still reserves patient");
+    mappedHealer=nullptr;mappedAI=nullptr;
     b.mana=1;check(ai.IsBackupPartyHealAllowed(&patient),"unaffordable primary permits backup");b.mana=700;
     b.silenced=true;check(ai.IsBackupPartyHealAllowed(&patient),"silenced primary permits backup");b.silenced=false;
     b.reach=false;check(ai.IsBackupPartyHealAllowed(&patient),"out of range primary permits backup");b.reach=true;
@@ -139,6 +160,10 @@ int main(){try{
     HealTargetFullHealthTrigger trigger(&ai);check(trigger.IsActive(),"ordinary PREPARING cast cancels at full health");
     InterruptCurrentSpellAction cancel{&ai,&a};Event event;patient.hp=700;
     check(!cancel.Execute(event)&&a.cancels==0,"stale reaction must not cancel needed heal");
+    patient.hp=950;
+    check(trigger.IsActive(),"prepared Heal estimate detects severe near-full overheal before GetDamage exists");
+    Unit pressure;pressure.victim=&patient;pressure.hit=250;patient.attackers.insert(&pressure);
+    check(!trigger.IsActive(),"incoming pressure keeps prepared heal despite near-full health");patient.attackers.clear();
     patient.hp=1000;check(cancel.Execute(event)&&ai.interrupted==1&&a.cancels==1,"native cancellation copies ID before invalidation");
     heal.Id=1;active.m_spellInfo=&heal;active.timer=0;a.casts[CURRENT_GENERIC_SPELL]=&active;
     check(!trigger.IsActive(),"completed/instant cast not cancelled");active.timer=2500;

@@ -1161,3 +1161,20 @@ Coordination itself still requires a group. Explicit `preheal` keeps its native
 patient/cast policy and does not acquire automatic full-health cancellation;
 manual heal-interrupt configuration remains authoritative. Extracted lifecycle
 checks cover group-less login, later grouping, preheal, free bots and PvP.
+
+## Party combat/recovery decision records (2026-10-18)
+
+Existing `AiPlayerbot.EnableActionLog` opt-in logs now include `HEAL_DECISION`
+records with the selected GUID, current/max health, estimated melee pressure and
+pending direct healing. Records are emitted when the cached party patient value
+is recalculated, not for every damage event. `RECOVERY` records report graveyard
+request state, corpse-run state and event source on spirit-healer execution;
+rejected automatic reclaim reports a leader/aggro-safety block. They do not claim
+which native subcondition failed or that an action was successfully completed.
+
+These additions use the existing per-bot logger; no new files/thread/config or
+chat chatter are introduced. They are diagnostic-only, with the logger's existing
+flush/storage overhead. Disable the existing action-log flag to remove output;
+retain only the focused records once playtest regression is accepted. BattleLog
+retention remains separate. Do not interpret an absent action-result record as
+proof that a direct chat action did not execute.

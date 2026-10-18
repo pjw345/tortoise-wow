@@ -13,6 +13,8 @@ namespace ai
 
         virtual bool IsActive() override
         {
+            if (ai->HasActivePlayerMaster() && !ai->IsRealPlayer() && !ai->IsInPvp())
+                return false; // No landing-position safety contract for automatic Blink yet.
             return bot->HasAuraType(SPELL_AURA_MOD_ROOT) ||
                    bot->HasAuraType(SPELL_AURA_MOD_STUN);
         }

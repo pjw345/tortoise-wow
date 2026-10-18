@@ -9,7 +9,7 @@ def block(text, marker):
     return text[start:end]
 ai=(base/'PlayerbotAI.cpp').read_text(encoding='utf-8')
 methods=[block(ai,'bool PlayerbotAI::UsesCoordinatedPartyHealing(')]
-methods += [block(ai,signature) for signature in ['uint32 PlayerbotAI::GetPartyHealingPressure(',
+methods += [block(ai,signature) for signature in ['uint32 PlayerbotAI::GetPartyHealingPressure(', 'uint32 PlayerbotAI::GetPreparedPartyHealing(',
     'uint32 PlayerbotAI::GetPendingPartyHealing(', 'bool PlayerbotAI::IsPartyHealCovered(',
     'bool PlayerbotAI::IsBackupPartyHealAllowed(']]
 triggers=(base/'strategy/triggers/HealthTriggers.cpp').read_text(encoding='utf-8')
@@ -34,4 +34,7 @@ assert 'coordinated || !IsTargetOfSpellCast(player, predicate)' in selector
 assert 'if (!spell || spell->HasModifierApplied(mod))' in (root/'src/game/Objects/Player.cpp').read_text(encoding='utf-8')
 assert 'SPELL_STATE_PREPARING' in triggers
 assert 'Spell::CalculatePowerCost(info, member)' in ai
+paladin=(base/'strategy/paladin/PaladinTriggers.h').read_text(encoding='utf-8')
+trigger=block(paladin,'    class OwnedPartyHealEmergencyTrigger')
+methods += [trigger+';']
 Path(sys.argv[1]).write_text('\n\n'.join(methods)+'\n',encoding='utf-8',newline='\n')

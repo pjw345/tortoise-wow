@@ -175,7 +175,8 @@ void Combat(Unit* actor, Unit* target, bool entered)
 void Observe(Player* p)
 {
     if(!Enabled()||!recorder.Contains(p->GetObjectGuid().GetRawValue())) return;
-    if(!p->IsInWorld()||p->IsBeingTeleported()) { recorder.Depart(p->GetObjectGuid().GetRawValue(),"map_transition"); return; }
+    if(!p->IsInWorld()||p->IsBeingTeleportedFar()) { recorder.Depart(p->GetObjectGuid().GetRawValue(),"map_transition"); return; }
+    if(p->IsBeingTeleportedNear()) return; // Same-map acknowledgement is transient, not departure.
     recorder.Observe(Snapshot(p),Roster(p));
 }
 void Depart(Player* p,char const* reason)

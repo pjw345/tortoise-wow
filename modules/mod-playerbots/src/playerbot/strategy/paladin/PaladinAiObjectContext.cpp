@@ -269,6 +269,8 @@ namespace ai
                 creators["shadow resistance aura"] = [](PlayerbotAI* ai) { return new ShadowResistanceAuraTrigger(ai); };
                 creators["fire resistance aura"] = [](PlayerbotAI* ai) { return new FireResistanceAuraTrigger(ai); };
                 creators["frost resistance aura"] = [](PlayerbotAI* ai) { return new FrostResistanceAuraTrigger(ai); };
+                creators["hammer of justice on runner"] = [](PlayerbotAI* ai) { return new HammerOfJusticeRunnerTrigger(ai); };
+                creators["owned party heal emergency"] = [](PlayerbotAI* ai) { return new OwnedPartyHealEmergencyTrigger(ai); };
                 creators["hammer of justice snare"] = [](PlayerbotAI* ai) { return new HammerOfJusticeSnareTrigger(ai); };
                 creators["hammer of justice interrupt"] = [](PlayerbotAI* ai) { return new HammerOfJusticeInterruptSpellTrigger(ai); };
                 creators["cleanse cure disease"] = [](PlayerbotAI* ai) { return new CleanseCureDiseaseTrigger(ai); };
