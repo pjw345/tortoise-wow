@@ -97,3 +97,41 @@ with tempfile.TemporaryDirectory() as directory:
     assert row["resource_before_pct"] == "80" and row["resource_after_pct"] == "70"
     assert row["actor_guid"] == "0x3"
 print("Native wiring and CSV validation passed")
+
+# Live regression: preparation precedes the human opener, but mana is paid later.
+opening = dict(mage, casting=8400, combat=True)
+window = [dict(events[0], party=[a, b, opening, second]),
+          {"kind": "resource_change", "actor": mage, "power_type": 0,
+           "before": 1368, "after": 1248, "elapsed_ms": 100},
+          {"kind": "damage", "actor": mage, "target": enemy, "spell": 8400,
+           "cast": "0", "effective": 141, "elapsed_ms": 200}, events[-1]]
+legacy = reporter.analyze(window)
+row = next(r for r in legacy['characters'] if r['guid'] == '3')
+assert legacy['complete'] and legacy['warnings']
+assert row['mana_spent'] == 0 and row['unattributed_mana_loss'] == 120
+assert not row['resource_attribution_complete'] and row['damage_per_mana'] is None
+assert 'Recorded mana cost' in reporter.markdown(legacy, 'legacy capture')
+attached = window[:2] + [
+    {"kind": "cast_attached", "actor": mage, "cast": "44", "elapsed_ms": 100},
+    {"kind": "resource_spent", "actor": mage, "power_type": 0, "amount": 120,
+     "cast": "44", "elapsed_ms": 100},
+    {"kind": "cast_launch", "actor": mage, "hostile": True, "cast": "44", "elapsed_ms": 100},
+] + window[2:]
+row = next(r for r in reporter.analyze(attached)['characters'] if r['guid'] == '3')
+assert row['mana_spent'] == 120 and row['unattributed_mana_loss'] == 0
+assert row['dps_spell_launches'] == 1 and not row['resource_attribution_complete']
+assert row['damage_per_mana'] is None, 'Earlier unknown cost must not become free damage'
+# A genuine pool drain is not silently reclassified as a cast cost.
+drain = [events[0], dict(window[1], before=700, after=650), events[-1]]
+row = next(r for r in reporter.analyze(drain)['characters'] if r['guid'] == '3')
+assert row['mana_spent'] == 0 and row['unattributed_mana_loss'] == 50
+normal = [events[0], dict(window[1], before=700, after=600),
+          {"kind": "resource_spent", "actor": mage, "power_type": 0, "amount": 100, "elapsed_ms": 100},
+          window[2], events[-1]]
+row = next(r for r in reporter.analyze(normal)['characters'] if r['guid'] == '3')
+assert row['resource_attribution_complete'] and row['damage_per_mana'] == 1.41
+assert reporter.analyze(window)['native_assistance_signals'] == []
+adapter = source('src/game/BattleLog.cpp')
+cast_hook = adapter[adapter.index('void Cast('):adapter.index('void Resource(')]
+assert 'if(!AttachCast(s)) return;' in cast_hook
+print('Pre-existing cast coverage and resource attribution validation passed')

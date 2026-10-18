@@ -56,6 +56,11 @@ def analyze(events, errors=None):
     contacts, overlaps, chases, target_differences, toward_runners, aggro = {}, [], [], [], [], []
     active_heals, samples, states = {}, {}, {}
     assistance = []
+    warnings = []
+    initial_casts = {a.get("guid") for a in start.get("party", []) if a.get("casting") or a.get("shooting")}
+    attached_casts = set()
+    if any(a.get("combat") for a in start.get("party", [])):
+        warnings.append("Party members were already in combat when capture opened; earlier damage and aggro are outside this window.")
 
     def credited(actor):
         return actor.get("guid") if actor.get("guid") in roster else actor.get("owner") if actor.get("owner") in roster else None
@@ -150,6 +155,8 @@ def analyze(events, errors=None):
             row[field][resource] = row[field].get(resource, 0) + abs(delta)
         elif kind == "bot_context" and row:
             contexts[own] = e.get("detail", "")
+        elif kind == "cast_attached" and row:
+            attached_casts.add(own)
         elif kind == "cast_launch" and row:
             skills[spell_key]["launches"] += 1
             if e.get("healing") and not e.get("triggered"): row["heal_spell_launches"] += 1
@@ -220,7 +227,15 @@ def analyze(events, errors=None):
         row["dps"] = row["damage"] / duration if duration else None
         row["rage_spent"] = row["rage_raw_spent"] / 10
         row["overheal_pct"] = 100 * row["overheal"] / row["raw_healing"] if row["raw_healing"] else 0
-        row["damage_per_mana"] = row["damage"] / row["mana_spent"] if row["mana_spent"] else None
+        row["unattributed_mana_loss"] = max(0, row["pool_losses"].get("mana", 0) - row["mana_spent"])
+        row["resource_attribution_complete"] = bool(start and end.get("complete") and not errors and
+                                                     guid not in initial_casts and guid not in attached_casts and
+                                                     not row["unattributed_mana_loss"])
+        if guid in initial_casts or guid in attached_casts:
+            warnings.append(f"{row['name']}: a cast/auto-repeat was already active or attached after preparation; earlier cast starts and costs are unknown. Efficiency is unavailable.")
+        if row["unattributed_mana_loss"]:
+            warnings.append(f"{row['name']}: {row['unattributed_mana_loss']} observed mana loss is not attributed to recorded costs. This may include drains; it is not assumed to be spell spending.")
+        row["damage_per_mana"] = row["damage"] / row["mana_spent"] if row["mana_spent"] and row["resource_attribution_complete"] else None
         rows.append(row)
     names = {row["guid"]: row["name"] for row in rows}
     casts = [dict(actor=names.get(key[0], key[0]), spell=key[1], spell_name=key[2], **value) for key, value in skills.items() if key[0]]
@@ -230,7 +245,7 @@ def analyze(events, errors=None):
     failed_results = [dict(actor=names.get(key[0], key[0]), spell=key[1], spell_name=key[2], result=key[3], count=count) for key, count in cast_failures.items()]
     return {"schema": 1, "revision": start.get("revision"), "wall_time_us": start.get("wall_time_us"), "leader": start.get("leader", {}).get("name"),
             "complete": bool(start and end.get("complete") and not errors), "end_reason": end.get("reason", "missing_end"),
-            "duration_seconds": duration, "events": len(events), "errors": errors, "characters": rows, "spells": casts,
+            "duration_seconds": duration, "events": len(events), "errors": errors, "warnings": warnings, "characters": rows, "spells": casts,
             "failed_cast_checks": failed_checks, "decisions": decision_rows, "spell_misses": miss_rows, "item_names": item_names,
             "failed_cast_results": failed_results,
             "bot_context": {names.get(k, k): v for k,v in contexts.items()},
@@ -256,7 +271,9 @@ def markdown(report, source):
              f"Capture: **{'complete' if report['complete'] else 'INCOMPLETE'}** ({report['end_reason']}); observed duration {report['duration_seconds']:.1f}s; {report['events']} events."]
     if report.get("wall_time_us"):
         lines += ["Started: " + datetime.fromtimestamp(report["wall_time_us"] / 1e6, timezone.utc).isoformat() + " (UTC)."]
-    lines += ["", "## Characters", "", "| Character | Class | Damage | DPS | Taken | Effective healing | Overheal % | Mana spent | Rage spent | DPS spell launches | Sampled wand seconds (>50% mana) |", "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+    lines += ["", "## Coverage warnings", ""]
+    lines += ["- " + text(w) for w in report["warnings"]] or ["None detected; interpretation limits still apply."]
+    lines += ["", "## Characters", "", "| Character | Class | Damage | DPS | Taken | Effective healing | Overheal % | Recorded mana cost | Rage spent | Recorded DPS launches | Sampled wand seconds (>50% mana) |", "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for row in report["characters"]:
         lines.append(f"| {text(row['name'])} | {row['character_class']} | {row['damage']} | {num(row['dps'])} | {row['damage_taken']} | {row['healing']} | {num(row['overheal_pct'])} | {row['mana_spent']} | {num(row['rage_spent'])} | {row['dps_spell_launches']} | {num(row['sampled_wand_seconds'])} ({num(row['sampled_wand_above_50_seconds'])}) |")
     paladin = sum(r["healing"] for r in report["characters"] if r["character_class"] == "Paladin")

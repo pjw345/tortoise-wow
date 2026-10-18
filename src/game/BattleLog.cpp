@@ -122,6 +122,18 @@ Event SpellEvent(Spell* s, char const* kind)
     e.healing=s->m_spellInfo->IsHealSpell();
     return e;
 }
+bool AttachCast(Spell* s)
+{
+    if(!s->GetCaster()) return false;
+    if(s->m_battleLogCastId) return true;
+    if(!Relevant(s->GetCaster()->ToUnit())&&!Relevant(s->m_targets.getUnitTarget())) return false;
+    s->m_battleLogCastId=++nextCast;
+    if(Item* item=s->GetCastItem()) s->m_battleLogItemId=item->GetEntry();
+    Event e=SpellEvent(s,"cast_attached");
+    e.detail="Cast first observed after preparation; original start and earlier costs unknown";
+    recorder.Emit(e);
+    return true;
+}
 }
 bool Enabled() { return enabled.load(std::memory_order_relaxed); }
 bool IsRunner(Unit* actor)
@@ -189,19 +201,22 @@ void Cast(Spell* s,char const* phase,int result)
         if(!s->m_battleLogCastId) s->m_battleLogCastId=++nextCast;
         if(Item* item=s->GetCastItem()) s->m_battleLogItemId=item->GetEntry();
     }
-    if(!s->m_battleLogCastId) return;
+    if(!AttachCast(s)) return;
     Event e=SpellEvent(s,phase); e.result=result; recorder.Emit(e);
 }
 void Resource(Spell* s,int type,uint32 before,uint32 after,uint32 maximum)
 {
-    if(!Enabled()||!s->m_battleLogCastId) return;
+    if(!Enabled()||!AttachCast(s)) return;
     Event e=SpellEvent(s,"resource_spent"); e.powerType=type;
     e.before=before; e.after=after; e.maximum=maximum; e.amount=static_cast<long long>(before)-after;
     recorder.Emit(e);
 }
 void ItemSpent(Spell* s,uint32 item,uint32 before,uint32 after)
 {
-    if(!Enabled()||!s->m_battleLogCastId) return;
+    if(!Enabled()) return;
+    // Native item destruction may already have cleared GetCastItem().
+    s->m_battleLogItemId=item;
+    if(!AttachCast(s)) return;
     Event e=SpellEvent(s,"item_spent"); e.item=item; e.before=before; e.after=after; e.amount=before-after; recorder.Emit(e);
 }
 void Damage(Unit* actor,Unit* target,uint32 requested,uint32 effective,int type,SpellEntry const* info,CleanDamage const* clean,Spell* spell,bool targetWasFleeing)

@@ -146,3 +146,18 @@ Native assistance runs are recorded separately from the ordinary fleeing unit fl
 Healing totals cover native explicit heals and periodic heal ticks. Passive health regeneration is not cast healing. Incoming damage includes native absorption/resistance values when supplied; absorbed damage is not credited to an individual shield caster and must not be treated as evidence that a shielding priest contributed nothing.
 
 If loaded party members are already on another map when capture opens, their initial state cannot be observed atomically on the initiating map. That capture remains explicitly incomplete even if subsequent owner-map observations arrive. Captures with the whole party initially on one map can complete normally; later world/map departures close them as incomplete.
+
+### Casts already active at battle opening (2026-10-18)
+
+The first live captures exposed spells prepared before the human attack whose
+diagnostic cast ID was unset. Their native mana loss and damage were visible,
+but cast-specific launch/cost events were dropped. The adapter now attaches a
+diagnostic ID at the first relevant later phase and records `cast_attached`;
+it does not replay preparation, invent a start time, or charge power again.
+Item destruction retains the supplied item entry even after native item-pointer
+clearing. No session is opened by attachment, and no AI decision is changed.
+Reports distinguish structural completion from resource attribution, warn about
+initial/attached casts and unattributed pool loss, and withhold efficiency ratios
+for affected characters. Pool loss is not assumed to be spell cost. Existing raw
+captures cannot recover missing cast phases. Focused adapter/report tests run on
+Windows; the full native build and gameplay validation await a server-off window.
