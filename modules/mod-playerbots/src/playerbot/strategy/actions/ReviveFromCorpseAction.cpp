@@ -350,7 +350,8 @@ bool SpiritHealerAction::Execute(Event& event)
         return false;
     }
 
-    if (event.getSource() == "revive")
+    if (event.getSource() == "revive" && ai->HasActivePlayerMaster() &&
+        !ai->IsRealPlayer() && !ai->IsInPvp() && !bot->InBattleGround())
     {
         SET_AI_VALUE(bool, "corpse run", false);
         SET_AI_VALUE(bool, "spirit healer requested", true);

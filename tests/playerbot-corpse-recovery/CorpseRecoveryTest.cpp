@@ -25,9 +25,9 @@ struct Config{float spellDistance=30,sightDistance=60,farDistance=100;template<c
 namespace botdiag {struct BotActionLog {template<class...T>static void Write(T...) {}};}
 struct Log{template<class...T>void outString(const char*,T...){}template<class...T>void outDetail(const char*,T...){}}sLog;
 enum class PlayerbotSecurityLevel{PLAYERBOT_SECURITY_ALLOW_ALL};enum class BotState{BOT_STATE_NON_COMBAT};
-struct PlayerbotAI{Player*bot,*master;bool active=true,real=false,manual=false,graveyard=false;int resets=0;
+struct PlayerbotAI{Player*bot,*master;bool active=true,real=false,manual=false,graveyard=false;int resets=0;bool pvp=false;
  bool& Bool(std::string name){return name=="corpse run"?manual:graveyard;}int stopped=0;std::map<int,Unit*>units;
- bool HasActivePlayerMaster(){return active&&master;}bool IsRealPlayer(){return real;}Player*GetMaster(){return master;}Player*GetGroupMaster(){return master;}bool IsSafe(Unit*u){return u&&u->safe;}Unit*GetUnit(int g){return units[g];}
+ bool HasActivePlayerMaster(){return active&&master;}bool IsRealPlayer(){return real;}bool IsInPvp(){return pvp;}Player*GetMaster(){return master;}Player*GetGroupMaster(){return master;}bool IsSafe(Unit*u){return u&&u->safe;}Unit*GetUnit(int g){return units[g];}
  float GetRange(const char*){return 5;}void StopMoving(){++stopped;bot->stopped=true;}std::string GetDefaultMovementStrategy(){return "follow";}bool HasStrategy(std::string,BotState){return true;}void ChangeStrategy(std::string,BotState){}template<class...T>void TellPlayerNoFacing(T...){}};
 bool GetBotAI(Player*){return false;}
 int scans=0;std::string qualifier;
@@ -64,7 +64,12 @@ int main(){try{Player bot,leader;Corpse corpse;bot.alive=false;bot.corpse=&corps
  ai.manual=true;bot.nativeAccept=false;check(!revive.Execute(event)&&ai.manual,"native rejection retains corpse-run state");bot.nativeAccept=true;check(revive.Execute(event)&&bot.alive&&!ai.manual,"successful native reclaim clears manual flag");bot.alive=false;
  FindCorpseAction find(&ai);leader.distance=80;check(find.Execute(event)&&find.destination==&leader&&find.legacyCalls==0,"ghost regroups instead of solo corpse run");leader.distance=4;bot.stopped=false;check(!find.Execute(event)&&bot.stopped,"ghost waits near leader and cancels old path");
  ai.manual=true;check(find.Execute(event)&&find.legacyCalls==1,"explicit corpse-run movement preserved");leader.distance=80;check(!revive.Execute(event),"corpse run does not bypass revival safety");ai.manual=false;
- ai.manual=true;event.source="revive";RequestGraveyard(&ai,event);
+ ai.manual=true;event.source="revive";
+ ai.active=false;RequestGraveyard(&ai,event);check(ai.manual&&!ai.graveyard,"free-bot command keeps native recovery path");ai.active=true;
+ ai.real=true;RequestGraveyard(&ai,event);check(ai.manual&&!ai.graveyard,"real-player command unchanged");ai.real=false;
+ ai.pvp=true;RequestGraveyard(&ai,event);check(ai.manual&&!ai.graveyard,"PvP command unchanged");ai.pvp=false;
+ bot.bg=true;RequestGraveyard(&ai,event);check(ai.manual&&!ai.graveyard,"battleground command unchanged");bot.bg=false;
+ RequestGraveyard(&ai,event);
  check(ai.graveyard&&!ai.manual&&ContinueGraveyard(&ai),"revive supersedes corpse run and schedules continuing recovery");
  int movesBefore=find.moves;check(!find.Execute(event)&&find.moves==movesBefore,"graveyard recovery cannot reverse toward corpse");
  int reclaimsBefore=bot.session.reclaims;check(!revive.Execute(event)&&bot.session.reclaims==reclaimsBefore,"graveyard intent blocks body reclaim");
