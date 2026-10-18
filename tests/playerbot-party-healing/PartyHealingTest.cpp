@@ -9,7 +9,7 @@
 using uint8=uint8_t;using uint32=uint32_t;using uint64=uint64_t;using int32=int32_t;
 constexpr int MAX_EFFECT_INDEX=3,SPELL_STATE_PREPARING=1,SPELL_STATE_CASTING=2,SPELL_STATE_FINISHED=3;
 constexpr int UNIT_FIELD_MINDAMAGE=1,UNIT_FIELD_MAXDAMAGE=2,UNIT_FIELD_FLAGS=3,UNIT_FLAG_SILENCED=4,UNIT_STAT_CAN_NOT_REACT=1;
-constexpr int SPELL_EFFECT_HEAL=10,POWER_MANA=0,HEAL=0,SPELLFAMILY_PALADIN=10,SPELLCATEGORY_RANGED_WEAPON=351,RANGED_ATTACK=0;
+constexpr int SPELL_EFFECT_HEAL=10,SPELL_EFFECT_HEAL_MAX_HEALTH=67,POWER_MANA=0,HEAL=0,SPELLFAMILY_PALADIN=10,SPELLCATEGORY_RANGED_WEAPON=351,RANGED_ATTACK=0;
 enum SpellEffectIndex { EFFECT_INDEX_0,EFFECT_INDEX_1,EFFECT_INDEX_2 };
 enum CurrentSpellTypes { CURRENT_MELEE_SPELL,CURRENT_GENERIC_SPELL,CURRENT_AUTOREPEAT_SPELL,CURRENT_CHANNELED_SPELL,CURRENT_MAX_SPELL };
 enum class BotState { BOT_STATE_COMBAT,BOT_STATE_NON_COMBAT };
@@ -106,12 +106,28 @@ int main(){try{
     ai.pvp=true;check(!ai.IsPartyHealCovered(&patient),"PvP policy unchanged");ai.pvp=false;
     a.healer=false;ai.offheal=true;b.casts.clear();b.known[1]=1;sServerFacade.spells[1]=&heal;
     check(!ai.IsBackupPartyHealAllowed(&patient),"ready priest owns routine heal");
+    b.mana=0;check(!ai.IsBackupPartyHealAllowed(&patient),"moderate injury is not backup emergency even without priest mana");
+    patient.hp=100;b.mana=700;
+    check(!ai.IsBackupPartyHealAllowed(&patient),"available priest still owns critical patient");
     b.mana=499;check(!ai.IsBackupPartyHealAllowed(&patient),"primary below 50 percent may still heal");
     b.mana=1;check(ai.IsBackupPartyHealAllowed(&patient),"unaffordable primary permits backup");b.mana=700;
     b.silenced=true;check(ai.IsBackupPartyHealAllowed(&patient),"silenced primary permits backup");b.silenced=false;
     b.reach=false;check(ai.IsBackupPartyHealAllowed(&patient),"out of range primary permits backup");b.reach=true;
-    b.casts[CURRENT_GENERIC_SPELL]=&pending;check(ai.IsBackupPartyHealAllowed(&patient),"busy primary permits needed supplement");b.casts.clear();
-    patient.hp=100;check(ai.IsBackupPartyHealAllowed(&patient),"emergency overrides backup preference");patient.hp=700;
+    b.casts[CURRENT_GENERIC_SPELL]=&pending;
+    check(!ai.IsBackupPartyHealAllowed(&patient),"backup must not race a priest healing critical patient");
+    pending.m_currentBasePoints[0]=49;
+    check(!ai.IsBackupPartyHealAllowed(&patient),"partial priest heal still prevents backup race");
+    pending.m_targets.guid=a.GetObjectGuid();
+    check(ai.IsBackupPartyHealAllowed(&patient),"priest busy on another patient permits emergency backup");
+    Player otherPriest;otherPriest.healer=true;otherPriest.known[1]=1;
+    GroupReference extra{&otherPriest};rp.nextRef=&extra;
+    check(!ai.IsBackupPartyHealAllowed(&patient),"second available priest prevents backup even when first is busy elsewhere");
+    otherPriest.alive=false;
+    check(ai.IsBackupPartyHealAllowed(&patient),"dead second priest cannot cover uncovered emergency");rp.nextRef=nullptr;
+    pending.m_targets.guid=patient.GetObjectGuid();pending.m_currentBasePoints[0]=499;b.casts.clear();
+    patient.hp=700;b.mana=0;attacker.hit=800;
+    check(ai.IsBackupPartyHealAllowed(&patient),"immediate lethal pressure permits uncovered emergency backup");
+    attacker.hit=100;b.mana=700;
     // Actual selector prioritises pressure at equal health and keeps emergency overrides.
     Player tank,mage;tank.hp=mage.hp=500;tank.id=4;mage.id=5;tank.tank=true;
     Unit x,y,z;x.victim=y.victim=z.victim=&tank;tank.attackers={&x,&y,&z};
@@ -133,6 +149,13 @@ int main(){try{
     heal.Effect[0]=0;heal.SpellFamilyName=SPELLFAMILY_PALADIN;heal.SpellIconID=70;a.healer=false;
     b.casts.clear();SpellEntry priestHeal;priestHeal.Id=2;b.known[2]=1;sServerFacade.spells[2]=&priestHeal;
     check(!action.isUseful(),"Turtle dummy-effect Paladin heal obeys backup gate");
+    patient.hp=100;b.mana=0;check(action.isUseful(),"Turtle dummy heal permits uncovered emergency");
+    heal.SpellFamilyName=0;heal.SpellIconID=0;heal.Effect[0]=SPELL_EFFECT_HEAL_MAX_HEALTH;
+    b.mana=700;check(!action.isUseful(),"Lay on Hands cannot bypass available primary healer");
+    b.mana=0;check(action.isUseful(),"Lay on Hands remains available for uncovered emergency");
+    b.mana=700;patient.hp=1000;a.healer=true;
+    check(action.isUseful(),"primary Lay on Hands retains native full-health mana-benefit policy");
+    a.healer=false;patient.hp=700;
     ai.owned=false;check(action.isUseful(),"legacy free-bot action path preserved");
     std::cout<<"Native healing coverage, urgency, backup availability and cancellation cases passed\n";
 }catch(std::exception const& error){std::cerr<<error.what()<<'\n';return 1;}}

@@ -315,7 +315,11 @@ bool CastHealingSpellAction::isUseful()
     SpellEntry const* info = sServerFacade.LookupSpellInfo(GetSpellID());
     if (!info || (!info->HasEffect(SPELL_EFFECT_HEAL) &&
         !(info->SpellFamilyName == SPELLFAMILY_PALADIN && (info->SpellIconID == 70 || info->SpellIconID == 242))))
-        return true; // HoTs and shields retain native policy; Turtle Paladin heals use dummy effects.
+    {
+        // Lay on Hands must obey the backup role without changing primary-healer
+        // native uses (including its mana benefit). HoTs/shields stay unchanged.
+        return !info || !info->HasEffect(SPELL_EFFECT_HEAL_MAX_HEALTH) || ai->IsBackupPartyHealAllowed(target);
+    }
     return target->GetHealth() < target->GetMaxHealth() && !ai->IsPartyHealCovered(target) &&
         ai->IsBackupPartyHealAllowed(target);
 }

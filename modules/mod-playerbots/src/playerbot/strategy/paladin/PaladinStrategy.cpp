@@ -456,7 +456,7 @@ void PaladinOffhealStrategy::InitCombatTriggers(std::list<TriggerNode*>& trigger
 {
     OffhealStrategy::InitCombatTriggers(triggers);
     if (ai->UsesCoordinatedPartyHealing())
-        triggers.push_back(new TriggerNode("party member medium health",
+        triggers.push_back(new TriggerNode("party member critical health",
             NextAction::array(0, new NextAction("flash of light on party", ACTION_MEDIUM_HEAL), NULL)));
 
     triggers.push_back(new TriggerNode(

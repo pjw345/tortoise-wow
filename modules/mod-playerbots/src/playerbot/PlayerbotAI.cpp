@@ -3295,9 +3295,14 @@ bool PlayerbotAI::IsBackupPartyHealAllowed(Unit* target)
 {
     if (!UsesCoordinatedPartyHealing() || IsHeal(bot) ||
         !HasStrategy("offheal", BotState::BOT_STATE_COMBAT)) return true;
-    if (!target || target->FindMap() != bot->FindMap()) return false;
-    if (target->GetHealthPercent() <= sPlayerbotAIConfig.criticalHealth ||
-        target->GetHealth() <= GetPartyHealingPressure(target)) return true;
+    if (!target || target->FindMap() != bot->FindMap() || !target->IsAlive()) return false;
+    // Offheal is emergency cover, not a second routine healer. The critical
+    // override used between primary healers must not override this role.
+    if (target->GetHealthPercent() > sPlayerbotAIConfig.criticalHealth &&
+        target->GetHealth() > GetPartyHealingPressure(target)) return false;
+    // Even partial healing already underway belongs to the primary healer;
+    // keep the backup on damage/protection rather than racing that cast.
+    if (GetPendingPartyHealing(target)) return false;
     for (GroupReference* ref = bot->GetGroup()->GetFirstMember(); ref; ref = ref->next())
     {
         Player* member = ref->getSource();
@@ -3306,8 +3311,9 @@ bool PlayerbotAI::IsBackupPartyHealAllowed(Unit* target)
             member->HasUnitState(UNIT_STAT_CAN_NOT_REACT) ||
             member->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SILENCED) ||
             !member->IsWithinLOSInMap(target)) continue;
-        // Busy healers cannot cover a new patient immediately. Wand auto-repeat
-        // is deliberately excluded: the native prerequisite can stop it.
+        // A cast on this patient was handled above. A healer busy elsewhere
+        // cannot cover this emergency immediately. Wand auto-repeat is excluded:
+        // the native prerequisite can stop it.
         if (member->GetCurrentSpell(CURRENT_GENERIC_SPELL) || member->GetCurrentSpell(CURRENT_CHANNELED_SPELL)) continue;
         for (auto const& known : member->GetSpellMap())
         {

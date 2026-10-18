@@ -604,12 +604,19 @@ CASTING state. A heal-qualified native interrupt rechecks the patient's health
 at execution and copies spell identity before cancellation can destroy it. It
 never clears GCD or charges/refunds power itself.
 
-A DPS bot with offheal defers routine direct heals while a living same-map
-primary healer is unoccupied, in range/LOS, able to act and able to afford a
-known ready direct heal. Critical patients override the preference. Native
-wand auto-repeat does not make the primary unavailable; its existing qualified
-handoff remains responsible for stopping shooting. Vanilla Paladin offheal also
-covers the medium-health tier when primary healing is unavailable.
+A DPS bot with offheal supplies emergency direct healing only: the patient
+must be at the configured critical-health threshold or within one estimated
+lethal melee swing. Moderate injuries do not recruit the backup even when the
+priests are out of mana. A heal already underway on the patient (including
+partial coverage), or an available living same-map primary healer with a known,
+ready, affordable heal in range/LOS, keeps the backup on damage/protection.
+Critical health does not override that role preference. Priests busy on other
+patients, dead, silenced, out of range or unable to afford a heal permit emergency
+backup. Native wand auto-repeat does not make a primary unavailable; its existing
+qualified handoff stops shooting. Vanilla Paladin Flash of Light is offered at
+the critical tier; Lay on Hands also passes the backup gate. Ordinary primary
+healers retain their critical rescue override. This refinement is source-only
+until the next stopped-server build; the deployed 8d6af717 predates it.
 
 The owned melee backup Paladin may override master focus to peel an already
 engaged, attackable, LOS-valid enemy currently within melee reach of a grouped
