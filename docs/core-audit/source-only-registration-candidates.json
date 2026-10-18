@@ -1,46 +1,63 @@
 [
   {
-    "name": "spell_ubrs_freeze_rookery_egg",
-    "file": "src/scripts/dungeons/blackrock_spire/instance_blackrock_spire.cpp",
-    "line": 1031,
-    "cmake_listed": true,
-    "file_loader_call_found": true,
-    "dependency_signals": [
-      "movement",
-      "summons",
-      "instance_state",
-      "doors",
-      "timers",
-      "threat"
-    ]
-  },
-  {
-    "name": "go_urok_challenge",
-    "file": "src/scripts/dungeons/blackrock_spire/boss_urok.cpp",
-    "line": 370,
+    "name": "go_book_celebras",
+    "file": "src/scripts/dungeons/maraudon/boss_celebras_the_cursed.cpp",
+    "line": 341,
     "cmake_listed": true,
     "file_loader_call_found": true,
     "dependency_signals": [
       "ai_update",
       "spells",
-      "movement",
-      "summons",
       "death_reset",
-      "timers",
+      "instance_state",
+      "doors",
       "threat"
     ]
   },
   {
-    "name": "boss_mother_smolderweb",
-    "file": "src/scripts/dungeons/blackrock_spire/boss_mother_smolderweb.cpp",
-    "line": 100,
+    "name": "npc_sandstalker",
+    "file": "src/scripts/dungeons/ruins_of_ahnqiraj/npc_sandstalker.cpp",
+    "line": 73,
     "cmake_listed": true,
     "file_loader_call_found": false,
     "dependency_signals": [
       "ai_update",
-      "spells",
       "death_reset",
-      "timers"
+      "timers",
+      "threat"
+    ]
+  },
+  {
+    "name": "ossirian_crystal",
+    "file": "src/scripts/dungeons/ruins_of_ahnqiraj/boss_ossirian.cpp",
+    "line": 371,
+    "cmake_listed": true,
+    "file_loader_call_found": true,
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "summons",
+      "death_reset",
+      "instance_state",
+      "timers",
+      "threat"
+    ]
+  },
+  {
+    "name": "spell_haunting_phantoms",
+    "file": "src/scripts/dungeons/stratholme/stratholme.cpp",
+    "line": 903,
+    "cmake_listed": true,
+    "file_loader_call_found": true,
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "movement",
+      "summons",
+      "death_reset",
+      "instance_state",
+      "timers",
+      "threat"
     ]
   },
   {
@@ -62,71 +79,46 @@
     ]
   },
   {
-    "name": "npc_sandstalker",
-    "file": "src/scripts/dungeons/ruins_of_ahnqiraj/npc_sandstalker.cpp",
-    "line": 73,
-    "cmake_listed": true,
-    "file_loader_call_found": false,
-    "dependency_signals": [
-      "ai_update",
-      "death_reset",
-      "timers",
-      "threat"
-    ]
-  },
-  {
-    "name": "boss_wushoolay",
-    "file": "src/scripts/dungeons/zulgurub/boss_wushoolay.cpp",
-    "line": 82,
+    "name": "boss_mother_smolderweb",
+    "file": "src/scripts/dungeons/blackrock_spire/boss_mother_smolderweb.cpp",
+    "line": 100,
     "cmake_listed": true,
     "file_loader_call_found": false,
     "dependency_signals": [
       "ai_update",
       "spells",
       "death_reset",
-      "threat"
+      "timers"
     ]
   },
   {
-    "name": "ossirian_crystal",
-    "file": "src/scripts/dungeons/ruins_of_ahnqiraj/boss_ossirian.cpp",
-    "line": 371,
+    "name": "go_urok_challenge",
+    "file": "src/scripts/dungeons/blackrock_spire/boss_urok.cpp",
+    "line": 370,
     "cmake_listed": true,
     "file_loader_call_found": true,
     "dependency_signals": [
       "ai_update",
       "spells",
+      "movement",
       "summons",
       "death_reset",
-      "instance_state",
       "timers",
       "threat"
     ]
   },
   {
-    "name": "boss_hazzarah",
-    "file": "src/scripts/dungeons/zulgurub/boss_hazzarah.cpp",
-    "line": 107,
+    "name": "spell_ubrs_freeze_rookery_egg",
+    "file": "src/scripts/dungeons/blackrock_spire/instance_blackrock_spire.cpp",
+    "line": 1031,
     "cmake_listed": true,
-    "file_loader_call_found": false,
+    "file_loader_call_found": true,
     "dependency_signals": [
-      "ai_update",
-      "spells",
+      "movement",
       "summons",
-      "death_reset",
-      "threat"
-    ]
-  },
-  {
-    "name": "boss_grilek",
-    "file": "src/scripts/dungeons/zulgurub/boss_grilek.cpp",
-    "line": 90,
-    "cmake_listed": true,
-    "file_loader_call_found": false,
-    "dependency_signals": [
-      "ai_update",
-      "spells",
-      "death_reset",
+      "instance_state",
+      "doors",
+      "timers",
       "threat"
     ]
   },
@@ -141,6 +133,19 @@
       "spells",
       "death_reset",
       "timers"
+    ]
+  },
+  {
+    "name": "boss_kormok",
+    "file": "src/scripts/dungeons/scholomance/boss_kormok.cpp",
+    "line": 121,
+    "cmake_listed": true,
+    "file_loader_call_found": false,
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "death_reset",
+      "threat"
     ]
   },
   {
@@ -180,9 +185,24 @@
     ]
   },
   {
-    "name": "boss_kormok",
-    "file": "src/scripts/dungeons/scholomance/boss_kormok.cpp",
-    "line": 121,
+    "name": "spell_uldaman_awaken_vault_warder",
+    "file": "src/scripts/dungeons/uldaman/uldaman.cpp",
+    "line": 333,
+    "cmake_listed": true,
+    "file_loader_call_found": true,
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "movement",
+      "death_reset",
+      "instance_state",
+      "threat"
+    ]
+  },
+  {
+    "name": "boss_wushoolay",
+    "file": "src/scripts/dungeons/zulgurub/boss_wushoolay.cpp",
+    "line": 82,
     "cmake_listed": true,
     "file_loader_call_found": false,
     "dependency_signals": [
@@ -193,17 +213,29 @@
     ]
   },
   {
-    "name": "go_book_celebras",
-    "file": "src/scripts/dungeons/maraudon/boss_celebras_the_cursed.cpp",
-    "line": 341,
+    "name": "boss_hazzarah",
+    "file": "src/scripts/dungeons/zulgurub/boss_hazzarah.cpp",
+    "line": 107,
     "cmake_listed": true,
-    "file_loader_call_found": true,
+    "file_loader_call_found": false,
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "summons",
+      "death_reset",
+      "threat"
+    ]
+  },
+  {
+    "name": "boss_grilek",
+    "file": "src/scripts/dungeons/zulgurub/boss_grilek.cpp",
+    "line": 90,
+    "cmake_listed": true,
+    "file_loader_call_found": false,
     "dependency_signals": [
       "ai_update",
       "spells",
       "death_reset",
-      "instance_state",
-      "doors",
       "threat"
     ]
   },
@@ -231,19 +263,6 @@
     ]
   },
   {
-    "name": "boss_silver_hand_bosses",
-    "file": "src/scripts/dungeons/stratholme/boss_order_of_silver_hand.cpp",
-    "line": 153,
-    "cmake_listed": true,
-    "file_loader_call_found": false,
-    "dependency_signals": [
-      "ai_update",
-      "spells",
-      "death_reset",
-      "instance_state"
-    ]
-  },
-  {
     "name": "npc_scarlet_spirit",
     "file": "src/scripts/dungeons/stratholme/boss_sc_attunement.cpp",
     "line": 491,
@@ -260,20 +279,16 @@
     ]
   },
   {
-    "name": "spell_haunting_phantoms",
-    "file": "src/scripts/dungeons/stratholme/stratholme.cpp",
-    "line": 903,
+    "name": "boss_silver_hand_bosses",
+    "file": "src/scripts/dungeons/stratholme/boss_order_of_silver_hand.cpp",
+    "line": 153,
     "cmake_listed": true,
-    "file_loader_call_found": true,
+    "file_loader_call_found": false,
     "dependency_signals": [
       "ai_update",
       "spells",
-      "movement",
-      "summons",
       "death_reset",
-      "instance_state",
-      "timers",
-      "threat"
+      "instance_state"
     ]
   },
   {
@@ -290,21 +305,6 @@
       "death_reset",
       "instance_state",
       "timers",
-      "threat"
-    ]
-  },
-  {
-    "name": "spell_uldaman_awaken_vault_warder",
-    "file": "src/scripts/dungeons/uldaman/uldaman.cpp",
-    "line": 333,
-    "cmake_listed": true,
-    "file_loader_call_found": true,
-    "dependency_signals": [
-      "ai_update",
-      "spells",
-      "movement",
-      "death_reset",
-      "instance_state",
       "threat"
     ]
   }
