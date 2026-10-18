@@ -18179,7 +18179,7 @@
       "spells",
       "death_reset"
     ],
-    "sha256": "8337845F252B47354919964932183866E0D0BF942995AA097554524027FEB6A7"
+    "sha256": "D4493BE9145CF6309C4DB654385B2C11AD90B4D4EF2B0651F64FBE664E866674"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/TravelRoutePolicy.h",
@@ -19000,7 +19000,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "4787E1A2EF1C1B4D7108E124A1E8010ACE6655BF6DDE5D463C9234363938CBFD"
+    "sha256": "B58EE4D851EE2A7BCD0F598670D4C3BAFD093EE04694594B3E9EF405B44E594A"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/triggers/ChatCommandTrigger.h",
@@ -19480,7 +19480,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "C387C9CF6A9D5E20A55B5D70CB3D9CA5C7FB2EA71E5F5C5EE0AD5ABEAB81A18A"
+    "sha256": "6D0C2BC876B136B2E5547A114AEA658CACB6107F5036F419A8E9D6E1C635BF7A"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/Trigger.h",
@@ -20871,7 +20871,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "CA852CA8CC93909368606F54EEBAFB7955A9361152874B7A3CDFB290FFF4E378"
+    "sha256": "74CD498ABB50608B74AEB9EED02347F065933C37098B58652919CCED8F5E8E19"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/NearestGameObjects.cpp",
@@ -21791,7 +21791,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "0007ABD37B5BF17FDF59402828B22D06ADE69BC072C9BEFF4CB627A99C31C7C2"
+    "sha256": "3E55D847183D9B9C806BE9C76E98B07095A4A03AD50689164EFBB18AF646050F"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/generic/AvoidMobsStrategy.h",
@@ -23509,7 +23509,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "6F8CEE4A05E4DB6843D8478D6704A688B71AE7E09939BD3A453A6350185C8061"
+    "sha256": "0B14D11E841D8D941E32D8A8F5610AF6778C5D9AF1FEE1D793C44782CBD26028"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/UnstuckAction.cpp",
@@ -25708,7 +25708,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "B5FFD22811E1DA0F28DAA82E6E55730EFBD5792180A6A23FF23D7A9062F15669"
+    "sha256": "2D8E94F90091E33929D4D90D394B8A1067DF88EB668BC79CAC5AD156728DF1E1"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/LootRollAction.cpp",
@@ -25877,7 +25877,7 @@
       "death_reset",
       "async"
     ],
-    "sha256": "D8C9CC208593F7D8967FD4FD9E4216C382CA5136C14DB9363A251D182CD5E139"
+    "sha256": "FD1946117891935EE480D681210F0E7C3DB0FD35B87841DA32DB840584C806B0"
   },
   {
     "file": "src/game/BattleLog.cpp",

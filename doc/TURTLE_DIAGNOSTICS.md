@@ -1100,3 +1100,64 @@ initial/attached casts and unattributed pool loss, and withhold efficiency ratio
 for affected characters. Pool loss is not assumed to be spell cost. Existing raw
 captures cannot recover missing cast phases. Focused adapter/report tests run on
 Windows; the full native build and gameplay validation await a server-off window.
+
+## Coordinated human-party healing (2026-10-18)
+
+Human-owned PvE companions use current same-map group casts to estimate pending
+single-target direct healing. Preparation, live caster/target, remaining cast,
+LOS and affordable power are required. Read prepared base points and native
+healing-done/taken bonuses without a Spell argument: DropModCharge is a no-op
+without that argument. Prediction does not roll RNG or run spell scripts/procs,
+consume mana/items or retain pointers. Crits, extra dice/level scaling, channels,
+HoTs, shields and Turtle dummy-triggered heals are not invented as guaranteed
+coverage. A native melee-swing pressure allowance and critical-health override
+allow multiple rescuers when required; ranged pressure and scripted healing are
+not fully predicted by this first change.
+
+The existing party patient selector accounts for pending coverage and pressure
+instead of distributing by healer roster index. Injured critical patients win;
+at equal urgency a tank wins the tie. Direct-heal action usefulness and actual
+queued execution recheck coverage. HoT/shield policy, explicit cast commands,
+free bots, PvP and the 50-percent offensive-spell cutoff retain their boundaries.
+
+The existing heal-interrupt reaction is added after saved strategies load for
+owned parties. Ordinary heal cast bars are PREPARING, not the native channel
+CASTING state. A heal-qualified native interrupt rechecks the patient's health
+at execution and copies spell identity before cancellation can destroy it. It
+never clears GCD or charges/refunds power itself.
+
+A DPS bot with offheal supplies emergency direct healing only: the patient
+must be at the configured critical-health threshold or within one estimated
+lethal melee swing. Moderate injuries do not recruit the backup even when the
+priests are out of mana. A heal already underway on the patient (including
+partial coverage), or an available living same-map primary healer with a known,
+ready, affordable heal in range/LOS, keeps the backup on damage/protection.
+Critical health does not override that role preference. Priests busy on other
+patients, dead, silenced, out of range or unable to afford a heal permit emergency
+backup. Native wand auto-repeat does not make a primary unavailable; its existing
+qualified handoff stops shooting. Vanilla Paladin Flash of Light is offered at
+the critical tier; Lay on Hands also passes the backup gate. Ordinary primary
+healers retain their critical rescue override. This refinement is source-only
+until the next stopped-server build; the deployed 8d6af717 predates it.
+
+The owned melee backup Paladin may override master focus to peel an already
+engaged, attackable, LOS-valid enemy currently within melee reach of a grouped
+primary healer. CC/runner policy remains enforced. Once holding that enemy it
+keeps it until the tank recovers its attention; distant ranged attackers do not
+qualify for this pursuit exception. No new roaming or pull targets are acquired.
+Alon's role is a separate reversible saved-strategy configuration: Retribution
+plus offheal rather than Holy, retaining his talents, gear and professions.
+
+Focused tests compile extracted production helpers, selector, interruption and
+action methods. Cover sufficient/partial pending healing, critical and incoming
+pressure, same-map ownership, unavailable primary healers, native dummy-effect
+Paladin heals, stale cancellation, healer peeling and return to master focus.
+Windows local tests passed; full Linux build and gameplay acceptance remain
+separate. Retest the 410-mana waste example and Priest/Paladin healing roles.
+
+The cancellation reaction is installed for owned PvE companions even before a
+group invitation, because SetMaster/ResetStrategies precedes later invitations.
+Coordination itself still requires a group. Explicit `preheal` keeps its native
+patient/cast policy and does not acquire automatic full-health cancellation;
+manual heal-interrupt configuration remains authoritative. Extracted lifecycle
+checks cover group-less login, later grouping, preheal, free bots and PvP.

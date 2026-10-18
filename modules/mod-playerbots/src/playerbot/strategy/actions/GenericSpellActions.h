@@ -201,6 +201,8 @@ namespace ai
     {
     public:
         CastHealingSpellAction(PlayerbotAI* ai, std::string spell, uint8 estAmount = 15.0f) : CastAuraSpellAction(ai, spell, true), estAmount(estAmount) {}
+        bool isUseful() override;
+        bool Execute(Event& event) override;
         
     protected:
         virtual ActionThreatType getThreatType() override { return ActionThreatType::ACTION_THREAT_AOE; }

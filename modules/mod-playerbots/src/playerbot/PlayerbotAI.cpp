@@ -955,6 +955,25 @@ Unit* PlayerbotAI::GetPlayerMasterAttackTarget()
         return target && std::find(attackers.begin(), attackers.end(), target->GetObjectGuid()) != attackers.end();
     };
 
+    // A melee backup Paladin protects a healer already under a melee attack.
+    // Only native engaged attackers qualify; never pursue a distant shooter.
+    if (bot->getClass() == CLASS_PALADIN && IsMelee(bot) && !IsHeal(bot) &&
+        HasStrategy("offheal", BotState::BOT_STATE_COMBAT))
+    {
+        for (ObjectGuid guid : attackers)
+        {
+            Unit* enemy = GetUnit(guid);
+            if (!canAttack(enemy)) continue;
+            Unit* patient = enemy->GetVictim();
+            if (patient && patient->FindMap() == bot->FindMap() && patient->IsInWorld() &&
+                patient->IsPlayer() && patient->IsAlive() && bot->IsInGroup(patient->ToPlayer()) &&
+                IsHeal(patient->ToPlayer()) && !IsTank(patient->ToPlayer()) &&
+                enemy->CanReachWithMeleeAttack(patient)) return enemy;
+        }
+        // Keep holding the engaged enemy until the tank recovers its attention.
+        if (engaged(current) && canAttack(current) && current->GetVictim() == bot) return current;
+    }
+
     Unit* selected = GetUnit(master->GetSelectionGuid());
     if (canAttack(selected) && (selected == master->GetVictim() || engaged(selected)))
         return selected;
@@ -3177,6 +3196,15 @@ void PlayerbotAI::ResetStrategies(bool autoLoad)
     AiFactory::AddDefaultDeadStrategies(bot, this, engines[(uint8)BotState::BOT_STATE_DEAD]);
     AiFactory::AddDefaultReactionStrategies(bot, this, reactionEngine);
     if (autoLoad && HasPlayerRelation()) sPlayerbotDbStore.Load(this);
+    // Applied after saved strategies so existing human-owned companions receive
+    // the corrected native cancellation reaction too.
+    // Group invitations may happen after login/reset. Install the reaction for
+    // an owned companion now, while preserving deliberately selected prehealing.
+    if (HasActivePlayerMaster() && !IsRealPlayer() && !IsInPvp() &&
+        !HasStrategy("preheal", BotState::BOT_STATE_COMBAT))
+    {
+        reactionEngine->addStrategy("heal interrupt");
+    }
 
     // A role handed out by the dungeon finder wins over both the talent spec
     // and the stored strategy set - hence applied last. addStrategy() drops the
@@ -3195,6 +3223,112 @@ void PlayerbotAI::ResetStrategies(bool autoLoad)
         engines[i]->initMode = false;
         engines[i]->Init();
     }
+}
+
+bool PlayerbotAI::UsesCoordinatedPartyHealing()
+{
+    return HasActivePlayerMaster() && !IsRealPlayer() && !IsInPvp() &&
+        bot->IsInWorld() && bot->GetGroup() && !HasStrategy("preheal", BotState::BOT_STATE_COMBAT);
+}
+
+uint32 PlayerbotAI::GetPartyHealingPressure(Unit* target)
+{
+    if (!target || target->FindMap() != bot->FindMap()) return 0;
+    uint64 pressure = 0;
+    for (Unit* attacker : target->getAttackers())
+    {
+        if (!attacker || attacker->FindMap() != bot->FindMap() || !attacker->IsInWorld() ||
+            !attacker->IsAlive() || attacker->GetVictim() != target) continue;
+        // One native melee swing is a conservative pressure allowance, not a
+        // prediction that the target has already taken this damage.
+        if (attacker->CanReachWithMeleeAttack(target))
+            pressure += uint32(std::max(0.0f, (attacker->GetFloatValue(UNIT_FIELD_MINDAMAGE) +
+                attacker->GetFloatValue(UNIT_FIELD_MAXDAMAGE)) / 2.0f));
+    }
+    return uint32(std::min<uint64>(pressure, target->GetMaxHealth()));
+}
+
+uint32 PlayerbotAI::GetPendingPartyHealing(Unit* target)
+{
+    if (!UsesCoordinatedPartyHealing() || !target || target->FindMap() != bot->FindMap()) return 0;
+    uint64 healing = 0;
+    // Read current casts on this map owner, not the cached nearest-player list.
+    for (GroupReference* ref = bot->GetGroup()->GetFirstMember(); ref; ref = ref->next())
+    {
+        Player* member = ref->getSource();
+        if (!member || member == bot || member->FindMap() != bot->FindMap() ||
+            !member->IsInWorld() || !member->IsAlive()) continue;
+        Spell* cast = member->GetCurrentSpell(CURRENT_GENERIC_SPELL);
+        if (!cast || cast->getState() != SPELL_STATE_PREPARING || !cast->GetCastedTime() ||
+            cast->m_targets.getUnitTargetGuid() != target->GetObjectGuid() ||
+            cast->m_spellInfo->IsChanneledSpell() || !member->IsWithinLOSInMap(target)) continue;
+        if (cast->m_spellInfo->powerType == POWER_MANA && member->GetPower(POWER_MANA) < cast->GetPowerCost()) continue;
+        for (uint8 i = 0; i < MAX_EFFECT_INDEX; ++i)
+        {
+            if (cast->m_spellInfo->Effect[i] != SPELL_EFFECT_HEAL) continue;
+            // No RNG, proc/script replay or Spell pointer passed to bonus
+            // helpers: native DropModCharge does nothing with a null Spell.
+            // This omits crits/dice/level gains and dummy-triggered heals rather
+            // than pretending an uncertain spell guarantees coverage.
+            int32 base = std::max(0, cast->m_currentBasePoints[i] + 1);
+            uint32 amount = member->SpellHealingBonusDone(target, cast->m_spellInfo, SpellEffectIndex(i), base, HEAL);
+            amount = target->SpellHealingBonusTaken(member, cast->m_spellInfo, SpellEffectIndex(i), amount, HEAL);
+            healing += amount;
+        }
+    }
+    return uint32(std::min<uint64>(healing, target->GetMaxHealth()));
+}
+
+bool PlayerbotAI::IsPartyHealCovered(Unit* target)
+{
+    if (!UsesCoordinatedPartyHealing() || !target || target->FindMap() != bot->FindMap() ||
+        !target->IsAlive() || !target->GetMaxHealth()) return false;
+    uint32 pressure = GetPartyHealingPressure(target);
+    // Never reserve a critical patient away from another rescuer.
+    if (target->GetHealthPercent() <= sPlayerbotAIConfig.criticalHealth || target->GetHealth() <= pressure) return false;
+    uint32 missing = target->GetMaxHealth() - target->GetHealth();
+    uint32 pending = GetPendingPartyHealing(target);
+    return pending && uint64(pending) >= uint64(missing) + pressure;
+}
+
+bool PlayerbotAI::IsBackupPartyHealAllowed(Unit* target)
+{
+    if (!UsesCoordinatedPartyHealing() || IsHeal(bot) ||
+        !HasStrategy("offheal", BotState::BOT_STATE_COMBAT)) return true;
+    if (!target || target->FindMap() != bot->FindMap() || !target->IsAlive()) return false;
+    // Offheal is emergency cover, not a second routine healer. The critical
+    // override used between primary healers must not override this role.
+    if (target->GetHealthPercent() > sPlayerbotAIConfig.criticalHealth &&
+        target->GetHealth() > GetPartyHealingPressure(target)) return false;
+    // Even partial healing already underway belongs to the primary healer;
+    // keep the backup on damage/protection rather than racing that cast.
+    if (GetPendingPartyHealing(target)) return false;
+    for (GroupReference* ref = bot->GetGroup()->GetFirstMember(); ref; ref = ref->next())
+    {
+        Player* member = ref->getSource();
+        if (!member || member == bot || member->FindMap() != bot->FindMap() ||
+            !member->IsInWorld() || !member->IsAlive() || !IsHeal(member) ||
+            member->HasUnitState(UNIT_STAT_CAN_NOT_REACT) ||
+            member->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SILENCED) ||
+            !member->IsWithinLOSInMap(target)) continue;
+        // A cast on this patient was handled above. A healer busy elsewhere
+        // cannot cover this emergency immediately. Wand auto-repeat is excluded:
+        // the native prerequisite can stop it.
+        if (member->GetCurrentSpell(CURRENT_GENERIC_SPELL) || member->GetCurrentSpell(CURRENT_CHANNELED_SPELL)) continue;
+        for (auto const& known : member->GetSpellMap())
+        {
+            SpellEntry const* info = sServerFacade.LookupSpellInfo(known.first);
+            if (!info || !member->HasSpell(known.first) ||
+                (!info->HasEffect(SPELL_EFFECT_HEAL) && !(info->SpellFamilyName == SPELLFAMILY_PALADIN &&
+                    (info->SpellIconID == 70 || info->SpellIconID == 242))) ||
+                info->IsChanneledSpell() || !member->IsSpellReady(known.first)) continue;
+            SpellRangeEntry const* range = sServerFacade.LookupSpellRangeEntry(info->rangeIndex);
+            if (!range || !member->IsWithinDistInMap(target, range->maxRange)) continue;
+            if (info->powerType == POWER_MANA && member->GetPower(POWER_MANA) < Spell::CalculatePowerCost(info, member)) continue;
+            return false;
+        }
+    }
+    return true;
 }
 
 bool PlayerbotAI::IsRanged(Player* player, bool inGroup)

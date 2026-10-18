@@ -41,6 +41,7 @@ bool compareByMissingHealth(const Unit* u1, const Unit* u2, bool incomingDamage 
 
 Unit* PartyMemberToHeal::Calculate()
 {
+    bool const coordinated = ai->UsesCoordinatedPartyHealing() && bot->IsInCombat();
     std::vector<Unit*> needHeals;
     std::vector<Unit*> tankTargets;
     if (bot->GetSelectionGuid())
@@ -94,7 +95,7 @@ Unit* PartyMemberToHeal::Calculate()
                 incomingDamage = getIncomingdamage(player);
 
             uint8 health = (((player->GetHealth() - incomingDamage) * 100.0f) / player->GetMaxHealth());
-            if (isTank || (health < sPlayerbotAIConfig.almostFullHealth && !IsTargetOfSpellCast(player, predicate)))
+            if (isTank || (health < sPlayerbotAIConfig.almostFullHealth && (coordinated || !IsTargetOfSpellCast(player, predicate))))
             { 
                 needHeals.push_back(player);
             }
@@ -124,6 +125,35 @@ Unit* PartyMemberToHeal::Calculate()
     if (needHeals.empty() && !tankTargets.empty())
     {
         needHeals = tankTargets;
+    }
+
+    if (coordinated)
+    {
+        needHeals.erase(std::remove_if(needHeals.begin(), needHeals.end(), [this](Unit* patient)
+        {
+            return !patient || patient->FindMap() != bot->FindMap() || !patient->IsAlive() ||
+                patient->GetHealth() >= patient->GetMaxHealth() || ai->IsPartyHealCovered(patient);
+        }), needHeals.end());
+        if (needHeals.empty()) return nullptr;
+        auto urgency = [this](Unit* patient)
+        {
+            float missing = patient->GetMaxHealth() - patient->GetHealth();
+            float pressure = ai->GetPartyHealingPressure(patient);
+            float pending = ai->GetPendingPartyHealing(patient);
+            float score = std::max(0.0f, missing + pressure - pending) / std::max(1u, patient->GetMaxHealth());
+            if (patient->GetHealthPercent() <= sPlayerbotAIConfig.criticalHealth || patient->GetHealth() <= pressure)
+                score += 2.0f;
+            return score;
+        };
+        std::stable_sort(needHeals.begin(), needHeals.end(), [&](Unit* left, Unit* right)
+        {
+            float a = urgency(left), b = urgency(right);
+            if (a != b) return a > b;
+            bool tankA = left->IsPlayer() && ai->IsTank(left->ToPlayer());
+            bool tankB = right->IsPlayer() && ai->IsTank(right->ToPlayer());
+            return tankA && !tankB;
+        });
+        return needHeals.front();
     }
 
     bool preHealing = ai->HasStrategy("preheal", BotState::BOT_STATE_COMBAT);

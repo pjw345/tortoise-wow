@@ -20,9 +20,11 @@ bool IsSpellHaveEffect(SpellEntry const* s,int){return s->interrupt;}
 struct Spell { SpellEntry* m_spellInfo=nullptr; bool canInterrupt=true; struct { ObjectGuid guid; ObjectGuid getUnitTargetGuid(){return guid;} }m_targets; bool CanBeInterrupted(){return canInterrupt;} };
 struct Motion { int followed=0; template<class T> void MoveFollow(T*,float,float){++followed;} };
 struct CreatureAI { ReactStates react=REACT_DEFENSIVE; ReactStates GetReactState(){return react;} void SetReactState(ReactStates r){react=r;} };
-struct Pet;
-struct Unit { ObjectGuid guid; bool alive=true,friendly=false,safe=true,world=true,near=true,los=true,cc=false,attackable=true,fleeing=false; void* map=reinterpret_cast<void*>(1); Unit* chase=nullptr; Unit* victim=nullptr; std::string name="Add"; int stops=0; bool HasUnitState(int){return fleeing;} bool IsWithinLOSInMap(Unit*u){return u->los;} Unit* GetVictim(){return victim;} void AttackStop(){victim=nullptr;++stops;} void* GetMap(){return map;} bool IsInWorld(){return world;} bool IsWithinDistInMap(Unit*,float,bool){return near;} ObjectGuid GetObjectGuid(){return guid;} char const* GetName(){return name.c_str();} };
-struct Player : Unit { bool healer=false,hasMana=true; float manaPercent=100; bool HasMana(){return hasMana;}float GetPowerPercent(){return manaPercent;}ObjectGuid selection; ObjectGuid GetSelectionGuid(){return selection;} bool grouped=true; Pet* pet=nullptr; std::set<Unit*> attackers; std::map<int,Spell*> spells; bool IsInGroup(Player*){return grouped;} Pet* GetPet(){return pet;} std::set<Unit*>& getAttackers(){return attackers;} Spell* GetCurrentSpell(CurrentSpellTypes t){return spells[t];} void InterruptSpell(CurrentSpellTypes t){spells[t]=nullptr;} };
+struct Pet; struct Player;
+enum class BotState { BOT_STATE_COMBAT };
+constexpr int CLASS_PALADIN=2;
+struct Unit { bool isPlayer=false,meleeReach=true; bool IsPlayer(){return isPlayer;} Player* ToPlayer(){return reinterpret_cast<Player*>(this);} bool IsAlive(){return alive;} void* FindMap(){return map;} bool CanReachWithMeleeAttack(Unit*){return meleeReach;} ObjectGuid guid; bool alive=true,friendly=false,safe=true,world=true,near=true,los=true,cc=false,attackable=true,fleeing=false; void* map=reinterpret_cast<void*>(1); Unit* chase=nullptr; Unit* victim=nullptr; std::string name="Add"; int stops=0; bool HasUnitState(int){return fleeing;} bool IsWithinLOSInMap(Unit*u){return u->los;} Unit* GetVictim(){return victim;} void AttackStop(){victim=nullptr;++stops;} void* GetMap(){return map;} bool IsInWorld(){return world;} bool IsWithinDistInMap(Unit*,float,bool){return near;} ObjectGuid GetObjectGuid(){return guid;} char const* GetName(){return name.c_str();} };
+struct Player : Unit { Player(){isPlayer=true;} int cls=1; int getClass(){return cls;} bool tank=false; bool healer=false,hasMana=true; float manaPercent=100; bool HasMana(){return hasMana;}float GetPowerPercent(){return manaPercent;}ObjectGuid selection; ObjectGuid GetSelectionGuid(){return selection;} bool grouped=true; Pet* pet=nullptr; std::set<Unit*> attackers; std::map<int,Spell*> spells; bool IsInGroup(Player*){return grouped;} Pet* GetPet(){return pet;} std::set<Unit*>& getAttackers(){return attackers;} Spell* GetCurrentSpell(CurrentSpellTypes t){return spells[t];} void InterruptSpell(CurrentSpellTypes t){spells[t]=nullptr;} };
 struct Pet:Unit { CreatureAI brain; Motion motion; CreatureAI* AI(){return &brain;} Motion* GetMotionMaster(){return &motion;} };
 struct PossibleAttackTargetsValue {static bool IsPossibleTarget(Unit*u,Player*,float,bool){return u->near&&u->attackable&&!u->cc;}};
 struct Facade { Unit* GetChaseTarget(Unit*u){return u->chase;}  bool IsAlive(Unit* u){return u->alive;} bool IsFriendlyTo(Unit*,Unit* u){return u->friendly;} }sServerFacade;
@@ -34,7 +36,7 @@ struct Context { std::map<std::string,Value<Unit*>> units; Value<ObjectGuid> att
 template<> Value<Unit*>* Context::GetValue<Unit*>(std::string n){return &units[n];}
 template<> Value<ObjectGuid>* Context::GetValue<ObjectGuid>(std::string){return &attack;}
 template<> Value<std::list<ObjectGuid>>* Context::GetValue<std::list<ObjectGuid>>(std::string){return &attackers;}
-struct PlayerbotAI { Player *bot=nullptr,*master=nullptr; Context storage; Context* aiObjectContext=&storage; bool activeMaster=true,pvp=false,real=false,silent=false,ranged=false; bool playerMasterAggroObserved=false; uint32 playerMasterAggroStartedMs=0; uint32 lastPlayerMasterAggroWarningMs=0; ObjectGuid playerMasterPursuitTarget; int movementStops=0; ObjectGuid playerMasterFocusPet; uint8 playerMasterFocusPetReact=0; std::map<int,Unit*> world; std::vector<std::string> warnings; int interrupted=0;
+struct PlayerbotAI { Player *bot=nullptr,*master=nullptr; Context storage; Context* aiObjectContext=&storage; bool activeMaster=true,pvp=false,real=false,silent=false,ranged=false,offheal=false; bool HasStrategy(std::string,BotState){return offheal;} bool IsMelee(Player*){return !ranged;} static bool IsTank(Player*p){return p->tank;} bool playerMasterAggroObserved=false; uint32 playerMasterAggroStartedMs=0; uint32 lastPlayerMasterAggroWarningMs=0; ObjectGuid playerMasterPursuitTarget; int movementStops=0; ObjectGuid playerMasterFocusPet; uint8 playerMasterFocusPetReact=0; std::map<int,Unit*> world; std::vector<std::string> warnings; int interrupted=0;
  bool HasActivePlayerMaster(){return master && activeMaster;} bool IsRealPlayer(){return real;} bool IsInPvp(){return pvp;} bool IsSafe(Player* p){return p&&p->safe;} static bool IsSafe(Player*,Unit* p){return p&&p->safe;}
  Unit* GetUnit(ObjectGuid g){return world[g.value];} void SpellInterrupted(uint32){++interrupted;}
  bool TellPlayerNoFacing(Player*,std::string text,PlayerbotSecurityLevel,bool,bool){if(silent)return false;warnings.push_back(text);return true;}
@@ -165,5 +167,17 @@ int main(){try{
 
  bot.healer=false;bot.manaPercent=100;master.alive=true;
  ai.pvp=true;ai.UpdatePlayerMasterAssist();check(pet.brain.react==REACT_DEFENSIVE,"pet react restored outside policy");
+ // The backup melee Paladin peels engaged melee from a healer, then returns focus.
+ ai.pvp=false;ai.real=false;ai.ranged=false;ai.offheal=true;bot.cls=CLASS_PALADIN;bot.healer=false;
+ master.victim=&primary;master.selection=primary.guid;primary.alive=true;primary.safe=true;primary.near=true;primary.fleeing=false;
+ Player priest;priest.healer=true;add.victim=&priest;add.meleeReach=true;
+ ai.storage.attackers.value={primary.guid,add.guid};ai.storage.units["current target"].value=&primary;
+ check(ai.GetPlayerMasterAttackTarget()==&add,"peel engaged melee from priest despite master focus");
+ add.victim=&bot;ai.storage.units["current target"].value=&add;
+ check(ai.GetPlayerMasterAttackTarget()==&add,"hold peel until tank reacquires");
+ add.victim=&master;check(ai.GetPlayerMasterAttackTarget()==&primary,"return focus after tank reacquires");
+ add.victim=&priest;add.meleeReach=false;check(ai.GetPlayerMasterAttackTarget()==&primary,"never chase distant shooter for peel");
+ add.meleeReach=true;ai.storage.attackers.value={primary.guid};check(ai.GetPlayerMasterAttackTarget()==&primary,"no unengaged peel pull");
+ ai.storage.attackers.value={primary.guid,add.guid};ai.offheal=false;check(ai.GetPlayerMasterAttackTarget()==&primary,"other roles retain focus");
  std::cout<<"Native master-focus policy, target transitions, spell guards, pet lifecycle and warning cases passed\n";
 }catch(std::exception const& e){std::cerr<<e.what()<<'\n';return 1;} }
