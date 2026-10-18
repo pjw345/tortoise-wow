@@ -81,7 +81,7 @@ bool Open(Unit* actor, Unit* target, Event const& opening, bool hostileCast=fals
     // No dereference of another map owner's player state, and no retained pointers.
     for(Guid id:roster)
     {
-        Player* member=sObjectAccessor.FindPlayerNotInWorld(ObjectGuid(id));
+        Player* member=sObjectAccessor.FindPlayerNotInWorld(ObjectGuid(uint64(id)));
         if(!member) { Actor offline; offline.guid=id; offline.player=true; offline.name="offline member"; initial.push_back(offline); }
         else if(member->FindMap()==p->FindMap() && member->IsInWorld()) initial.push_back(Snapshot(member));
     }
