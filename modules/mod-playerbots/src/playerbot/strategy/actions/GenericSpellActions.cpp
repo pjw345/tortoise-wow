@@ -173,6 +173,23 @@ bool CastSpellAction::isUseful()
 
 NextAction** CastSpellAction::getPrerequisites()
 {
+    NextAction** prerequisites = Action::getPrerequisites();
+    SpellEntry const* spellInfo = sServerFacade.LookupSpellInfo(spellId);
+    Spell* shooting = bot->GetCurrentSpell(CURRENT_AUTOREPEAT_SPELL);
+    Unit* target = GetTarget();
+    // Turtle wand shots renew the spell GCD on every swing. A normal spell
+    // cannot pass isPossible until shooting stops, so do that as a prerequisite
+    // before the cast checks. Keep unknown/forbidden spells on their native
+    // alternative path and leave hunter auto shot alone.
+    if (shooting && shooting->m_spellInfo->Category == SPELLCATEGORY_RANGED_WEAPON &&
+        spellInfo && !spellInfo->IsAutoRepeatRangedSpell() && ai->HasSpell(spellId) &&
+        bot->IsSpellReady(spellId) &&
+        target && ai->IsPlayerMasterSpellAllowed(spellInfo, target))
+    {
+        prerequisites = NextAction::merge(prerequisites,
+            NextAction::array(0, new NextAction("interrupt current spell::wand"), NULL));
+    }
+
     // Set the reach action as the cast spell prerequisite when needed
     const std::string reachAction = GetReachActionName();
     if (!reachAction.empty())
@@ -193,11 +210,11 @@ NextAction** CastSpellAction::getPrerequisites()
             }
 
             const std::string qualifiersStr = Qualified::MultiQualify(qualifiers, "::");
-            return NextAction::merge(NextAction::array(0, new NextAction(reachAction + "::" + qualifiersStr), NULL), Action::getPrerequisites());
+            return NextAction::merge(NextAction::array(0, new NextAction(reachAction + "::" + qualifiersStr), NULL), prerequisites);
         }
     }
 
-    return Action::getPrerequisites();
+    return prerequisites;
 }
 
 void CastSpellAction::SetSpellName(const std::string& name, std::string spellIDContextName /*= "spell id"*/, bool force)
@@ -471,6 +488,12 @@ bool RemoveBuffAction::Execute(Event& event)
 
 bool InterruptCurrentSpellAction::isUseful()
 {
+    if (getQualifier() == "wand")
+    {
+        Spell* shooting = bot->GetCurrentSpell(CURRENT_AUTOREPEAT_SPELL);
+        return shooting && shooting->m_spellInfo->Category == SPELLCATEGORY_RANGED_WEAPON;
+    }
+
     for (int type = CURRENT_MELEE_SPELL; type < CURRENT_CHANNELED_SPELL; type++)
     {
         Spell* currentSpell = bot->GetCurrentSpell((CurrentSpellTypes)type);
@@ -482,6 +505,22 @@ bool InterruptCurrentSpellAction::isUseful()
 
 bool InterruptCurrentSpellAction::Execute(Event& event)
 {
+    if (getQualifier() == "wand")
+    {
+        if (!isUseful())
+            return false;
+
+        // Copy before InterruptSpell: native cancellation can release the Spell.
+        uint32 const spellId = bot->GetCurrentSpell(CURRENT_AUTOREPEAT_SPELL)->m_spellInfo->Id;
+        uint32 const remaining = bot->GetAttackTimer(RANGED_ATTACK);
+        bot->InterruptSpell(CURRENT_AUTOREPEAT_SPELL);
+        ai->SpellInterrupted(spellId);
+        // Do not clear/bypass the GCD or report the requested spell as cast.
+        // The engine retains that spell behind this successful prerequisite.
+        SetDuration(std::max(remaining, sPlayerbotAIConfig.globalCoolDown) + sPlayerbotAIConfig.reactDelay);
+        return true;
+    }
+
     bool interrupted = false;
     for (int type = CURRENT_MELEE_SPELL; type < CURRENT_CHANNELED_SPELL; type++)
     {
