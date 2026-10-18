@@ -21,3 +21,8 @@ add_test(NAME battle_recorder COMMAND BattleRecorderTest "${CMAKE_CURRENT_BINARY
 add_test(NAME battle_reports COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_reports.py" "${CMAKE_CURRENT_BINARY_DIR}/capture")
 set_tests_properties(battle_recorder PROPERTIES FIXTURES_SETUP captured_battles)
 set_tests_properties(battle_reports PROPERTIES FIXTURES_REQUIRED captured_battles)
+
+add_executable(ObservationTest ObservationTest.cpp)
+target_compile_features(ObservationTest PRIVATE cxx_std_17)
+target_include_directories(ObservationTest PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+add_test(NAME near_teleport_observation COMMAND ObservationTest)

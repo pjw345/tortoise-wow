@@ -134,3 +134,21 @@ Correction order suggested by this evidence:
 Encounter acceptance must include: initial spawn/activation, pull, phase transitions, summons, targeting/casts, wipe/evade/reset, death and loot, doors/next boss, save/reload and repeat entry. Include world-boss helpers, group/pet/bot participation and visibility during movement. Compare behavior and input latency at the intended population. The [coverage inventory](core-audit/COVERAGE.md) is the starting checklist, not a completed gameplay-test sheet.
 
 This turn changed only local audit tooling/documentation/generated evidence. **No gameplay code, production SQL, configs, share files or service state was changed.** No new per-action logging was added. Findings are not silently marked fixed.
+
+### 2026-10-18 party combat/recovery follow-up
+
+Traced native dead-engine priorities, chat revive/corpse-run routing and context
+value lifecycle; retained SpiritHealerAction travel/penalties and reclaim guards.
+Added transient intent only because a one-shot move cannot own recovery until
+arrival while persistent corpse-run remains enabled. Existing dead triggers
+continue it, and the alive transition clears it. No account/character DB writes
+or GM recovery were used to implement the change.
+
+Reviewed native prepared-heal base points/bonus helpers, GetDamage timing,
+native rank resolution and Paladin strategy initialization before invitation.
+Reused healing actions/reaction and native spell validation. Runner control uses
+engaged attackers and current range/LOS; it does not grant pursuit or damage
+permission against a runner. Automatic owned-PvE Blink is disabled pending a
+safe-landing contract. Same-map near teleports no longer close battle capture.
+Focused extracted production regressions cover these policies. Full compilation,
+image verification and live gameplay acceptance must be reported separately.

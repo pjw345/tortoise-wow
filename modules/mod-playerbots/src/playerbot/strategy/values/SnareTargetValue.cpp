@@ -10,6 +10,9 @@ using namespace ai;
 Unit* SnareTargetValue::Calculate()
 {
     std::string spell = qualifier;
+    if (spell == "hammer of justice" && ai->HasActivePlayerMaster() &&
+        !ai->IsRealPlayer() && !ai->IsInPvp())
+        return ai->GetPlayerMasterFleeingControlTarget(sServerFacade.LookupSpellInfo(AI_VALUE2(uint32, "spell id", spell)));
 
     Unit* enemy = AI_VALUE(Unit*, "enemy player target");
     if (enemy)

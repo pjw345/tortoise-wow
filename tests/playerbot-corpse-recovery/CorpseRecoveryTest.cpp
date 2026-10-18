@@ -19,13 +19,15 @@ struct Player:Unit {bool world=true,teleport=false,grouped=true,combat=false,los
  uint32 GetCorpseReclaimDelay(bool){return 30;}char const*GetName(){return "Priest";}int GetGUIDLow(){return 1;}int GetTeam(){return 0;}int GetLevel(){return 24;}int GetObjectGuid(){return 1;}Session*GetSession(){return &session;}};
 void Session::HandleReclaimCorpseOpcode(WorldPacket&){++reclaims;if(player->nativeAccept)player->alive=true;}
 void Session::HandleSelfResOpcode(WorldPacket&){++selfres;if(player->nativeAccept)player->alive=true;}
-struct Event{Player*owner=nullptr;WorldPacket packet;Player*getOwner(){return owner;}WorldPacket&getPacket(){return packet;}};
+struct Event{std::string source;std::string getSource(){return source;}Player*owner=nullptr;WorldPacket packet;Player*getOwner(){return owner;}WorldPacket&getPacket(){return packet;}};
 struct Facade{bool IsAlive(Unit*u){return u->alive;}bool UnitIsDead(Unit*u){return !u->alive;}bool IsInCombat(Player*p){return p->combat;}bool IsHostileTo(Unit*u,Player*){return u->hostile;}bool IsDistanceLessThan(float a,float b){return a<b;}}sServerFacade;
 struct Config{float spellDistance=30,sightDistance=60,farDistance=100;template<class T>void logEvent(T*,const char*){}}sPlayerbotAIConfig;
-struct Log{template<class...T>void outDetail(const char*,T...){}}sLog;
+namespace botdiag {struct BotActionLog {template<class...T>static void Write(T...) {}};}
+struct Log{template<class...T>void outString(const char*,T...){}template<class...T>void outDetail(const char*,T...){}}sLog;
 enum class PlayerbotSecurityLevel{PLAYERBOT_SECURITY_ALLOW_ALL};enum class BotState{BOT_STATE_NON_COMBAT};
-struct PlayerbotAI{Player*bot,*master;bool active=true,real=false,manual=false;int stopped=0;std::map<int,Unit*>units;
- bool HasActivePlayerMaster(){return active&&master;}bool IsRealPlayer(){return real;}Player*GetMaster(){return master;}Player*GetGroupMaster(){return master;}bool IsSafe(Unit*u){return u&&u->safe;}Unit*GetUnit(int g){return units[g];}
+struct PlayerbotAI{Player*bot,*master;bool active=true,real=false,manual=false,graveyard=false;int resets=0;bool pvp=false;
+ bool& Bool(std::string name){return name=="corpse run"?manual:graveyard;}int stopped=0;std::map<int,Unit*>units;
+ bool HasActivePlayerMaster(){return active&&master;}bool IsRealPlayer(){return real;}bool IsInPvp(){return pvp;}Player*GetMaster(){return master;}Player*GetGroupMaster(){return master;}bool IsSafe(Unit*u){return u&&u->safe;}Unit*GetUnit(int g){return units[g];}
  float GetRange(const char*){return 5;}void StopMoving(){++stopped;bot->stopped=true;}std::string GetDefaultMovementStrategy(){return "follow";}bool HasStrategy(std::string,BotState){return true;}void ChangeStrategy(std::string,BotState){}template<class...T>void TellPlayerNoFacing(T...){}};
 bool GetBotAI(Player*){return false;}
 int scans=0;std::string qualifier;
@@ -33,8 +35,9 @@ struct PossibleTargetsValue{PlayerbotAI*ai;PossibleTargetsValue(PlayerbotAI*a,co
 PlayerbotAI*currentAI=nullptr;
 struct WorldPosition{WorldPosition(Player*){}uint32 getUnitsAggro(std::list<int>const&units,Player*){uint32 n=0;for(int g:units){auto*u=currentAI->GetUnit(g);if(u->distance<=u->aggro)++n;}return n;}};
 #define AI_VALUE2(type,name,key) (ai->master->distance)
-#define AI_VALUE(type,name) (ai->manual)
-#define SET_AI_VALUE(type,name,value) (ai->manual=value)
+#define AI_VALUE(type,name) (ai->Bool(name))
+#define SET_AI_VALUE(type,name,value) (ai->Bool(name)=value)
+#define RESET_AI_VALUE(type,name) (++ai->resets)
 struct MovementAction{PlayerbotAI*ai;Player*bot;int moves=0,legacyCalls=0;Player*destination=nullptr;explicit MovementAction(PlayerbotAI*a):ai(a),bot(a->bot){}Player*GetMaster(){return ai->master;}bool MoveNear(Player*p,float){++moves;destination=p;return true;}};
 struct ReviveFromCorpseAction:MovementAction{using MovementAction::MovementAction;static bool IsSafeToAutoResurrect(PlayerbotAI*,Player*);bool Execute(Event&);};
 struct FindCorpseAction:MovementAction{using MovementAction::MovementAction;bool Execute(Event&);};
@@ -42,6 +45,11 @@ struct FindCorpseAction:MovementAction{using MovementAction::MovementAction;bool
 #include "NativeRegroup.inc"
 struct SelfResurrectAction:MovementAction{using MovementAction::MovementAction;
 #include "NativeSelfRes.inc"
+};
+#include "NativeGraveyardIntent.inc"
+#include "NativeGraveyardContinue.inc"
+struct CorpseRunCommand:MovementAction {using MovementAction::MovementAction;
+#include "NativeCorpseCommand.inc"
 };
 void check(bool b,const char*m){if(!b)throw std::runtime_error(m);}
 int main(){try{Player bot,leader;Corpse corpse;bot.alive=false;bot.corpse=&corpse;leader.distance=5;PlayerbotAI ai{&bot,&leader};currentAI=&ai;
@@ -56,6 +64,18 @@ int main(){try{Player bot,leader;Corpse corpse;bot.alive=false;bot.corpse=&corps
  ai.manual=true;bot.nativeAccept=false;check(!revive.Execute(event)&&ai.manual,"native rejection retains corpse-run state");bot.nativeAccept=true;check(revive.Execute(event)&&bot.alive&&!ai.manual,"successful native reclaim clears manual flag");bot.alive=false;
  FindCorpseAction find(&ai);leader.distance=80;check(find.Execute(event)&&find.destination==&leader&&find.legacyCalls==0,"ghost regroups instead of solo corpse run");leader.distance=4;bot.stopped=false;check(!find.Execute(event)&&bot.stopped,"ghost waits near leader and cancels old path");
  ai.manual=true;check(find.Execute(event)&&find.legacyCalls==1,"explicit corpse-run movement preserved");leader.distance=80;check(!revive.Execute(event),"corpse run does not bypass revival safety");ai.manual=false;
+ ai.manual=true;event.source="revive";
+ ai.active=false;RequestGraveyard(&ai,event);check(ai.manual&&!ai.graveyard,"free-bot command keeps native recovery path");ai.active=true;
+ ai.real=true;RequestGraveyard(&ai,event);check(ai.manual&&!ai.graveyard,"real-player command unchanged");ai.real=false;
+ ai.pvp=true;RequestGraveyard(&ai,event);check(ai.manual&&!ai.graveyard,"PvP command unchanged");ai.pvp=false;
+ bot.bg=true;RequestGraveyard(&ai,event);check(ai.manual&&!ai.graveyard,"battleground command unchanged");bot.bg=false;
+ RequestGraveyard(&ai,event);
+ check(ai.graveyard&&!ai.manual&&ContinueGraveyard(&ai),"revive supersedes corpse run and schedules continuing recovery");
+ int movesBefore=find.moves;check(!find.Execute(event)&&find.moves==movesBefore,"graveyard recovery cannot reverse toward corpse");
+ int reclaimsBefore=bot.session.reclaims;check(!revive.Execute(event)&&bot.session.reclaims==reclaimsBefore,"graveyard intent blocks body reclaim");
+ event.source="val::should spirit healer";RequestGraveyard(&ai,event);check(ai.graveyard,"automatic continuation retains explicit request");
+ CorpseRunCommand command(&ai);check(command.Execute(event)&&ai.manual&&!ai.graveyard&&!ContinueGraveyard(&ai),"new corpse-run replaces graveyard recovery");
+ ai.manual=false;event.source="";
  SelfResurrectAction self(&ai);check(!self.Execute(event)&&bot.session.selfres==0,"automatic self-resurrection waits for leader");event.owner=&leader;check(self.Execute(event)&&bot.session.selfres==1,"explicit owner self-resurrection preserved");event.owner=nullptr;
  ai.active=false;check(ReviveFromCorpseAction::IsSafeToAutoResurrect(&ai,&bot),"free bot policy unchanged");ai.active=true;bot.bg=true;check(ReviveFromCorpseAction::IsSafeToAutoResurrect(&ai,&bot),"battleground policy unchanged");bot.bg=false;ai.real=true;check(ReviveFromCorpseAction::IsSafeToAutoResurrect(&ai,&bot),"real-player policy unchanged");
  std::cout<<"Native safe party reclaim, regroup and self-resurrection cases passed\n";

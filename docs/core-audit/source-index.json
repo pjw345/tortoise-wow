@@ -14310,14 +14310,6 @@
     "sha256": "22C1FE8CC3825BCEDA1538793AF8186E91215EF182C8701B8241A2B9D685F371"
   },
   {
-    "file": "src/modules/Eluna/ElunaCompat.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "49EDAAC722B18A3DA83F88DEDD558FC5D8DAA4A605EDF250009B9CA26CE02F38"
-  },
-  {
     "file": "modules/mod-dungeon-clear/src/Routes/Route_429_13280.cpp",
     "cmake_listed": null,
     "addsc": [],
@@ -14404,24 +14396,6 @@
     "loader_calls": [],
     "dependency_signals": [],
     "sha256": "CE15FE4023FF1B62E14490501E7C339D6B47A16ABD766CB0DF86BB4AF2AD8096"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaInstanceAI.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "instance_state"
-    ],
-    "sha256": "FA7070B54DB7B339788C8AF1DB293EDBFEFFB26D69B3971EC2D2726A025BE3DB"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaSpellWrapper.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "9680F4BF4790AFAED6A920284830EFDB60C0B18CD6D740CC8B5080109F7CFE5E"
   },
   {
     "file": "modules/mod-dungeon-clear/src/Routes/Route_33_3927.cpp",
@@ -14939,30 +14913,6 @@
     "sha256": "C732BE49679721E1782DF9B65010394762F8008020D6D40D4F899B7830748D05"
   },
   {
-    "file": "src/modules/Eluna/ElunaConfig.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "4378EF0AF802E32D6FB1103F5EAD6CB78505C604DCC8A6F25F47089E8EC7F2A2"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaUtility.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "F65F8FBC9D72501810E6D8FA8E252382DE5156D608AF9BF5EFBE20D50E3289A1"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaMgr.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "324EAF4B58F3241883D29A3E2F9A7A08F78BBC9283B562550240571C3F0B64D7"
-  },
-  {
     "file": "modules/mod-dungeon-clear/src/TestRun/DcTestRunSelect.cpp",
     "cmake_listed": null,
     "addsc": [],
@@ -15097,22 +15047,6 @@
     "loader_calls": [],
     "dependency_signals": [],
     "sha256": "EB37FDAD5F76C2FA46955B3897EA9AE92863B270EA84FBF21E99AF2124A6350B"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaIncludes.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "0FE047818615223F7CE68F90769CC2FFDC66DA4F678E75D1E48E53DFD7F7D47B"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaTemplate.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "4A0D15F1E824AAE7A22F7E91D835365F584AEC5CD94E31773CD3AC4ADBD54CA2"
   },
   {
     "file": "modules/mod-dungeon-clear/src/TestRun/DcTestDriver.h",
@@ -15355,16 +15289,6 @@
     "sha256": "5D151879FDE7D0A06B0033C140B1EB7E77152880EB51663E82DA5670E555304F"
   },
   {
-    "file": "src/modules/Eluna/LuaEngine.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "death_reset"
-    ],
-    "sha256": "D75CC67FAF9303D8AD5ECC911313E13A0C53D2DD7C25B113935DEDD82B85206A"
-  },
-  {
     "file": "modules/mod-dungeon-clear/src/compat/GridTerrainData.h",
     "cmake_listed": null,
     "addsc": [],
@@ -15541,36 +15465,12 @@
     "sha256": "DADD41160CE4801591A032BC2F8D06B43349236B55B5BC0AFB5EA4D80EDEE84A"
   },
   {
-    "file": "src/modules/Eluna/ElunaCreatureAI.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "ai_update",
-      "movement",
-      "summons",
-      "death_reset",
-      "threat"
-    ],
-    "sha256": "4712DF04B64351070CE32CAF3518498E4EB1B168DF3129DCB86843BD3E7B7FB5"
-  },
-  {
     "file": "modules/mod-dungeon-clear/src/compat/CharacterCache.h",
     "cmake_listed": null,
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
     "sha256": "CA285D1BDAA59FF8E6332EA09851FBC9B8A95D400B1D977A5AF32E4C672711E0"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaEventMgr.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "timers"
-    ],
-    "sha256": "C4125D0ED7427A0B4039166BF50B34431010CD58A4B6FE649FA7D45AE975B003"
   },
   {
     "file": "modules/mod-dungeon-clear/src/compat/Optional.h",
@@ -15581,817 +15481,6 @@
     "sha256": "A6CDD2FA4AEAEB564E67D54BC7F158EE2FF2927E9179C7B127A06AAE5270047C"
   },
   {
-    "file": "src/modules/Eluna/ElunaInstanceAI.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "instance_state"
-    ],
-    "sha256": "483EEC8D2D96F8D86AC63065BA48F614DDA0FEB924A64E9E9224D1D79C179304"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/GroupMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "A0BFF8DEF3A18D01E6EC51373BF90BDACF0164484952CF0562F24362C616EB0E"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/BattleGroundMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "1A38F7F1F1A14A953658498A3448A2FF0894BB7FBE1FB510ACDFB289DFDA45DE"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/ObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "C155E9BFEEB34E7AC2DC6633B9D3D8D9A3116BA6631E2D8F636A1C377AC07071"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/CreatureMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "movement",
-      "threat"
-    ],
-    "sha256": "74EADD6084E7A3A4FA48344158186772EC262BF5EACADA3B57ED984D1EA1C063"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/BigIntMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "73A62BDE5687DB44D55BD67FE378930CED29A9B029B9BE5E0AFC5E26338423DE"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/GameObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "doors"
-    ],
-    "sha256": "EB6520B399E53AC193D4D539742116497B0ACA51AF3EB53FFDD0A75046E77D36"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/ItemMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "5A386D3FAA09234E4005BB3B88C1C9819F6F2CFF17BD79AB9EE670D2513206B6"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/GuildMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "6CE5612FEEFDB6DCAE9662E2B8784C28F316099B371F15A8EA562FBF93759103"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/CorpseMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "901536C842540DB133BD583200C694316348EBA3CAA74B8B47F1623C64D3F708"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/AuraMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "5B5430041244939FC48927F4430959E438F4F02C382CAC1FC2865E2BD2DB6770"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/ElunaQueryMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "66AD993A63013E75BE644953C7798992EDF35BC8964357CB9C1C7C0FB2B7697B"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/UnitMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "spells",
-      "movement"
-    ],
-    "sha256": "992717B3CDDB3039BBB9E7483F8739583A1F723182F09264F941EEABA5D6B694"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/PlayerMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "5C6C2A66B032BB7D76EAFD309AADA34A45B2D6F9FC71B860022A7F85E20705AF"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/AuraEffectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "6585E260B02934E13FC3E3309814884E6CF1F7E6FE0A524C07BE2172556514CB"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/SpellMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "B011696FED58D1CB3D5CFE41174DD1DC9726828DF29D7DCE924394906E660382"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/MapMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "A445950F6FEAFECF880D30A93E8270728974EFE0CD977E6476BC8708A923BF6C"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/GlobalMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "summons"
-    ],
-    "sha256": "52A1F6E183F7AEB4E4FD0F37620CD4A70167AC23872A04666F9C4FDDFD3FE2A8"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/ElunaProcInfoMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "FE9FB2F1938647F56A1F9BCFD3387A5DD1BCE6695D5D21DE886BCF02F57FD0E2"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/QuestMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "584CDEBD3F2B45173B56B258EBBDD59CA952CB3906E7547AC6CE19B7B6AAC1F3"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/VehicleMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "63F39D7AC42900F3CB6A1CDE9EBEA9EBF08F67D98C8704FCD4AC0F41A6315EDB"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/WorldObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "summons"
-    ],
-    "sha256": "459085F732A024BB0E16D95C532DFC397DD698AF214C356DD6BADE41B20B7AD3"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/SpellInfoMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "661470B34C96D35EC3F2803562876B4EC629BD445DC286396DC35258396F165A"
-  },
-  {
-    "file": "src/modules/Eluna/methods/AzerothCore/WorldPacketMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "A2ED522E7A7AFDFDEBB8CB86C06B11325E11EE88696D5EACB7507A5539B7084F"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/HookHelpers.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "8F3096B7D361F74388850138DDB44B598A56557F58D221AAA87B58E11068F681"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/GroupMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "5C458D8022DE5FB7AC368489BA30C4EBE193EE61B1D28C6061E7B0E2FCC88189"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/BattleGroundHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "885DD3F7D1F55CDBE71A8FF47A3F459F8B346B550DAE366F442EB75F369DAB5D"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/ItemHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "149EC4118D1D1B243FD1AB3602EDD1973036C3A5D165A6C2C875BAD1C01388C5"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/BattleGroundMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "97A3256DB57CDC8EA7D36A60D80A2066A92EE9E3E49F8471C6D84BB3E9AEBBBF"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/VehicleHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "E7B60584D5BF25BF09793387A490583F98620311BC18E4D4FAB957BD2F2FCC1C"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/CreatureMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "movement",
-      "threat"
-    ],
-    "sha256": "8B48CEC9B537EE00B27739CC8B92DB84394C6AFD03CE109DCCC3D0535BA05B1B"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/BigIntMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "7A1061E4E3D12B473277F74128C9F0E2A5826345814939BE83FDE6DCAB5DF655"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/GameObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "doors"
-    ],
-    "sha256": "F9269F3C858C2F5C02428D9F1E78CD0237803EC8AC019E0BB8974B8C28C06A8C"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/ItemMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "DF46B2A80A3A7D679025B2EB12F892020D636893D45A48B2830323B131898CD1"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/GuildMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "7B70ABB9B7DFFD61702199A8F475648F41E1E1088D5D49B69C420838446C55B5"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/CorpseMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "19BB3B58DB4799C2255C61CA39CD035766A248BE498BE75782020F18938850B6"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/AuraMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "482671DD4C5BEEFE82B8B221565A05BE2C9D0F4FE149BB6DB2A04DF06E675CA2"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/ElunaQueryMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "373D790D9605914300668F767D04F6FEC773442CEF0809EFC7CD2FE93450BAA8"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/ObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "99E6126EDF613A1F7C4016AFD63259334F85D3DA13F46FDC91597E81DDFDA795"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/UnitMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "spells",
-      "movement"
-    ],
-    "sha256": "E2A26FB50B6700CB568434C2C389E2380052EADE282F5597B636F78E663D50FC"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/PlayerMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "death_reset"
-    ],
-    "sha256": "E326ACB4C8B7BA261EB69E12E8921C6AD3EC70056D5B9B2684648E5B064BF16E"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/SpellMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "76F5042899D46B7A16795B9E8EDA84309B507C3FC672B2DC93604C2421CB0835"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/AuraEffectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "7DECE3645535703D812EC31E7A6D9FB9C7E1A3BDC613E2E86DE5692EC2481BA9"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/GlobalMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "B03509B717F740B51BA7A77614FCBFB43BDC1A593D9158C3CF7FA66CFC4A8D11"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/SpellMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "7ACD11FB4AB6537BDF0C9D298B34B66F898BC4AC3A4FC2710DC29EBFB4AF750B"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/MapMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "B581B06025F55B302678E750B43546943639E79FD8F7C988E80D52AEDA5772F8"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/GlobalMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "summons"
-    ],
-    "sha256": "6B439BA1273E5048A9619251B548E0400865DAE20FC881B87CE7B9B662D80178"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/ElunaProcInfoMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "F8B1437E3A9EE569C5E0F60E56E2DD875C669DFD39917EF4673BDFE9030FBF32"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/MapMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "E71C6098474337E6A40BE4DCB2052FEACCC59BECA8D4C4F996622917A84AD692"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/QuestMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "A0D4242A89F5308428616E91D04BE2244596C7F1B4A86DF0C640582C431C582A"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/QuestMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "584CDEBD3F2B45173B56B258EBBDD59CA952CB3906E7547AC6CE19B7B6AAC1F3"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/VehicleMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "3D36059666814516A805109186F34232E02AE217DBB2A63E528693A76C4FCBED"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/WorldObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "summons"
-    ],
-    "sha256": "8732E59FF336F32E84217C97CF87AC9372463DBEEEABC281F949651FAF858581"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/VehicleMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "6DABA607A3A1F2FFE145AF7AE8C2F27826A6C549939982257E7D896FD75C0140"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/WorldObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "summons"
-    ],
-    "sha256": "DD5FAB1AADCC4959767FD5905DE695726B244AC4EC567EB61FCA016AC4094107"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/SpellInfoMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "08BB1F582A42FDAEE8B29A30D6A7F1D06BE914ADD0DCC5ECAA12C000CAFFE339"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CMangos/WorldPacketMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "A9B4D6CE04387AAE2ABF7B18001FDACB346C041C572F96DFE90930A2AC05F175"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/WorldPacketMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "A2ED522E7A7AFDFDEBB8CB86C06B11325E11EE88696D5EACB7507A5539B7084F"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/Hooks.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "A42DAA8672368C123D193492ABAC2504112C6FCE163DE737A62B3E8B598A2E19"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/GameObjectHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "ai_update"
-    ],
-    "sha256": "659CE7111085299F976DC24A25DBE2DB8754E0DE25E64D82ECD6B8DB15B6F841"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/PlayerHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "D45F7AAD1669B92152B8FD2FFFEBACD187C73A91D2E35D9E863D0627327DF4F6"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/SpellHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "8172D86AC74391535AEE7AA86606F1B189E55B44A0E1312AC108FCD3DEF93310"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/GroupHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "501E4DF19BF347D1B831CAECA8BD3FCEB389E1178324E52F9BEA1202F34406EC"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/CreatureHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "ai_update",
-      "movement",
-      "summons",
-      "death_reset",
-      "threat"
-    ],
-    "sha256": "BBA3077781314B53D91E1EE6E03228A5CA528E44D5DD747FB0641F4149C6F6F4"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/ServerHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "F870AA37B96848416FEBCAEBF544E465BD54AC51E7F4496AD27031BB7C9C4FAA"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/PacketHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "337BDBFFE5FCA9FEE1F943F038DBC391B161CED359F7F1E7DB6376F975615AFA"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/GossipHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "2DA7DDB0333A9E3B1D81CAF13FE246BC4387B25B92D4021A78DF97790E9E246F"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/InstanceHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "B065FC7D296B710346113E9A8B64F9D924E6199370D34876F2173FEBFB18AAB4"
-  },
-  {
-    "file": "src/modules/Eluna/methods/CustomMethodsInterface.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "600A2099C39013701A33B61BBECD774CA1FDB75B956982954410D02F0AD9DA87"
-  },
-  {
-    "file": "src/modules/Eluna/hooks/GuildHooks.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "3815A8B7334A85B1F006428FB0F99B5EE722CB7DE2EB11A9100883B15B2EE031"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Methods.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "722D41016D24EA1C7371988AC144DF3FE29D43A440EE416D68F5E06C6CC05ACE"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaUtility.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "3AEADADBEE12EAC84CFAF4FE2492D1090D655F4634E2BA2182CFC0B63A20E340"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaEventMgr.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "timers"
-    ],
-    "sha256": "9FA1FDEC2F616573240DD1FA94F58170752CF5A17EFF4666DAFE9E72B1DAC3BB"
-  },
-  {
-    "file": "src/modules/Eluna/BindingMap.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "6E517509E768F563E285353AD40FBA89CFD412E2F0B2CD744D75C1FCCA6A4084"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/AuraMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "24DC09CEB5E15F3A291DBB08B680EE07E685AE020F6CAB3653575EB06F9B9512"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/CorpseMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "901536C842540DB133BD583200C694316348EBA3CAA74B8B47F1623C64D3F708"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/GuildMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "33F2821B79A52C8AE4F4202643EB1CD82872872D836CF05D376109E46C78E25C"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/ElunaQueryMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "A38BE15779EF6E860B03A87255CB58494F5383FA42A6658EDD16467C750E415F"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/ItemMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "AF051AEE3F1FCB8AB29CFACCC12B7B7741F8679456F217C8E40E64291298E077"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/UnitMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "spells",
-      "movement"
-    ],
-    "sha256": "1A01454064716E43698E9C453CC22CD9BF6BBE6F6C7D7EBD3062AEB26C664DF3"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/GroupMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "7539E0D949B413EE019735AA585197AD29BABAB87B1757C6866B4797D2075794"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/ObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "9B0AEA8FE1608AD416043EBD7415DECFB5DA6A4EC1F5D9FC78EEEA9D4567C3CB"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/BigIntMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "7A1061E4E3D12B473277F74128C9F0E2A5826345814939BE83FDE6DCAB5DF655"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/BattleGroundMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "24AF5AC9791C95758912E735A9569058D5C2516A114F5C4E65E8F83E2BF5B4AA"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/GroupMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "471CB9C783555D8C4FD4842BA57AE459444EE82A2CBA6B6A863F454E9A9516A8"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/BattleGroundMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "1464572528A9BBAC4CDF6B81DAC26A0F26985D9DCE269370594BFF3910B9835D"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/ObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "99E6126EDF613A1F7C4016AFD63259334F85D3DA13F46FDC91597E81DDFDA795"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/CreatureMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "movement",
-      "threat"
-    ],
-    "sha256": "C5968AE8A67C4C0507422BFE4EF7ED0A738A61C52EB24CB0E1B54E2497CE6E69"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/GroupMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "ADC500CE858D160792FAE9D9B4D62FA7CBD23207BFF97D81772387376FD2830E"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/GameObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "doors"
-    ],
-    "sha256": "8A6EA4F967B348EE5F142F05AF2C0C4C746D2DDC9DFB9E0502F53607E559B094"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/CreatureMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "movement",
-      "threat"
-    ],
-    "sha256": "BACF7E6BA32678F72088CA0898827E2A83CC23E83B924979D73B74594FFD5EE0"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/ItemMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "E0AE57261E9FE6ACA54DA5F770555F4BAF6E8183AFCA30D81C37F1913C1952DB"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/GuildMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "11D592393DAA1729B953954BC98480F0193FA49B5539CAD554F5DDE1A13A4940"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/BigIntMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "7A1061E4E3D12B473277F74128C9F0E2A5826345814939BE83FDE6DCAB5DF655"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/CorpseMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "19BB3B58DB4799C2255C61CA39CD035766A248BE498BE75782020F18938850B6"
-  },
-  {
     "file": "modules/mod-dungeon-clear/src/compat/Ai/Base/Value/LastMovementValue.h",
     "cmake_listed": null,
     "addsc": [],
@@ -16400,397 +15489,12 @@
     "sha256": "2DFE84E0D9371B80F0519B5874C8827387D0BF7B81608D1959B7A68223596578"
   },
   {
-    "file": "src/modules/Eluna/methods/Mangos/AuraMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "4AEF0EF3E87692C0D8A31449AF017B4654389939CA7457AA2D32DA6A6ED3F0B3"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/GameObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "doors"
-    ],
-    "sha256": "2FA704497D0662EE0A4FD334DA09CC31823029804D247EF9876A0B8888B5686A"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/ElunaQueryMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "7E1C81502E799DB51AD6749E8CCB5DC04F0251B6D186BFB5E558C53261FD0A4D"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/ItemMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "CB791EF0DC77D14A904AD0982199A34BC5FC760BB57D1B41948EB50B7739138C"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/GuildMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "7077DDACD01D70B3DA6C9EA8542E4BA28294B5CFB4434116B6744AEB0F43AAFB"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/UnitMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "spells",
-      "movement",
-      "threat"
-    ],
-    "sha256": "077581EC8800ADA6E74A95AC660AD2085166FE24F6665736C0648BB4C214E8EC"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/PlayerMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "death_reset"
-    ],
-    "sha256": "4EAED6EDEABB31D5958E0F74E954C2A32F4C8D23CA95C46B4B131BBBE3D95EB3"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/CorpseMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "19BB3B58DB4799C2255C61CA39CD035766A248BE498BE75782020F18938850B6"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/SpellMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "0495EBC56E25D506DD2CBB1E9D52B388D0D23125F2C2A4003542CE924B7DD120"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/AuraMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "B9FD223AB7CBBD563A79673AB9035EF1CE244E10DA02B12AD80E92EB826E7D9A"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/MapMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "F6CF6448372FA0769E4767DCB4E9B898610169817C14E95B09550B1D3ADD5B0F"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/ElunaQueryMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "373D790D9605914300668F767D04F6FEC773442CEF0809EFC7CD2FE93450BAA8"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/GlobalMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "B94AE73E109DE369A376D9C89D90C17BE79E8601FC894B45E47236080CFC2CC2"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/QuestMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "F657C0009B3E09D768F77398A4843AC644F882C73B51B820616CF3937C8CF003"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/PlayerMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "death_reset"
-    ],
-    "sha256": "131DAA3D76BEF16EF806E74A8988F7068451B166B1074986A4691943D7FBAB4F"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/VehicleMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "229B598DAD2F0976A176A91A018680821C944D13D5091FF2C121DDD4E1CD89C2"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/SpellMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "D10061174D1097148B7D0047228F4DC3FC97002728DF169889547752D8BC026D"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/MapMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "53408D41ED65F71CBBC64CAE43E35ED55B466B443013E85A122A86758C78732F"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/WorldObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "summons"
-    ],
-    "sha256": "5D5145D81DE85E334D5FF8DCD5324DD2633B29C9B5DA46C120B46063DABC2F2C"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/GlobalMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "72C479ED0289D04BFEA5FF2B00A44D7B52A5663C42557FEF24B33697F6E22279"
-  },
-  {
-    "file": "src/modules/Eluna/methods/Mangos/WorldPacketMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "A2ED522E7A7AFDFDEBB8CB86C06B11325E11EE88696D5EACB7507A5539B7084F"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/QuestMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "C03596CB4D18C3BF3DDA8380B6538E481C75171C5D96786C40C045E78CB817C6"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/VehicleMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "784B78A4CBFE29E5C91003376AC3344DE1A81D72B4303E631DE9ECA4A0DEEC94"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/WorldObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "summons"
-    ],
-    "sha256": "83968C48AD9D18EE7DF807B69274C4F1C4F5C587E135F00358110A2FDE301BC7"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/WorldPacketMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "6A3A2ED3AEE12EF9771256B0B441740AFF0054D7A6267F3BFACE542E337D8C01"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/BattleGroundMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "B1F8C829CB6A99976B7EFE34404E442F0B0D630CB7852CCF2D1B76E2396685A8"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/ObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "C155E9BFEEB34E7AC2DC6633B9D3D8D9A3116BA6631E2D8F636A1C377AC07071"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/BigIntMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "73A62BDE5687DB44D55BD67FE378930CED29A9B029B9BE5E0AFC5E26338423DE"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/GameObjectMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "doors"
-    ],
-    "sha256": "30BA18B36EC692BB25015A25A813F47D0C3BB0E8BEC49AFFC130B7B4F28DCA79"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/PlayerMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "0D69539363A17B249126D8ED0EF54290E69B54EC8384956D2DF2AAF3E278BFEC"
-  },
-  {
-    "file": "src/modules/Eluna/lmarshal.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "1F8A95DCF825AADC5F12FAAA133E8D5CC743AB2870EB2332915E41EDC250E68B"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaLoader.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "async"
-    ],
-    "sha256": "077790F9B190EA71CBDB96DF4040F6FE12ED23768967FE293032AE77029E1F32"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaLoader.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "async"
-    ],
-    "sha256": "7522444EBB86E40CDAEC268DCE19875784F95491F63886C0E27F0D57E513EE93"
-  },
-  {
-    "file": "src/modules/Eluna/methods/TrinityCore/CreatureMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "movement",
-      "threat"
-    ],
-    "sha256": "11188492045CA26F958906DCD317E46EA43665A29528ADE97EF3774A826CFD31"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaConfig.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "82B1BAF696D15498CF0B3651852528D3910B9BABCACF8B2C8DE18CEA7BBEAAB4"
-  },
-  {
-    "file": "src/modules/Eluna/lmarshal.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "760593C4143CFE301AAC06786EA34F05871D3A322C8B225D17C2958F9FC783A8"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaSpellWrapper.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "7CDDD1B02E9A9A36BAF4FF479888B57AEC0F3E0EB2B0EC5953B2491BE8E51EA3"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaMgr.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "2538FD1B5192DF8F158B2E119AC1179BF868C579DE93A54F10C4DFF90FFD4DB6"
-  },
-  {
-    "file": "src/modules/Eluna/LuaValue.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "A5933E33B0430285DC93362047684C16ECD6499796D4E238354360036B76415B"
-  },
-  {
-    "file": "src/modules/Eluna/LuaEngine.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "ai_update",
-      "movement",
-      "summons",
-      "death_reset",
-      "threat"
-    ],
-    "sha256": "7AA20717061B5DDB3E931B6ACEC0948BB68773F71828B18F940DD5B9966FEF25"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaCompat.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "5126D91BF404D4B08999198FB6D2785851E902491ED8F04C6420A348979BF1EC"
-  },
-  {
-    "file": "src/modules/Eluna/ElunaTemplate.cpp",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "1D35ACBA77DD189E628EB5F414F5375877F5923277927317D8E8BC4A49A78F45"
-  },
-  {
-    "file": "src/modules/Eluna/LuaValue.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [],
-    "sha256": "27CE37B9BCB04E6D798C291C079C47FEED78868B496C9A73C5EC89B25B68B207"
-  },
-  {
     "file": "modules/mod-dungeon-clear/src/DcStrategyGate.cpp",
     "cmake_listed": null,
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
     "sha256": "5B9A659E2F3CF568DABCC4F895891658391B29044AE2B7CCC565115AA3BF0BC4"
-  },
-  {
-    "file": "src/modules/Eluna/methods/VMangos/UnitMethods.h",
-    "cmake_listed": null,
-    "addsc": [],
-    "loader_calls": [],
-    "dependency_signals": [
-      "spells",
-      "movement",
-      "threat"
-    ],
-    "sha256": "3F4617034F1898ECA6656842673B49C4E63F9621D571F27BA9CCF945B43381A0"
   },
   {
     "file": "modules/mod-dungeon-clear/t/TestEventRegistry.cpp",
@@ -18179,7 +16883,7 @@
       "spells",
       "death_reset"
     ],
-    "sha256": "D4493BE9145CF6309C4DB654385B2C11AD90B4D4EF2B0651F64FBE664E866674"
+    "sha256": "8147A31F4107A7123DBD0E576E259C1AFA18AD80310A3D526F316A1B37E0B7F9"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/TravelRoutePolicy.h",
@@ -19000,7 +17704,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "B58EE4D851EE2A7BCD0F598670D4C3BAFD093EE04694594B3E9EF405B44E594A"
+    "sha256": "E126B3269E71FA832A54EA169EDFCC5ABDBD7317E9C07F047B613B23FE8252FC"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/triggers/ChatCommandTrigger.h",
@@ -19122,7 +17826,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "1DB8DE29FA6A51225D6F3358BC07C5425421596EC6D6814CA29E89B9BAFA3328"
+    "sha256": "F7D8C67605A84386C07D1DDA0BBE6024EACC689AD4370A053AF486685D87F0DD"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/deathknight/DKActions.cpp",
@@ -19382,7 +18086,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "35603D7763CDE0B2D22F9D80D826A1E5E00C9EC670199E63BB1C368C7F4B62F7"
+    "sha256": "F6193951310138802EF82C02CA032BEDB28BE1559BCF23958768B8EE0F6101DA"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/paladin/PaladinActions.cpp",
@@ -19480,7 +18184,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "6D0C2BC876B136B2E5547A114AEA658CACB6107F5036F419A8E9D6E1C635BF7A"
+    "sha256": "C59BEE7995BD6553A47BABA47D56253EEB015A3A71C1BC7C722A403CC9F81A2D"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/Trigger.h",
@@ -19738,7 +18442,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "47E729E12CDE5E5C99AC9C1403248E43DDF8B6EBCB788E2F9B6FC6618EAA7EFD"
+    "sha256": "AF98939348E59C6FCA551EC3F94A92B1D2A8C932D97DF194A82C8DE3A7BE913C"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/deathknight/DKTriggers.cpp",
@@ -19850,7 +18554,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "9C7B51373043A82FEC566EF1148D42D0A7CD5AA073745694D6DC3C6DE41B7C70"
+    "sha256": "92E311167363755C73105846F7105EAC3EDF56B4205D0D4C05095D294B8E4D79"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/RangeValues.h",
@@ -20455,7 +19159,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "B440A56EA740660C619FC6ABDEBAFA0D40D0D905C847777B2C39508BA8FA0DC1"
+    "sha256": "45E82505CA3BEC4FF6358B2FBBE7C21FC901E0A08351F3B3C9FCA3EBF0170C67"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/TalentSpecValue.h",
@@ -20871,7 +19575,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "74CD498ABB50608B74AEB9EED02347F065933C37098B58652919CCED8F5E8E19"
+    "sha256": "47A77714A4507AC1F3FE0C90782C9E37CA8332D3739284E9BE2B38C0AF0D969C"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/NearestGameObjects.cpp",
@@ -22719,7 +21423,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "26987D3A4BF6EF9FC4A2F19272B2AEE50E49AB0452FBED3143822A55AF7B780E"
+    "sha256": "9EF703614DB7ED6DDDE13EB937FC29BD6907D6C8B40DF1E466F9477935F512D2"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/mage/MageStrategy.cpp",
@@ -24736,7 +23440,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "9E70D99FFCB3E57EF1ADF68605FC5B22AC8564BC82B52D7881C2D4FA60C53BE3"
+    "sha256": "700E5542EE3EC3F497B5F4E7BC2E4913801CA884F60E82D5EFDD0D486DE78CD3"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/ChooseRpgTargetAction.h",
@@ -25040,7 +23744,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "567B777A08D529CE5A584B192542466DF44E1AAA3C5E884C1DA9F1A37AD9CEFF"
+    "sha256": "84964B730240B0EFE980D90594999BB2A08AEDE0EFB3B1BC1CA3EC0D6300F8BE"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/AttackAction.cpp",
@@ -25877,7 +24581,7 @@
       "death_reset",
       "async"
     ],
-    "sha256": "FD1946117891935EE480D681210F0E7C3DB0FD35B87841DA32DB840584C806B0"
+    "sha256": "75DD2F037D07EB76CDAC4D3A2B321B24DD5413E2AE664695478C747BCCA635EF"
   },
   {
     "file": "src/game/BattleLog.cpp",
@@ -25885,7 +24589,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "3F8517EAF6D2324BDB54E97C9FCA32231A2944B816754DA475BDE05B690545C4"
+    "sha256": "201F3B4F4E6776EC4A4DA2B97AFE8F03373000BB6189CB837FECACF425EC2164"
   },
   {
     "file": "src/game/BattleLog.h",

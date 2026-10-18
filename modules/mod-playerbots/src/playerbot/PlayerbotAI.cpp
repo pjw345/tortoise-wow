@@ -916,6 +916,39 @@ bool PlayerbotAI::CanPlayerMasterChase(Unit* target)
         !sServerFacade.IsFriendlyTo(bot, target) && target->HasUnitState(UNIT_STAT_FLEEING));
 }
 
+Unit* PlayerbotAI::GetPlayerMasterFleeingControlTarget(SpellEntry const* spell)
+{
+    if (!spell || spell->SpellFamilyName != SPELLFAMILY_PALADIN ||
+        !HasActivePlayerMaster() || IsRealPlayer() || IsInPvp() || !bot->IsInWorld() ||
+        !bot->GetGroup()) return nullptr;
+    bool stun = false;
+    for (int i = 0; i < MAX_EFFECT_INDEX; ++i)
+    {
+        if (Spells::IsDirectDamageEffect(spell->Effect[i]) ||
+            (Spells::IsEffectAppliesAura(spell->Effect[i]) &&
+                Spells::IsDamagingAuraEffect(spell->EffectApplyAuraName[i]))) return nullptr;
+        stun = stun || (Spells::IsEffectAppliesAura(spell->Effect[i]) &&
+            spell->EffectApplyAuraName[i] == SPELL_AURA_MOD_STUN);
+    }
+    if (!stun) return nullptr;
+    SpellRangeEntry const* range = sServerFacade.LookupSpellRangeEntry(spell->rangeIndex);
+    if (!range) return nullptr;
+    // Native engaged attackers only: no selection of idle nearby mobs or pursuit.
+    for (ObjectGuid guid : aiObjectContext->GetValue<std::list<ObjectGuid>>("attackers")->Get())
+    {
+        Unit* enemy = GetUnit(guid);
+        if (!enemy || !IsSafe(bot, enemy) || enemy->FindMap() != bot->FindMap() ||
+            !enemy->IsInWorld() || !enemy->IsAlive() || !enemy->HasUnitState(UNIT_STAT_FLEEING) ||
+            sServerFacade.IsFriendlyTo(bot, enemy) || !bot->IsWithinLOSInMap(enemy) ||
+            !bot->IsWithinDistInMap(enemy, range->maxRange) ||
+            PossibleAttackTargetsValue::HasBreakableCC(enemy, bot) ||
+            PossibleAttackTargetsValue::HasUnBreakableCC(enemy, bot) ||
+            !PossibleAttackTargetsValue::IsPossibleTarget(enemy, bot, range->maxRange, false)) continue;
+        return enemy;
+    }
+    return nullptr;
+}
+
 bool PlayerbotAI::ShouldAssistPlayerMaster()
 {
     return sPlayerbotAIConfig.assistPlayerMaster && HasActivePlayerMaster() &&
@@ -968,7 +1001,7 @@ Unit* PlayerbotAI::GetPlayerMasterAttackTarget()
             if (patient && patient->FindMap() == bot->FindMap() && patient->IsInWorld() &&
                 patient->IsPlayer() && patient->IsAlive() && bot->IsInGroup(patient->ToPlayer()) &&
                 IsHeal(patient->ToPlayer()) && !IsTank(patient->ToPlayer()) &&
-                enemy->CanReachWithMeleeAttack(patient)) return enemy;
+                enemy->CanReachWithMeleeAttack(patient) && enemy->CanReachWithMeleeAttack(bot)) return enemy;
         }
         // Keep holding the engaged enemy until the tank recovers its attention.
         if (engaged(current) && canAttack(current) && current->GetVictim() == bot) return current;
@@ -1016,6 +1049,9 @@ bool PlayerbotAI::IsPlayerMasterSpellAllowed(SpellEntry const* spell, Unit* targ
                 return false;
         }
     }
+    // Allow only in-range pure stun control of an already engaged runner. Damage,
+    // attack focus and every movement/pursuit restriction remain unchanged.
+    if (target && target == GetPlayerMasterFleeingControlTarget(spell)) return true;
     if (spell && !IsPositiveSpell(spell) && !CanPlayerMasterChase(target) && !IsRanged(bot))
         return false;
     if (!ShouldAssistPlayerMaster() || !spell || IsPositiveSpell(spell))
@@ -1511,6 +1547,10 @@ void PlayerbotAI::OnResurrected()
 {
     if (IsStateActive(BotState::BOT_STATE_DEAD) && sServerFacade.IsAlive(bot))
     {
+        // Covers accepted player resurrection/self-resurrection as well as reclaim.
+        aiObjectContext->GetValue<bool>("corpse run")->Set(false);
+        aiObjectContext->GetValue<bool>("spirit healer requested")->Set(false);
+        aiObjectContext->GetValue<bool>("should spirit healer")->Reset();
         // Stop following on resurrected
         if ((HasStrategy("follow", BotState::BOT_STATE_COMBAT) || HasStrategy("wander", BotState::BOT_STATE_COMBAT)) &&
             !(HasStrategy("follow", BotState::BOT_STATE_NON_COMBAT) || HasStrategy("wander", BotState::BOT_STATE_NON_COMBAT)))
@@ -3248,6 +3288,22 @@ uint32 PlayerbotAI::GetPartyHealingPressure(Unit* target)
     return uint32(std::min<uint64>(pressure, target->GetMaxHealth()));
 }
 
+uint32 PlayerbotAI::GetPreparedPartyHealing(Player* caster, Spell* cast, Unit* target)
+{
+    if (!caster || !cast || !cast->m_spellInfo || !target || caster->FindMap() != bot->FindMap() ||
+        target->FindMap() != bot->FindMap() || !caster->IsInWorld() || !target->IsInWorld()) return 0;
+    uint64 amount = 0;
+    for (uint8 i = 0; i < MAX_EFFECT_INDEX; ++i)
+    {
+        if (cast->m_spellInfo->Effect[i] != SPELL_EFFECT_HEAL) continue;
+        // No RNG, scripts, modifier charges or live Spell argument in prediction.
+        int32 base = std::max(0, cast->m_currentBasePoints[i] + 1);
+        uint32 heal = caster->SpellHealingBonusDone(target, cast->m_spellInfo, SpellEffectIndex(i), base, HEAL);
+        amount += target->SpellHealingBonusTaken(caster, cast->m_spellInfo, SpellEffectIndex(i), heal, HEAL);
+    }
+    return uint32(std::min<uint64>(amount, target->GetMaxHealth()));
+}
+
 uint32 PlayerbotAI::GetPendingPartyHealing(Unit* target)
 {
     if (!UsesCoordinatedPartyHealing() || !target || target->FindMap() != bot->FindMap()) return 0;
@@ -3263,18 +3319,7 @@ uint32 PlayerbotAI::GetPendingPartyHealing(Unit* target)
             cast->m_targets.getUnitTargetGuid() != target->GetObjectGuid() ||
             cast->m_spellInfo->IsChanneledSpell() || !member->IsWithinLOSInMap(target)) continue;
         if (cast->m_spellInfo->powerType == POWER_MANA && member->GetPower(POWER_MANA) < cast->GetPowerCost()) continue;
-        for (uint8 i = 0; i < MAX_EFFECT_INDEX; ++i)
-        {
-            if (cast->m_spellInfo->Effect[i] != SPELL_EFFECT_HEAL) continue;
-            // No RNG, proc/script replay or Spell pointer passed to bonus
-            // helpers: native DropModCharge does nothing with a null Spell.
-            // This omits crits/dice/level gains and dummy-triggered heals rather
-            // than pretending an uncertain spell guarantees coverage.
-            int32 base = std::max(0, cast->m_currentBasePoints[i] + 1);
-            uint32 amount = member->SpellHealingBonusDone(target, cast->m_spellInfo, SpellEffectIndex(i), base, HEAL);
-            amount = target->SpellHealingBonusTaken(member, cast->m_spellInfo, SpellEffectIndex(i), amount, HEAL);
-            healing += amount;
-        }
+        healing += GetPreparedPartyHealing(member, cast, target);
     }
     return uint32(std::min<uint64>(healing, target->GetMaxHealth()));
 }
@@ -3298,7 +3343,7 @@ bool PlayerbotAI::IsBackupPartyHealAllowed(Unit* target)
     if (!target || target->FindMap() != bot->FindMap() || !target->IsAlive()) return false;
     // Offheal is emergency cover, not a second routine healer. The critical
     // override used between primary healers must not override this role.
-    if (target->GetHealthPercent() > sPlayerbotAIConfig.criticalHealth &&
+    if (target->GetHealthPercent() > sPlayerbotAIConfig.lowHealth &&
         target->GetHealth() > GetPartyHealingPressure(target)) return false;
     // Even partial healing already underway belongs to the primary healer;
     // keep the backup on damage/protection rather than racing that cast.
@@ -3322,6 +3367,11 @@ bool PlayerbotAI::IsBackupPartyHealAllowed(Unit* target)
                 (!info->HasEffect(SPELL_EFFECT_HEAL) && !(info->SpellFamilyName == SPELLFAMILY_PALADIN &&
                     (info->SpellIconID == 70 || info->SpellIconID == 242))) ||
                 info->IsChanneledSpell() || !member->IsSpellReady(known.first)) continue;
+            // Native actions resolve the selected rank, not every affordable rank
+            // in the spellbook. An unusable low rank must not reserve the patient.
+            PlayerbotAI* healerAI = GetBotAI(member);
+            if (healerAI && healerAI->GetAiObjectContext()->GetValue<uint32>("spell id", info->SpellName[0])->Get() != known.first)
+                continue;
             SpellRangeEntry const* range = sServerFacade.LookupSpellRangeEntry(info->rangeIndex);
             if (!range || !member->IsWithinDistInMap(target, range->maxRange)) continue;
             if (info->powerType == POWER_MANA && member->GetPower(POWER_MANA) < Spell::CalculatePowerCost(info, member)) continue;

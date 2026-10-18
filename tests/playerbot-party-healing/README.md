@@ -16,3 +16,7 @@ Emergency backup cases distinguish moderate injuries from critical/lethal melee
 pressure, available priests from priests occupied elsewhere, and ongoing partial
 heals from uncovered emergencies. The actual action guard covers Turtle dummy
 Flash of Light/Holy Light and HEAL_MAX_HEALTH (Lay on Hands).
+
+Additional regressions: installed emergency trigger before/after invitation,
+low-health lead time without affordable priest healing, and near-full prepared
+direct-heal cancellation while preserving a heal under incoming pressure.

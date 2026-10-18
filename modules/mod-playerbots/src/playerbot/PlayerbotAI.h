@@ -421,6 +421,7 @@ public:
     bool UsesCoordinatedPartyHealing();
     uint32 GetPartyHealingPressure(Unit* target);
     uint32 GetPendingPartyHealing(Unit* target);
+    uint32 GetPreparedPartyHealing(Player* caster, Spell* cast, Unit* target);
     bool IsPartyHealCovered(Unit* target);
     bool IsBackupPartyHealAllowed(Unit* target);
 
@@ -692,6 +693,7 @@ public:
     //Bot has a master that is actively playing.
     bool HasActivePlayerMaster() const { return master && !GetBotAI(master); }
     bool CanPlayerMasterChase(Unit* target);
+    Unit* GetPlayerMasterFleeingControlTarget(SpellEntry const* spell);
     void SetPlayerMasterPursuitTarget(Unit* target) { playerMasterPursuitTarget = target ? target->GetObjectGuid() : ObjectGuid(); }
     bool ShouldAssistPlayerMaster();
     Unit* GetPlayerMasterAttackTarget();

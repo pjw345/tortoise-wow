@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(PlayerMasterFocusTest LANGUAGES CXX)
 enable_testing()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+ ../../modules/mod-playerbots/src/playerbot/PlayerbotAI.cpp
+ ../../modules/mod-playerbots/src/playerbot/strategy/mage/MageTriggers.h)
 set(CORE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 file(READ "${CORE_ROOT}/modules/mod-playerbots/src/playerbot/PlayerbotAI.cpp" source)
 string(FIND "${source}" "bool PlayerbotAI::CanPlayerMasterChase(" start)
@@ -19,3 +22,10 @@ if(MSVC)
 endif()
 add_test(NAME PlayerMasterFocusTest COMMAND PlayerMasterFocusTest)
 set_tests_properties(PlayerMasterFocusTest PROPERTIES TIMEOUT 20)
+
+file(READ "${CORE_ROOT}/modules/mod-playerbots/src/playerbot/strategy/mage/MageTriggers.h" mage_source)
+string(FIND "${mage_source}" "    class BlinkTrigger" blink_start)
+string(FIND "${mage_source}" "    class ArcaneIntellectOnPartyTrigger" blink_end)
+math(EXPR blink_length "${blink_end}-${blink_start}")
+string(SUBSTRING "${mage_source}" ${blink_start} ${blink_length} blink_policy)
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/NativeBlink.inc" "${blink_policy}")

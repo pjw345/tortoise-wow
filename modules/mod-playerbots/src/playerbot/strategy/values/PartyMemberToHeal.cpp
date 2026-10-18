@@ -1,6 +1,7 @@
 
 #include "playerbot/playerbot.h"
 #include "PartyMemberToHeal.h"
+#include "playerbot/BotActionLog.h"
 #include "playerbot/PlayerbotAIConfig.h"
 #include "playerbot/ServerFacade.h"
 
@@ -153,7 +154,11 @@ Unit* PartyMemberToHeal::Calculate()
             bool tankB = right->IsPlayer() && ai->IsTank(right->ToPlayer());
             return tankA && !tankB;
         });
-        return needHeals.front();
+        Unit* chosen = needHeals.front();
+        botdiag::BotActionLog::Write(ai, "HEAL_DECISION", "target=%u hp=%u max=%u pressure=%u pending=%u",
+            chosen->GetObjectGuid().GetCounter(), chosen->GetHealth(), chosen->GetMaxHealth(),
+            ai->GetPartyHealingPressure(chosen), ai->GetPendingPartyHealing(chosen));
+        return chosen;
     }
 
     bool preHealing = ai->HasStrategy("preheal", BotState::BOT_STATE_COMBAT);

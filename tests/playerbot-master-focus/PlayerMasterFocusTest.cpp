@@ -14,7 +14,7 @@ enum CurrentSpellTypes { CURRENT_MELEE_SPELL, CURRENT_GENERIC_SPELL, CURRENT_AUT
 constexpr int SPELL_EFFECT_INTERRUPT_CAST=68, UNIT_STAT_FLEEING=1, MAX_EFFECT_INDEX=3;
 namespace Spells {bool IsDirectDamageEffect(int e){return e==2;}bool IsEffectAppliesAura(int e){return e==6;}bool IsDamagingAuraEffect(int a){return a==3;}}
 constexpr float PET_FOLLOW_DIST=2, PET_FOLLOW_ANGLE=1.57f;
-struct SpellEntry { uint32 Id=1; int Effect[3]={},EffectApplyAuraName[3]={}; bool wand=false; bool IsAutoRepeatRangedSpell()const{return wand;} bool positive=false,area=false,interrupt=false; bool IsAreaOfEffectSpell()const{return area;} };
+struct SpellEntry { uint32 Id=1,SpellFamilyName=0,rangeIndex=1; int Effect[3]={},EffectApplyAuraName[3]={}; bool wand=false; bool IsAutoRepeatRangedSpell()const{return wand;} bool positive=false,area=false,interrupt=false; bool IsAreaOfEffectSpell()const{return area;} };
 bool IsPositiveSpell(SpellEntry const* s){return s->positive;}
 bool IsSpellHaveEffect(SpellEntry const* s,int){return s->interrupt;}
 struct Spell { SpellEntry* m_spellInfo=nullptr; bool canInterrupt=true; struct { ObjectGuid guid; ObjectGuid getUnitTargetGuid(){return guid;} }m_targets; bool CanBeInterrupted(){return canInterrupt;} };
@@ -22,12 +22,13 @@ struct Motion { int followed=0; template<class T> void MoveFollow(T*,float,float
 struct CreatureAI { ReactStates react=REACT_DEFENSIVE; ReactStates GetReactState(){return react;} void SetReactState(ReactStates r){react=r;} };
 struct Pet; struct Player;
 enum class BotState { BOT_STATE_COMBAT };
-constexpr int CLASS_PALADIN=2;
-struct Unit { bool isPlayer=false,meleeReach=true; bool IsPlayer(){return isPlayer;} Player* ToPlayer(){return reinterpret_cast<Player*>(this);} bool IsAlive(){return alive;} void* FindMap(){return map;} bool CanReachWithMeleeAttack(Unit*){return meleeReach;} ObjectGuid guid; bool alive=true,friendly=false,safe=true,world=true,near=true,los=true,cc=false,attackable=true,fleeing=false; void* map=reinterpret_cast<void*>(1); Unit* chase=nullptr; Unit* victim=nullptr; std::string name="Add"; int stops=0; bool HasUnitState(int){return fleeing;} bool IsWithinLOSInMap(Unit*u){return u->los;} Unit* GetVictim(){return victim;} void AttackStop(){victim=nullptr;++stops;} void* GetMap(){return map;} bool IsInWorld(){return world;} bool IsWithinDistInMap(Unit*,float,bool){return near;} ObjectGuid GetObjectGuid(){return guid;} char const* GetName(){return name.c_str();} };
-struct Player : Unit { Player(){isPlayer=true;} int cls=1; int getClass(){return cls;} bool tank=false; bool healer=false,hasMana=true; float manaPercent=100; bool HasMana(){return hasMana;}float GetPowerPercent(){return manaPercent;}ObjectGuid selection; ObjectGuid GetSelectionGuid(){return selection;} bool grouped=true; Pet* pet=nullptr; std::set<Unit*> attackers; std::map<int,Spell*> spells; bool IsInGroup(Player*){return grouped;} Pet* GetPet(){return pet;} std::set<Unit*>& getAttackers(){return attackers;} Spell* GetCurrentSpell(CurrentSpellTypes t){return spells[t];} void InterruptSpell(CurrentSpellTypes t){spells[t]=nullptr;} };
+constexpr int CLASS_PALADIN=2,SPELLFAMILY_PALADIN=10,SPELL_AURA_MOD_STUN=12,SPELL_AURA_MOD_ROOT=26;
+struct Unit { bool rooted=false;bool HasAuraType(int){return rooted;}bool isPlayer=false,meleeReach=true; bool IsPlayer(){return isPlayer;} Player* ToPlayer(){return reinterpret_cast<Player*>(this);} bool IsAlive(){return alive;} void* FindMap(){return map;} bool CanReachWithMeleeAttack(Unit*){return meleeReach;} ObjectGuid guid; bool alive=true,friendly=false,safe=true,world=true,near=true,los=true,cc=false,attackable=true,fleeing=false; void* map=reinterpret_cast<void*>(1); Unit* chase=nullptr; Unit* victim=nullptr; std::string name="Add"; int stops=0; bool HasUnitState(int){return fleeing;} bool IsWithinLOSInMap(Unit*u){return u->los;} Unit* GetVictim(){return victim;} void AttackStop(){victim=nullptr;++stops;} void* GetMap(){return map;} bool IsInWorld(){return world;} bool IsWithinDistInMap(Unit*,float,bool=false){return near;} ObjectGuid GetObjectGuid(){return guid;} char const* GetName(){return name.c_str();} };
+struct Player : Unit { Player(){isPlayer=true;}void* GetGroup(){return grouped?this:nullptr;} int cls=1; int getClass(){return cls;} bool tank=false; bool healer=false,hasMana=true; float manaPercent=100; bool HasMana(){return hasMana;}float GetPowerPercent(){return manaPercent;}ObjectGuid selection; ObjectGuid GetSelectionGuid(){return selection;} bool grouped=true; Pet* pet=nullptr; std::set<Unit*> attackers; std::map<int,Spell*> spells; bool IsInGroup(Player*){return grouped;} Pet* GetPet(){return pet;} std::set<Unit*>& getAttackers(){return attackers;} Spell* GetCurrentSpell(CurrentSpellTypes t){return spells[t];} void InterruptSpell(CurrentSpellTypes t){spells[t]=nullptr;} };
 struct Pet:Unit { CreatureAI brain; Motion motion; CreatureAI* AI(){return &brain;} Motion* GetMotionMaster(){return &motion;} };
-struct PossibleAttackTargetsValue {static bool IsPossibleTarget(Unit*u,Player*,float,bool){return u->near&&u->attackable&&!u->cc;}};
-struct Facade { Unit* GetChaseTarget(Unit*u){return u->chase;}  bool IsAlive(Unit* u){return u->alive;} bool IsFriendlyTo(Unit*,Unit* u){return u->friendly;} }sServerFacade;
+struct PossibleAttackTargetsValue {static bool HasBreakableCC(Unit*u,Player*){return u->cc;}static bool HasUnBreakableCC(Unit*u,Player*){return u->cc;}static bool IsPossibleTarget(Unit*u,Player*,float,bool){return u->near&&u->attackable&&!u->cc;}};
+struct SpellRangeEntry {float maxRange=10;};
+struct Facade { SpellRangeEntry range;SpellRangeEntry const* LookupSpellRangeEntry(uint32){return &range;} Unit* GetChaseTarget(Unit*u){return u->chase;}  bool IsAlive(Unit* u){return u->alive;} bool IsFriendlyTo(Unit*,Unit* u){return u->friendly;} }sServerFacade;
 struct Config { bool assistPlayerMaster=true; float sightDistance=60; }sPlayerbotAIConfig;
 struct WorldTimer { static uint32 now; static uint32 getMSTime(){return now;} static uint32 getMSTimeDiff(uint32 a,uint32 b){return b-a;} }; uint32 WorldTimer::now=100;
 enum class PlayerbotSecurityLevel { PLAYERBOT_SECURITY_ALLOW_ALL };
@@ -40,13 +41,29 @@ struct PlayerbotAI { Player *bot=nullptr,*master=nullptr; Context storage; Conte
  bool HasActivePlayerMaster(){return master && activeMaster;} bool IsRealPlayer(){return real;} bool IsInPvp(){return pvp;} bool IsSafe(Player* p){return p&&p->safe;} static bool IsSafe(Player*,Unit* p){return p&&p->safe;}
  Unit* GetUnit(ObjectGuid g){return world[g.value];} void SpellInterrupted(uint32){++interrupted;}
  bool TellPlayerNoFacing(Player*,std::string text,PlayerbotSecurityLevel,bool,bool){if(silent)return false;warnings.push_back(text);return true;}
- static bool IsHeal(Player*p){return p->healer;} bool IsRanged(Player*){return ranged;} void StopMoving(){++movementStops;bot->chase=nullptr;playerMasterPursuitTarget=ObjectGuid();} bool CanPlayerMasterChase(Unit*);
+ static bool IsHeal(Player*p){return p->healer;} bool IsRanged(Player*){return ranged;} void StopMoving(){++movementStops;bot->chase=nullptr;playerMasterPursuitTarget=ObjectGuid();} bool CanPlayerMasterChase(Unit*);Unit* GetPlayerMasterFleeingControlTarget(SpellEntry const*);
  bool ShouldAssistPlayerMaster(); Unit* GetPlayerMasterAttackTarget(); bool IsPlayerMasterAttackAllowed(Unit*); bool IsPlayerMasterSpellAllowed(SpellEntry const*,Unit*); void UpdatePlayerMasterAssist();
 };
 #include "NativeMasterFocus.inc"
+struct Trigger {PlayerbotAI* ai;Player* bot;Trigger(PlayerbotAI*a,char const*,int):ai(a),bot(a->bot){}virtual bool IsActive(){return false;}};
+#include "NativeBlink.inc"
 void check(bool b,char const* label){if(!b)throw std::runtime_error(label);}
 int main(){try{
  Player bot,master; Unit primary,add; primary.guid=ObjectGuid(1); add.guid=ObjectGuid(2); PlayerbotAI ai; ai.bot=&bot;ai.master=&master;ai.world[1]=&primary;ai.world[2]=&add;
+ BlinkTrigger blink(&ai);bot.rooted=true;
+ check(!blink.IsActive(),"owned PvE mage does not automatically Blink into unknown landing area");
+ ai.activeMaster=false;check(blink.IsActive(),"free-bot Blink retained");ai.activeMaster=true;
+ ai.pvp=true;check(blink.IsActive(),"PvP Blink retained");ai.pvp=false;
+ ai.real=true;check(blink.IsActive(),"real-player Blink retained");ai.real=false;bot.rooted=false;
+ SpellEntry stun;stun.SpellFamilyName=SPELLFAMILY_PALADIN;stun.Effect[0]=6;stun.EffectApplyAuraName[0]=SPELL_AURA_MOD_STUN;
+ ai.storage.attackers.value={primary.guid};primary.fleeing=true;
+ check(ai.GetPlayerMasterFleeingControlTarget(&stun)==&primary,"near engaged runner can be controlled");
+ check(ai.IsPlayerMasterSpellAllowed(&stun,&primary),"pure stun allowed without melee pursuit");
+ check(!ai.CanPlayerMasterChase(&primary)&&!ai.IsPlayerMasterAttackAllowed(&primary),"stun exception never enables chase or melee damage");
+ primary.near=false;check(!ai.GetPlayerMasterFleeingControlTarget(&stun),"distant runner cannot recruit movement");primary.near=true;
+ primary.cc=true;check(!ai.GetPlayerMasterFleeingControlTarget(&stun),"existing crowd control protected");primary.cc=false;
+ stun.Effect[1]=2;check(!ai.GetPlayerMasterFleeingControlTarget(&stun),"damage spell cannot use pure control exception");stun.Effect[1]=0;
+ ai.storage.attackers.value.clear();check(!ai.GetPlayerMasterFleeingControlTarget(&stun),"idle hostile cannot become runner target");primary.fleeing=false;
  check(ai.ShouldAssistPlayerMaster(),"grouped human PvE policy");
  check(!ai.GetPlayerMasterAttackTarget(),"selection alone cannot pull");
  check(!ai.IsPlayerMasterAttackAllowed(&add),"no victim forbids independent add");

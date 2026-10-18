@@ -94,6 +94,12 @@ bool HealTargetFullHealthTrigger::IsActive()
                 {
                     uint32 healValue = currentSpell->GetDamage();
                     uint32 needHeal = pTarget->GetMaxHealth() - pTarget->GetHealth();
+                    if (ai->UsesCoordinatedPartyHealing())
+                    {
+                        // GetDamage is normally zero while a direct heal is PREPARING.
+                        healValue = ai->GetPreparedPartyHealing(bot, currentSpell, pTarget);
+                        needHeal += ai->GetPartyHealingPressure(pTarget);
+                    }
                     if (healValue > needHeal && float((needHeal * 100.0f) / healValue) < 50.0f)
                     {
                         status = "almost fullhp";

@@ -141,6 +141,9 @@ namespace ai
                 return false;
             }
 
+            SET_AI_VALUE(bool, "spirit healer requested", false);
+            RESET_AI_VALUE(bool, "should spirit healer");
+            ai->StopMoving();
             SET_AI_VALUE(bool, "corpse run", true);
             sLog.outString("[BOT CORPSE] %s: corpse run command received - overriding wait-for-master, running to corpse", bot->GetName());
             ai->TellPlayerNoFacing(requester, "Running to my corpse", PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);

@@ -1,1 +1,6 @@
 Extracts actual safety/reclaim methods, the human-master regroup branch and self-resurrection execution. Stubs discovery, geometry and native session acceptance; verifies policy ordering and no premature native requests, ghost regroup, retained native delay/rejection, explicit movement and spirit/self-resurrection boundaries. CMake + CTest does not simulate live map pathfinding or gameplay; native core handlers still own actual corpse range and resurrection semantics.
+
+Additional regression: actual revive intent supersedes corpse run, corpse
+routing and reclaim yield while graveyard recovery is pending, and a later
+corpse-run command replaces that intent. This does not simulate graveyard
+pathfinding or native spirit-healer penalties.
