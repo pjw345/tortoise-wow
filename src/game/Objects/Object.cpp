@@ -19,6 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "BattleLog.h"
 #include "Object.h"
 #include "DetailedWorkDiagnostics.h"
 #include <shared_mutex>
@@ -4208,6 +4209,7 @@ float WorldObject::GetSpellResistChance(Unit const* victim, uint32 schoolMask, b
 
 void WorldObject::SendSpellMiss(Unit *target, uint32 spellID, SpellMissInfo missInfo) const
 {
+    BattleLog::Miss(this, target, spellID, int(missInfo));
     WorldPacket data(SMSG_SPELLLOGMISS, (4 + 8 + 1 + 4 + 8 + 1));
     data << uint32(spellID);
     data << GetObjectGuid();
@@ -4327,6 +4329,7 @@ int32 WorldObject::DealHeal(Unit *pVictim, uint32 addhealth, SpellEntry const *s
     }
 
     int32 gain = pVictim->ModifyHealth(int32(addhealth));
+    BattleLog::Heal(this, pVictim, addhealth, gain, spellProto, critical);
 
     WorldObject* pHealer = this;
 
@@ -4384,7 +4387,9 @@ void WorldObject::EnergizeBySpell(Unit* pVictim, uint32 spellId, uint32 amount, 
     }
 
     // needs to be called after sending spell log
+    uint32 battleBefore = pVictim->GetPower(powerType);
     pVictim->ModifyPower(powerType, amount);
+    BattleLog::PowerGain(this, pVictim, spellId, int(powerType), battleBefore, pVictim->GetPower(powerType), pVictim->GetMaxPower(powerType));
 }
 
 void WorldObject::SendEnergizeSpellLog(Unit const* pVictim, uint32 SpellID, uint32 Damage, Powers powertype) const

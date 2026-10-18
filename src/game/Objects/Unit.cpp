@@ -18,6 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "BattleLog.h"
 #include "Unit.h"
 #include "BotMovementDiagnostics.h"
 #include "ArchitectureDiagnostics.h"
@@ -826,6 +827,7 @@ uint32 Unit::DealDamage(Unit* pVictim, uint32 damage, CleanDamage const* cleanDa
 
     if (!damage)
     {
+        BattleLog::Damage(this, pVictim, 0, 0, damagetype, spellProto, cleanDamage, spell, pVictim->HasUnitState(UNIT_STAT_FLEEING));
         if (cleanDamage)
         {
             //sLog.outString("[ABSORB] Deal Damage sur %s (Dam%u|Absorb%u|Resist%u)", pVictim->GetName(), cleanDamage->damage, cleanDamage->absorb, cleanDamage->resist);
@@ -983,6 +985,8 @@ uint32 Unit::DealDamage(Unit* pVictim, uint32 damage, CleanDamage const* cleanDa
         }
     }
 
+    uint32 battleEffective = 0;
+    bool battleWasFleeing = BattleLog::Enabled() && BattleLog::IsRunner(pVictim);
     if (health <= damage && pVictim->GetInvincibilityHpThreshold() == 0)
     {
         if (auto player = pVictim->ToPlayer(); player && player->IsHardcore() && sWorld.HitsDiffThreshold())
@@ -993,6 +997,7 @@ uint32 Unit::DealDamage(Unit* pVictim, uint32 damage, CleanDamage const* cleanDa
 
         DEBUG_FILTER_LOG(LOG_FILTER_DAMAGE, "DealDamage: victim just died");
         Kill(pVictim, spellProto, durabilityLoss);
+        battleEffective = health > pVictim->GetHealth() ? health - pVictim->GetHealth() : 0;
 
         // last damage from non m_duel opponent or opponent controlled creature
         if (duel_hasEnded)
@@ -1014,7 +1019,7 @@ uint32 Unit::DealDamage(Unit* pVictim, uint32 damage, CleanDamage const* cleanDa
         if (health > pVictim->GetInvincibilityHpThreshold())
         {
             uint32 dmg = std::min<uint32>(health - pVictim->GetInvincibilityHpThreshold(), damage);
-            pVictim->ModifyHealth(-(int32)dmg);
+            battleEffective = uint32(-pVictim->ModifyHealth(-(int32)dmg));
         }
 
         if (damagetype != DOT)
@@ -1179,6 +1184,7 @@ uint32 Unit::DealDamage(Unit* pVictim, uint32 damage, CleanDamage const* cleanDa
         }
     }
 
+    BattleLog::Damage(this, pVictim, damage, battleEffective, damagetype, spellProto, cleanDamage, spell, battleWasFleeing);
     return damage;
 }
 
@@ -1434,6 +1440,7 @@ void Unit::Kill(Unit* pVictim, SpellEntry const *spellProto, bool durabilityLoss
         pVictim->SetHealth(0);
         DEBUG_FILTER_LOG(LOG_FILTER_DAMAGE, "SET JUST_DIED");
         pVictim->SetDeathState(JUST_DIED);
+        BattleLog::Decision(pVictim, this, "death", "native_kill");
         ScriptRegistry<UnitScript>::ForEachEnabledHook(UNITHOOK_ON_UNIT_DEATH, [&](UnitScript* script)
         {
             script->OnUnitDeath(pVictim, this);
@@ -3882,6 +3889,7 @@ bool Unit::AddSpellAuraHolder(SpellAuraHolder *holder)
         extern void BotActionLog_LogAuraApply(Unit* target, uint32 spellId, int32 durationMs, uint64 casterGuidRaw);
         int32 durMs = holder->GetAuraMaxDuration();
         BotActionLog_LogAuraApply(this, holder->GetId(), durMs, holder->GetCasterGuid().GetRawValue());
+        BattleLog::Aura(this, holder->GetId(), holder->GetCasterGuid().GetRawValue(), true, durMs);
     }
 
     return true;
@@ -4463,6 +4471,7 @@ void Unit::RemoveSpellAuraHolder(SpellAuraHolder *holder, AuraRemoveMode mode)
     {
         extern void BotActionLog_LogAuraRemove(Unit* target, uint32 spellId, uint64 casterGuidRaw);
         BotActionLog_LogAuraRemove(this, holder->GetId(), holder->GetCasterGuid().GetRawValue());
+        BattleLog::Aura(this, holder->GetId(), holder->GetCasterGuid().GetRawValue(), false, 0);
     }
 
     // Statue unsummoned at holder remove
@@ -5260,6 +5269,7 @@ bool Unit::Attack(Unit* victim, bool meleeAttack)
 
     m_attacking = victim;
     m_attacking->_addAttacker(this);
+    BattleLog::Attack(this, victim);
 
     if (Creature* pCreature = ToCreature()) // && !((Creature*)this)->GetLinkGroup())
     {
@@ -6717,6 +6727,7 @@ void Unit::SetInCombatState(uint32 combatTimer, Unit* pEnemy)
 
     if (!wasInCombat)
     {
+        BattleLog::Combat(this, pEnemy, true);
         ScriptRegistry<UnitScript>::ForEachEnabledHook(UNITHOOK_ON_UNIT_ENTER_COMBAT, [&](UnitScript* script)
         {
             script->OnUnitEnterCombat(this, pEnemy);
@@ -6896,6 +6907,7 @@ void Unit::ClearInCombat()
     m_combatTimer = 0;
     RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
     RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PET_IN_COMBAT);
+    if (wasInCombat) BattleLog::Combat(this, nullptr, false);
 
     if (IsPlayer())
     {
@@ -8937,7 +8949,8 @@ void Unit::SetPowerPercent(Powers power, float percent)
 
 void Unit::SetPower(Powers power, uint32 val)
 {
-    if (GetPower(power) == val)
+    uint32 battleBefore = GetPower(power);
+    if (battleBefore == val)
         return;
 
     uint32 maxPower = GetMaxPower(power);
@@ -8945,6 +8958,7 @@ void Unit::SetPower(Powers power, uint32 val)
         val = maxPower;
 
     SetStatInt32Value(UNIT_FIELD_POWER1 + power, val);
+    BattleLog::PoolChange(this, int(power), battleBefore, val, maxPower);
 
     // group update
     if (Player* pPlayer = ToPlayer())

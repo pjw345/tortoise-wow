@@ -551,3 +551,15 @@ low-mana healer's wand; hunter auto shot and unqualified interruption are unchan
 Focused source-extracted tests: tests/playerbot-wand-handoff. This addresses a
 source-level starvation mechanism; live healing, target/fleeing acceptance and
 Alon's DPS/backup-healer configuration remain separate and unverified.
+
+
+## Party battle sessions (2026-10-18)
+
+BattleLog hooks native attack intent, accepted casts, resource mutation, damage,
+healing, threat and movement without selecting AI targets or changing actions.
+A human attack starts one party window; native combat flags across all roster
+members and observed pets end it. Recorder state contains scalar snapshots only
+and is serialized across map owners. Cross-map state is not dereferenced; gaps,
+roster changes, logout, shutdown and caps mark captures incomplete.
+Ordinary fleeing and assistance movement are distinct native states and both
+are observed. Full contracts, controls and reporting: PARTY_BATTLE_LOG.md.

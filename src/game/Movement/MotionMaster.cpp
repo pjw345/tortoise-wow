@@ -19,6 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "BattleLog.h"
 #include "MotionMaster.h"
 #include "ArchitectureDiagnostics.h"
 #include "CreatureAISelector.h"
@@ -410,6 +411,7 @@ void MotionMaster::MoveChase(Unit* target, float dist, float angle)
     if (!target)
         return;
 
+    BattleLog::Movement(m_owner, target, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), "chase_request");
     DEBUG_FILTER_LOG(LOG_FILTER_AI_AND_MOVEGENSS, "%s chase to %s", m_owner->GetGuidStr().c_str(), target->GetGuidStr().c_str());
 
     if (m_owner->IsPlayer())
@@ -445,6 +447,7 @@ void MotionMaster::MoveFollow(Unit* target, float dist, float angle)
 
 void MotionMaster::MovePoint(uint32 id, float x, float y, float z, uint32 options, float speed, float finalOrientation)
 {
+    BattleLog::Movement(m_owner, nullptr, x, y, z, "point_request");
     DEBUG_FILTER_LOG(LOG_FILTER_AI_AND_MOVEGENSS, "%s targeted point (Id: %u X: %f Y: %f Z: %f)", m_owner->GetGuidStr().c_str(), id, x, y, z);
 
     if (m_owner->IsPlayer())

@@ -1,4 +1,5 @@
 
+#include "BattleLog.h"
 #include "playerbot/playerbot.h"
 #include "playerbot/BotDiagnostics.h"
 #include "playerbot/PerformanceMonitor.h"
@@ -2647,7 +2648,11 @@ bool MovementAction::ChaseTo(WorldObject* obj, float distance, float angle)
 {
     Unit* pursuit = dynamic_cast<Unit*>(obj);
     if (pursuit && !ai->CanPlayerMasterChase(pursuit))
+    {
+        if (BattleLog::Enabled())
+            BattleLog::Movement(bot, pursuit, pursuit->GetPositionX(), pursuit->GetPositionY(), pursuit->GetPositionZ(), "chase_blocked_policy");
         return false;
+    }
     if (!ai->CanMove())
     {
         sLog.outDetail("[BOT CHASE] %s: CanMove() blocked", bot->GetName());
@@ -2681,6 +2686,8 @@ bool MovementAction::ChaseTo(WorldObject* obj, float distance, float angle)
 
     UpdateMovementState();
     ai->SetPlayerMasterPursuitTarget(pursuit);
+    if (BattleLog::Enabled())
+        BattleLog::Movement(bot, pursuit, obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ(), "chase_intent");
 
     bot->HandleEmoteState(0);
     if (!bot->IsStandState())

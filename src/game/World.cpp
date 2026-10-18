@@ -23,6 +23,7 @@
     \ingroup world
 */
 
+#include "BattleLog.h"
 #include "World.h"
 #include "ExecutionWatch.h"
 #include "ArchitectureDiagnostics.h"
@@ -222,6 +223,7 @@ uint32 World::GetCurrentMSTime() const
 
 void World::Shutdown()
 {
+    BattleLog::Shutdown();
     ScriptRegistry<WorldScript>::ForEachEnabledHook(WORLDHOOK_ON_SHUTDOWN, [](WorldScript* script)
     {
         script->OnShutdown();
@@ -615,6 +617,7 @@ bool World::RemoveQueuedSession(WorldSession* sess)
 
 void World::LoadConfigSettingsCommonPart(bool reload)
 {
+    BattleLog::Configure();
 #ifdef USE_ANTICHEAT
     sAnticheatConfig.SetSource("anticheat.conf");
     sAnticheatConfig.loadConfigSettings();

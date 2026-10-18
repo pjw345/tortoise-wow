@@ -238,6 +238,8 @@ class Spell
         // bot sets spell->m_clientCast = true on spells it queues.
         // Penqle has no equivalent; stub field is never read.
         bool m_clientCast = false;
+        uint64 m_battleLogCastId = 0;
+        uint32 m_battleLogItemId = 0;
         // SpellStart: cmangos returns SpellCastResult; Penqle uses prepare().
         SpellCastResult SpellStart(SpellCastTargets const* targets, Aura* triggeredByAura = nullptr) {
             return prepare(targets ? *targets : SpellCastTargets(), triggeredByAura);

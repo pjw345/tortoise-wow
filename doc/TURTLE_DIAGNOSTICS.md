@@ -1071,3 +1071,17 @@ qualified interrupt prerequisite followed by the actual heal/DPS outcome.
 The focused tests extract production prerequisite/interrupt methods, native
 wand update and native GCD checks to cover starvation and handoff without
 changing live bot settings. No diagnostic toggle is enabled by this change.
+
+
+## Party battle sessions (2026-10-18)
+
+Temporary opt-in diagnostics: BattleLog.Enabled=0 by default. PlayerGuid can
+restrict capture to one human initiator. Native event hooks are unsampled; party
+state samples are limited to twice per second. Files are bounded by size, events,
+time, concurrent sessions and retention; limits end captures as incomplete.
+Default retention is 100 files of about 8 MiB each. Hooks add disabled checks;
+enabled sessions serialize bounded JSON/file writes, with a flush each second.
+This diagnostic overhead needs a live trial. No AI decision changes or hidden
+fallbacks. Disable and restart/reload to stop capture; existing logs remain.
+Remove BattleLog hooks/adapter/recorder, configuration and report tool when
+retiring this diagnostic. Details: docs/PARTY_BATTLE_LOG.md.

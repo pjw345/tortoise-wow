@@ -19,6 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "BattleLog.h"
 #include "ThreatManager.h"
 #include "Creature.h"
 #include "CreatureAI.h"
@@ -624,6 +625,7 @@ void ThreatManager::addThreatDirectly(Unit* pVictim, float threat)
     if (!pVictim || pVictim == getOwner() || !pVictim->IsAlive() || !pVictim->IsInMap(getOwner()))
         return;
 
+    float battleBefore = BattleLog::Enabled() ? getThreat(pVictim, true) : 0.0f;
     HostileReference* ref = iThreatContainer.addThreat(pVictim, threat);
     // Ref is not in the online refs, search the offline refs next
     if (!ref)
@@ -637,6 +639,11 @@ void ThreatManager::addThreatDirectly(Unit* pVictim, float threat)
         hostileReference->addThreat(threat);                // now we add the real threat
         if (pVictim->GetTypeId() == TYPEID_PLAYER && ((Player*)pVictim)->IsGameMaster())
             hostileReference->setOnlineOfflineState(false); // GM is always offline
+    }
+    if (BattleLog::Enabled())
+    {
+        float total = getThreat(pVictim, true);
+        BattleLog::Threat(getOwner(), pVictim, total - battleBefore, total);
     }
 }
 
@@ -697,6 +704,8 @@ void ThreatManager::tauntFadeOut(Unit *pTaunter)
 
 void ThreatManager::setCurrentVictim(HostileReference* pHostileReference)
 {
+    if (iCurrentVictim != pHostileReference && pHostileReference)
+        BattleLog::Decision(getOwner(), pHostileReference->getTarget(), "threat_victim", "changed");
     iCurrentVictim = pHostileReference;
 }
 

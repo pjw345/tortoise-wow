@@ -20,6 +20,7 @@
  */
 
 #include "Creature.h"
+#include "BattleLog.h"
 #include "ArchitectureDiagnostics.h"
 #include "Database/DatabaseEnv.h"
 #include "WorldPacket.h"
@@ -1167,6 +1168,7 @@ bool Creature::DoFleeToGetAssistance()
         Cell::VisitGridObjects(this, searcher, radius);
 
         SetNoSearchAssistance(true);
+        BattleLog::Decision(this, GetVictim(), "flee_for_assistance", pCreature ? "helper_found" : "no_helper");
 
         if (!pCreature)
             SetFleeing(true, GetVictim()->GetObjectGuid(), 0, sWorld.getConfig(CONFIG_UINT32_CREATURE_FAMILY_FLEE_DELAY));
@@ -2333,6 +2335,7 @@ void Creature::CallAssistance()
 
             if (!assistList.empty())
             {
+                BattleLog::Decision(this, GetVictim(), "call_assistance", "scheduled");
                 AssistDelayEvent *e = new AssistDelayEvent(GetVictim()->GetObjectGuid(), *this, assistList);
                 m_Events.AddEvent(e, m_Events.CalculateTime(sWorld.getConfig(CONFIG_UINT32_CREATURE_FAMILY_ASSISTANCE_DELAY)));
             }
@@ -2345,6 +2348,7 @@ void Creature::CallForHelp(float fRadius)
     if (fRadius <= 0.0f || !GetVictim() || IsPet() || IsCharmed())
         return;
 
+    BattleLog::Decision(this, GetVictim(), "call_for_help", "request");
     MaNGOS::CallOfHelpCreatureInRangeDo u_do(this, GetVictim(), fRadius);
     MaNGOS::CreatureWorker<MaNGOS::CallOfHelpCreatureInRangeDo> worker(this, u_do);
     Cell::VisitGridObjects(this, worker, fRadius);
