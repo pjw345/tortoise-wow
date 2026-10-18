@@ -19480,7 +19480,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "7E9814D920021742A2AB2750B492C8431BFE4BAEFC4B0D877AE326F4C300A104"
+    "sha256": "6D0C2BC876B136B2E5547A114AEA658CACB6107F5036F419A8E9D6E1C635BF7A"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/Trigger.h",
@@ -25708,7 +25708,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "E44A12410E5EC4B0E273CE7E440E38195002001269F9A0F7E1A5D151D40FABA7"
+    "sha256": "2D8E94F90091E33929D4D90D394B8A1067DF88EB668BC79CAC5AD156728DF1E1"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/LootRollAction.cpp",
@@ -25877,7 +25877,7 @@
       "death_reset",
       "async"
     ],
-    "sha256": "14703DA88D42F88283C1A5F83C6C3E3DED762BEC6D0DB088CB662652C1EFE6F8"
+    "sha256": "FD1946117891935EE480D681210F0E7C3DB0FD35B87841DA32DB840584C806B0"
   },
   {
     "file": "src/game/BattleLog.cpp",
