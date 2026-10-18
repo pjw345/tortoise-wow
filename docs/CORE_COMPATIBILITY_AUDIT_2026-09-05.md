@@ -165,3 +165,15 @@ GCD, movement and action lifecycles remain in use. Source-extracted tests cover
 stale target caches, live chase cancellation, adjacent stunned runners, protected
 CC, delayed emergency coverage, retarget continuity and range boundaries.
 Full server/image compilation and playtesting remain deferred by user request.
+
+
+### 2026-10-18 automatic gathering admission follow-up
+
+Traced automatic gather timer -> AddGatheringLootAction -> AddAllLootAction ->
+LootObject::IsApproachSafe, and compared explicit UseGameObject -> OpenLootAction.
+Removed the duplicate follower-only hard-coded hostile scan in favor of the
+existing configured admission/selection/movement safety contract. Solo and group
+leader strong-hostile policy remains native. Focused extracted regressions cover
+configured radii, opt-out, owner gathering ranges, LOS/eligibility/bags, legacy
+solo/leader cases and opt-in rejection logging. Full server/image build and live
+acceptance are pending; the running server was not changed for this follow-up.

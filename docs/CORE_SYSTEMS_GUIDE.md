@@ -722,3 +722,21 @@ attackability and tapping remain checked. A stunned runner may be struck in
 melee reach without pursuit; ranged bots retain their finish-from-position lock.
 
 See PARTY_COMBAT_SAFETY_2026-10-18.md for battle evidence and validation limits.
+
+
+## Gathering follower safety consistency (2026-10-18)
+
+Automatic gathering previously rejected grouped followers for any hostile within
+an extra hard-coded 30 yards, before the shared loot admission path applied
+LootHostileDistance (20 on the test VM). Grouped followers now use that existing
+shared safety check, including its configured opt-out and later selection/movement
+rechecks. Solo/group-leader gathering retains its native 30-yard strong-hostile
+policy. Gathering discovery range, LOS, native profession/tool/loot eligibility,
+bag capacity and spell opening are unchanged. Explicit `u go` retains its native
+manual interaction path; it does not establish automatic admission eligibility.
+
+Opt-in debug-loot gathering rejects now identify LOS, loot policy, gathering
+range and solo-hostile failures. The shared parent reports configured hostile
+blocks. No new UI chatter, configuration, logging stream or scheduler is added.
+This corrects a proven policy inconsistency; the old Alon action log only said
+FAILED and does not prove which filter rejected his particular Copper Vein.
