@@ -20,3 +20,11 @@ Flash of Light/Holy Light and HEAL_MAX_HEALTH (Lay on Hands).
 Additional regressions: installed emergency trigger before/after invitation,
 low-health lead time without affordable priest healing, and near-full prepared
 direct-heal cancellation while preserving a heal under incoming pressure.
+
+
+Safety regressions cover survival until native heal arrival, damage pushback
+represented by a longer remaining timer, timely/late primary ownership, idle
+primary cast-time availability, useful friendly/self heal continuity during
+enemy retargeting, dead/foreign-map patients and native learned selection range.
+The retarget fixture executes the production guard; the other native targeting
+and movement dependencies remain outside this isolated fixture.

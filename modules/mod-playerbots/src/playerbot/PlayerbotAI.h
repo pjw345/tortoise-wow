@@ -421,6 +421,9 @@ public:
     bool UsesCoordinatedPartyHealing();
     uint32 GetPartyHealingPressure(Unit* target);
     uint32 GetPendingPartyHealing(Unit* target);
+    bool CanWaitForPartyHeal(Unit* target, uint32 delayMs);
+    bool IsCastingUsefulPartyHeal();
+    float GetPartyHealingSelectionRange();
     uint32 GetPreparedPartyHealing(Player* caster, Spell* cast, Unit* target);
     bool IsPartyHealCovered(Unit* target);
     bool IsBackupPartyHealAllowed(Unit* target);

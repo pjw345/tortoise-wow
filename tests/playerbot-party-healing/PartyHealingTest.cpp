@@ -9,14 +9,14 @@
 using uint8=uint8_t;using uint32=uint32_t;using uint64=uint64_t;using int32=int32_t;
 constexpr int MAX_EFFECT_INDEX=3,SPELL_STATE_PREPARING=1,SPELL_STATE_CASTING=2,SPELL_STATE_FINISHED=3;
 constexpr int UNIT_FIELD_MINDAMAGE=1,UNIT_FIELD_MAXDAMAGE=2,UNIT_FIELD_FLAGS=3,UNIT_FLAG_SILENCED=4,UNIT_STAT_CAN_NOT_REACT=1;
-constexpr int SPELL_EFFECT_HEAL=10,SPELL_EFFECT_HEAL_MAX_HEALTH=67,POWER_MANA=0,HEAL=0,SPELLFAMILY_PALADIN=10,SPELLCATEGORY_RANGED_WEAPON=351,RANGED_ATTACK=0;
+constexpr int SPELL_EFFECT_HEAL=10,SPELL_EFFECT_HEAL_MAX_HEALTH=67,POWER_MANA=0,HEAL=0,SPELLFAMILY_PALADIN=10,SPELLCATEGORY_RANGED_WEAPON=351,RANGED_ATTACK=0,BASE_ATTACK=0;
 enum SpellEffectIndex { EFFECT_INDEX_0,EFFECT_INDEX_1,EFFECT_INDEX_2 };
 enum CurrentSpellTypes { CURRENT_MELEE_SPELL,CURRENT_GENERIC_SPELL,CURRENT_AUTOREPEAT_SPELL,CURRENT_CHANNELED_SPELL,CURRENT_MAX_SPELL };
 enum class BotState { BOT_STATE_COMBAT,BOT_STATE_NON_COMBAT };
 struct ObjectGuid { int id=0;uint32 GetCounter(){return id;}bool operator!=(ObjectGuid b)const{return id!=b.id;}bool operator==(ObjectGuid b)const{return id==b.id;} };
 struct SpellEntry
 {
-    std::string SpellName[1]={"heal"};uint32 Id=1,SpellFamilyName=0,SpellIconID=0,Category=0,rangeIndex=1;int powerType=0;uint32 cost=100;
+    std::string SpellName[1]={"heal"};uint32 Id=1,SpellFamilyName=0,SpellIconID=0,Category=0,rangeIndex=1;int powerType=0;uint32 cost=100,castTime=2500;
     int Effect[3]={SPELL_EFFECT_HEAL,0,0};bool channel=false;
     bool IsChanneledSpell()const{return channel;}
     bool HasEffect(int value)const{for(int e:Effect)if(e==value)return true;return false;}
@@ -35,6 +35,8 @@ struct Unit
     float GetFloatValue(int){return hit;}std::set<Unit*>& getAttackers(){return attackers;}
     ObjectGuid GetObjectGuid(){return {id};}bool IsPlayer(){return player;}Player* ToPlayer(){return reinterpret_cast<Player*>(this);}
     bool IsWithinDistInMap(Unit*,float){return reach;}
+    uint32 firstSwing=5000,swingTime=2000;float distance=0;
+    uint32 GetAttackTimer(int){return firstSwing;}uint32 GetAttackTime(int){return swingTime;}
     uint32 SpellHealingBonusTaken(Player*,SpellEntry const*,SpellEffectIndex,uint32 n,int,uint32=1,Spell* s=nullptr){if(s)throw std::runtime_error("prediction got live Spell");return n;}
 };
 struct Spell
@@ -52,7 +54,7 @@ struct Player:Unit
     Group* GetGroup(){return group;}Spell* GetCurrentSpell(CurrentSpellTypes slot){return casts[slot];}
     std::map<uint32,int>const& GetSpellMap(){return known;}bool HasSpell(uint32 id){return known.count(id);}
     bool IsSpellReady(uint32){return ready;}bool HasUnitState(int){return stunned;}bool HasFlag(int,int){return silenced;}
-    bool IsInCombat(){return true;}uint32 GetAttackTimer(int){return 0;}
+    bool IsInCombat(){return true;}bool IsInGroup(Player* p){return group&&group==p->group;}
     void InterruptSpell(CurrentSpellTypes slot){if(casts[slot])casts[slot]->m_spellInfo=nullptr;casts[slot]=nullptr;++cancels;}
     uint32 SpellHealingBonusDone(Unit*,SpellEntry const*,SpellEffectIndex,int32 n,int,uint32=1,Spell* s=nullptr){if(s)throw std::runtime_error("prediction got live Spell");return n;}
 };
@@ -72,12 +74,15 @@ struct PlayerbotAI
     bool UsesCoordinatedPartyHealing();uint32 GetPartyHealingPressure(Unit*);uint32 GetPendingPartyHealing(Unit*);
     uint32 GetPreparedPartyHealing(Player*,Spell*,Unit*);
     bool IsPartyHealCovered(Unit*);bool IsBackupPartyHealAllowed(Unit*);
+    bool CanWaitForPartyHeal(Unit*,uint32);bool IsCastingUsefulPartyHeal();float GetPartyHealingSelectionRange();
+    float GetRange(std::string){return 30;}bool GetSpellRange(std::string,float* out){*out=40;return true;}
 };
 Player* mappedHealer=nullptr;PlayerbotAI* mappedAI=nullptr;
 PlayerbotAI* GetBotAI(Player* p){return p==mappedHealer?mappedAI:nullptr;}
 namespace botdiag {struct BotActionLog {template<class...T>static void Write(T...) {}};}
-struct Facade {std::map<uint32,SpellEntry*> spells;SpellRangeEntry range;SpellEntry const* LookupSpellInfo(uint32 id){return spells[id];}SpellRangeEntry const* LookupSpellRangeEntry(uint32){return &range;}}sServerFacade;
-struct {uint32 criticalHealth=20,lowHealth=40,globalCoolDown=1500,reactDelay=100;}sPlayerbotAIConfig;
+uint32 GetSpellCastTime(SpellEntry const* s,Player*){return s->castTime;}
+struct Facade {bool IsAlive(Unit* u){return u->alive;}float GetDistance2d(Unit* a,Unit* b){return std::abs(a->distance-b->distance);}std::map<uint32,SpellEntry*> spells;SpellRangeEntry range;SpellEntry const* LookupSpellInfo(uint32 id){return spells[id];}SpellRangeEntry const* LookupSpellRangeEntry(uint32){return &range;}}sServerFacade;
+struct {uint32 criticalHealth=20,lowHealth=40,globalCoolDown=1500,reactDelay=100;float sightDistance=60,healDistanceBg=25;}sPlayerbotAIConfig;
 struct Event {};
 struct CastAuraSpellAction {bool baseUseful=true;int executed=0;bool isUseful(){return baseUseful;}bool Execute(Event&){++executed;return true;}};
 struct CastHealingSpellAction:CastAuraSpellAction {PlayerbotAI* ai;Player* bot;Unit* patient;uint32 GetSpellID(){return 1;}Unit* GetTarget(){return patient;}bool isUseful();bool Execute(Event&);};
@@ -146,6 +151,36 @@ int main(){try{
     otherPriest.alive=false;
     check(ai.IsBackupPartyHealAllowed(&patient),"dead second priest cannot cover uncovered emergency");rp.nextRef=nullptr;
     pending.m_targets.guid=patient.GetObjectGuid();pending.m_currentBasePoints[0]=499;b.casts.clear();
+    // Native swing timers decide whether prepared coverage can arrive in time.
+    patient.hp=250;attacker.hit=100;attacker.firstSwing=500;attacker.swingTime=1000;
+    pending.timer=2500;b.casts[CURRENT_GENERIC_SPELL]=&pending;
+    check(!ai.CanWaitForPartyHeal(&patient,pending.timer)&&ai.GetPendingPartyHealing(&patient)==0,
+        "three impending hits make slow pending heal too late");
+    check(ai.IsBackupPartyHealAllowed(&patient),"late primary cast does not suppress backup emergency");
+    pending.timer=200;check(ai.GetPendingPartyHealing(&patient)==500&&!ai.IsBackupPartyHealAllowed(&patient),
+        "near-complete heal retains primary ownership before next hit");
+    pending.timer=2500;attacker.firstSwing=5000;
+    check(ai.GetPendingPartyHealing(&patient)==500,"no imminent melee lets pending primary finish");
+    attacker.firstSwing=0;attacker.swingTime=1000;patient.hp=90;b.casts.clear();b.known[1]=1;
+    check(ai.IsBackupPartyHealAllowed(&patient),"idle priest with only a too-slow heal cannot reserve lethal patient");
+    attacker.firstSwing=100;heal.castTime=0;check(!ai.IsBackupPartyHealAllowed(&patient),"ready instant primary rescue retains role preference");heal.castTime=2500;
+    attacker.firstSwing=5000;attacker.swingTime=2000;patient.hp=700;
+    // Preserve actual useful friendly preparation across enemy retargeting.
+    a.healer=true;Spell continuity;continuity.m_spellInfo=&heal;continuity.m_targets.patient=&patient;
+    a.casts[CURRENT_GENERIC_SPELL]=&continuity;
+    check(ai.IsCastingUsefulPartyHeal()&&!CanRetarget(&ai),"enemy selection yields to live useful party heal");
+    patient.hp=1000;patient.attackers.clear();check(CanRetarget(&ai),"unneeded full-health heal does not block retargeting");
+    patient.hp=700;patient.alive=false;check(CanRetarget(&ai),"dead patient releases retarget guard");patient.alive=true;
+    patient.map=reinterpret_cast<void*>(2);check(CanRetarget(&ai),"foreign map patient releases guard");patient.map=a.map;
+    ai.owned=false;check(CanRetarget(&ai),"free-bot retarget policy unchanged");ai.owned=true;
+    ai.pvp=true;check(CanRetarget(&ai),"PvP retarget policy unchanged");ai.pvp=false;
+    continuity.m_targets.patient=&a;a.hp=500;check(!CanRetarget(&ai),"useful self-heal is preserved");
+    heal.Effect[0]=0;check(CanRetarget(&ai),"offensive generic cast does not gain healing protection");heal.Effect[0]=SPELL_EFFECT_HEAL;
+    a.casts.clear();a.hp=700;patient.hp=700;patient.distance=33;a.known[1]=1;
+    check(ai.GetPartyHealingSelectionRange()==40&&InHealingSelectionRange(&ai,&a,&patient),"learned 40-yard heal selects injured member beyond AI 30-yard preference");
+    patient.distance=41;check(!InHealingSelectionRange(&ai,&a,&patient),"native learned range still bounds discovery");
+    ai.owned=false;patient.distance=33;check(!InHealingSelectionRange(&ai,&a,&patient),"free bot keeps configured selection range");ai.owned=true;
+    patient.distance=0;a.known.clear();patient.attackers.insert(&attacker);a.healer=false;
     patient.hp=700;b.mana=0;attacker.hit=800;
     check(ai.IsBackupPartyHealAllowed(&patient),"immediate lethal pressure permits uncovered emergency backup");
     attacker.hit=100;b.mana=700;

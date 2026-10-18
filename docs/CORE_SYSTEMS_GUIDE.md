@@ -690,3 +690,35 @@ healing estimates/selector/interrupts/emergency trigger, master focus/control,
 Blink and battle observation. These tests stub native geometry/handlers and do
 not establish gameplay success or all-encounter balance. Alin's full-party wipes,
 runner-control opportunities and one-command graveyard recovery need playtesting.
+
+
+## Heal continuity, timely rescue and bounded pursuit (2026-10-18)
+
+The b74fc343 Alin capture exposed a useful friendly Heal interrupted by hostile
+retargeting, a delayed self-heal suppressing backup until death, and an AI
+patient-range cutoff narrower than learned heals. SelectNewTargetAction now
+yields while an owned coordinated party heal is preparing on a live injured
+same-map patient (including self). Existing qualified overheal cancellation and
+native spell checks still own cancellation/completion.
+
+Pending direct healing is counted only if the patient can survive estimated
+native melee swings before its current remaining timer expires. Primary healer
+availability applies the same check to native modified cast time. Mean native
+melee damage and attack timers supply the estimate; ranged damage, DoTs, crits,
+armor, absorption and future movement are not forecast. An unsafe estimate
+allows emergency cover; it never makes a cast succeed or clears a GCD. Timely
+partial healing retains the backup role preference. The learned healing range
+extends party selection beyond the preferred 30 yards when a known native heal
+can reach farther, capped at sight distance. Free bots, PvP and preheal retain
+selection/coordination boundaries.
+
+Owned-PvE focus requires actual enemy combat contact even if the human already
+has an attack victim set. Hostile pursuit is limited to the existing follow
+range around the same-map group leader; movement provenance cancels stale
+chases. Stationary defense is separate from pursuit permission, preserving
+self/party defense and fighting after the leader dies. A non-breakable stun
+alone permits finishing an engaged target. Breakable CC, fear/root, LOS,
+attackability and tapping remain checked. A stunned runner may be struck in
+melee reach without pursuit; ranged bots retain their finish-from-position lock.
+
+See PARTY_COMBAT_SAFETY_2026-10-18.md for battle evidence and validation limits.

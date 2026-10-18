@@ -116,6 +116,9 @@ bool AttackEnemyFlagCarrierAction::isUseful()
 
 bool SelectNewTargetAction::Execute(Event& event)
 {
+    // Hostile target death/change must not cancel a useful friendly heal.
+    // Let native completion and the qualified overheal reaction own that cast.
+    if (ai->IsCastingUsefulPartyHeal()) return false;
     Unit* target = AI_VALUE(Unit*, "current target");
     if (target && sServerFacade.UnitIsDead(target))
     {

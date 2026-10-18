@@ -1178,3 +1178,13 @@ flush/storage overhead. Disable the existing action-log flag to remove output;
 retain only the focused records once playtest regression is accepted. BattleLog
 retention remains separate. Do not interpret an absent action-result record as
 proof that a direct chat action did not execute.
+
+
+## Timely healing interpretation (2026-10-18)
+
+HEAL_DECISION pending now excludes direct heals whose remaining native cast
+timer cannot beat estimated melee damage. A zero does not mean nobody is casting:
+correlate cast_start/cast_finish, native failure codes, HP and attack timing in
+the battle capture. Current mean-melee estimates are conservative and omit
+ranged bursts/DoTs/mitigation. No new logging stream, per-tick trace or retention
+policy was added for this follow-up; existing action logging can be disabled.
