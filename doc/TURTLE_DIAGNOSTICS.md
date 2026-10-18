@@ -1199,4 +1199,6 @@ the existing parent reject record. `loot-policy` is a grouped category, not a
 claim of a particular missing skill/tool. Failed discovery before a valid
 LootObject exists remains unclassified. Output follows the existing scan rate,
 logger and retention controls. Disable `debug loot` to remove these records.
-No extra chat messages or logging thread were introduced.
+Automatic scans add no chat messages or logging thread. Explicit `u go` can
+reply when a trained gatherer lacks the required skill, including the node and
+current/required values. Bots without the profession remain silent.

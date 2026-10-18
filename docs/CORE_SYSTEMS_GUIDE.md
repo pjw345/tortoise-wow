@@ -440,8 +440,10 @@ This corrects the fixed 24-second normal item wait without changing regeneration
 item costs, healing priorities, recovery start thresholds or unrelated waits.
 
 UseGameObject decodes the chest through native LootObject before selecting it.
-Mining/herbalism requirements the bot lacks (or has insufficient skill for) are
-silent skips, without changing its selected loot or attempting open loot. Other
+Bots without Mining/Herbalism silently skip those nodes. An explicit use command
+with a trained but insufficient profession reports the formatted node and native
+current/required skill. Both cases leave selected loot untouched and do not
+attempt open loot. Automatic gathering remains silent. Other
 chests, lockpicking, eligible gatherers, missing-tool/open errors and existing
 quest-chest behavior retain their native paths and failure reports.
 

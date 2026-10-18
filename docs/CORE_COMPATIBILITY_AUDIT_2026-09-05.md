@@ -177,3 +177,10 @@ leader strong-hostile policy remains native. Focused extracted regressions cover
 configured radii, opt-out, owner gathering ranges, LOS/eligibility/bags, legacy
 solo/leader cases and opt-in rejection logging. Full server/image build and live
 acceptance are pending; the running server was not changed for this follow-up.
+
+Explicit use commands now distinguish a missing gathering profession (silent)
+from insufficient trained skill (one requester reply with native node link and
+current/required values). Both return before selecting or opening loot. Native
+LootObject lock requirements and GetSkillValue remain authoritative; automatic
+scan admission, tools and open-error handling are unchanged. The existing
+source-extracted profession-command fixture covers these boundaries.
