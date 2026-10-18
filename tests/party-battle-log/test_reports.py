@@ -1,3 +1,4 @@
+import csv
 import importlib.util
 import json
 from pathlib import Path
@@ -66,3 +67,33 @@ with tempfile.TemporaryDirectory() as directory:
     ev, err = reporter.read_capture(p)
     assert err and not reporter.analyze(ev, err)["complete"]
 print("Recorder output and battle report validation passed")
+
+# Wiring checks guard the native boundaries that standalone recorder fixtures cannot execute.
+def source(name):
+    return (root / name).read_text(encoding="utf-8")
+spell = source("src/game/Spells/Spell.cpp")
+assert spell.index('BattleLog::Cast(this, "cast_start")') < spell.index('OnSpellLaunch();', spell.index('BattleLog::Cast(this, "cast_start")'))
+launch = spell.index('BattleLog::Cast(this, "cast_launch")')
+assert spell.rfind('TakePower();', 0, launch) > spell.rfind('void Spell::cast(', 0, launch)
+assert 'BattleLog::Resource(this' in spell and 'BattleLog::ItemSpent(this' in spell
+assert 'BattleLog::PoolChange(this' in source("src/game/Objects/Unit.cpp")
+assert 'BattleLog::Heal' in source("src/game/Objects/Object.cpp")
+assert 'BattleLog::Heal' in source("src/game/Spells/SpellAuras.cpp")
+assert 'BattleLog::Decision(bot, nullptr, actionNode->getName()' in source("modules/mod-playerbots/src/playerbot/strategy/Engine.cpp")
+creature = source("src/game/Objects/Creature.cpp")
+flee = creature[creature.index('bool Creature::DoFleeToGetAssistance()'):creature.index('float Creature::GetFleeingSpeed()')]
+assert 'BattleLog::Decision(this, GetVictim(), "flee_for_assistance"' in flee
+assert 'ASSISTANCE_MOTION_TYPE' in source("src/game/BattleLog.cpp")
+
+with tempfile.TemporaryDirectory() as directory:
+    out = Path(directory) / "events.csv"
+    reporter.write_timeline([{"kind": "resource_spent", "elapsed_ms": 1000,
+                             "actor": dict(mage, name="=formula", mana_pct=70),
+                             "target": enemy, "amount": 100, "power_type": 1,
+                             "pool_before_pct": 80, "pool_after_pct": 70}], out)
+    with out.open(encoding="utf-8-sig", newline="") as stream:
+        row = next(csv.DictReader(stream))
+    assert row["actor"] == "'=formula" and row["rage_spent"] == "10.0"
+    assert row["resource_before_pct"] == "80" and row["resource_after_pct"] == "70"
+    assert row["actor_guid"] == "0x3"
+print("Native wiring and CSV validation passed")

@@ -827,7 +827,7 @@ uint32 Unit::DealDamage(Unit* pVictim, uint32 damage, CleanDamage const* cleanDa
 
     if (!damage)
     {
-        BattleLog::Damage(this, pVictim, 0, 0, damagetype, spellProto, cleanDamage, spell, pVictim->HasUnitState(UNIT_STAT_FLEEING));
+        BattleLog::Damage(this, pVictim, 0, 0, damagetype, spellProto, cleanDamage, spell, BattleLog::Enabled() && BattleLog::IsRunner(pVictim));
         if (cleanDamage)
         {
             //sLog.outString("[ABSORB] Deal Damage sur %s (Dam%u|Absorb%u|Resist%u)", pVictim->GetName(), cleanDamage->damage, cleanDamage->absorb, cleanDamage->resist);

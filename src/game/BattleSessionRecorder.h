@@ -82,7 +82,7 @@ struct Event
     Guid cast=0;
     unsigned spell=0, item=0;
     long long amount=0, effective=0, before=0, after=0, maximum=0;
-    int powerType=-1, result=0;
+    int powerType=-1, result=0, attackType=-1, damageType=-1;
     unsigned castMs=0, absorbed=0, outcome=0;
     long long resisted=0;
     bool periodic=false, critical=false, triggered=false, healing=false, hostile=false, wand=false, targetWasFleeing=false;
@@ -96,7 +96,7 @@ struct Event
           << ",\"before\":" << before << ",\"after\":" << after << ",\"maximum\":" << maximum << ",\"power_type\":" << powerType
           << ",\"pool_before_pct\":" << (maximum?Decimal(100.0*before/maximum):"null")
           << ",\"pool_after_pct\":" << (maximum?Decimal(100.0*after/maximum):"null")
-          << ",\"result\":" << result << ",\"periodic\":" << periodic << ",\"critical\":" << critical << ",\"triggered\":" << triggered
+          << ",\"attack_type\":" << attackType << ",\"damage_type\":" << damageType << ",\"result\":" << result << ",\"periodic\":" << periodic << ",\"critical\":" << critical << ",\"triggered\":" << triggered
           << ",\"healing\":" << healing << ",\"absorbed\":" << absorbed << ",\"resisted\":" << resisted << ",\"outcome\":" << outcome
           << ",\"hostile\":" << hostile << ",\"wand\":" << wand << ",\"target_was_fleeing\":" << targetWasFleeing
           << ",\"threat\":" << Decimal(threat) << ",\"threat_total\":" << Decimal(threatTotal) << ",\"detail\":" << Quote(detail);
@@ -238,8 +238,13 @@ private:
         if(e.kind=="cast_finish") s.pendingCasts.erase(e.cast);
         if(e.kind=="bot_context") s.context.insert(e.actor.guid);
         ++s.events;
-        std::string leader=s.actors.count(s.leader)?s.actors.at(s.leader).Json():"null";
-        Write(s,data+",\"leader\":"+leader+",\"leader_sample_age_ms\":"+std::to_string(now-s.observedAt[s.leader]),now);
+        std::string leader="null";
+        if(s.actors.count(s.leader))
+        {
+            Actor const& a=s.actors.at(s.leader);
+            leader="{\"guid\":"+Quote(std::to_string(a.guid))+",\"selected\":"+Quote(std::to_string(a.selected))+",\"alive\":"+(a.alive?"true":"false")+"}";
+        }
+        Write(s,data+",\"leader\":"+leader+",\"leader_sample_age_ms\":"+std::to_string(now>=s.observedAt[s.leader]?now-s.observedAt[s.leader]:0),now);
         }
     }
 public:

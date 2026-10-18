@@ -303,7 +303,11 @@ def write_timeline(events, path):
     fields = ["elapsed_seconds", "kind", "actor", "actor_guid", "target", "target_guid", "spell", "spell_name", "cast_id",
               "damage_effective", "heal_effective", "heal_raw", "resource", "resource_spent_raw", "rage_spent",
               "resource_before_pct", "resource_after_pct", "actor_mana_pct_at_event", "actor_rage_pct_at_event",
-              "item", "item_name", "item_consumed", "result", "detail"]
+              "item", "item_name", "item_consumed", "result", "detail",
+              "actor_health", "actor_max_health", "target_health", "target_max_health",
+              "actor_selected_guid", "actor_victim_guid", "leader_selected_guid", "leader_sample_age_ms",
+              "actor_x", "actor_y", "actor_z", "target_x", "target_y", "target_z",
+              "target_fleeing", "target_assistance_running", "actor_casting_spell", "actor_shooting_spell", "attack_type", "damage_type"]
     def safe(value):
         return "'" + value if isinstance(value, str) and value.startswith(("=", "+", "-", "@")) else value
     def guid(value):
@@ -314,7 +318,7 @@ def write_timeline(events, path):
         for e in events:
             a, b = e.get("actor") or {}, e.get("target") or {}
             kind, resource = e.get("kind"), POWER.get(e.get("power_type"), e.get("power_type"))
-            result = e.get("result", "")
+            result = e.get("result", "") if kind in {"cast_result", "cast_check", "cast_finish", "spell_miss"} else ""
             if kind in {"cast_result", "cast_check"}: result = CODES["SpellCastResult"].get(str(result), result)
             elif kind == "spell_miss": result = CODES["SpellMissInfo"].get(str(result), result)
             row = {"elapsed_seconds": e["elapsed_ms"] / 1000, "kind": kind, "actor": a.get("name", ""), "actor_guid": guid(a.get("guid")),
@@ -325,6 +329,17 @@ def write_timeline(events, path):
                    "resource_before_pct": e.get("pool_before_pct"), "resource_after_pct": e.get("pool_after_pct"),
                    "actor_mana_pct_at_event": a.get("mana_pct"), "actor_rage_pct_at_event": a.get("rage_pct"),
                    "item": e.get("item", ""), "item_name": e.get("item_name", ""), "item_consumed": e.get("amount") if kind == "item_spent" else "", "result": result, "detail": e.get("detail", "")}
+            row.update(actor_health=a.get("health"), actor_max_health=a.get("max_health"),
+                       target_health=b.get("health"), target_max_health=b.get("max_health"),
+                       actor_selected_guid=guid(a.get("selected")), actor_victim_guid=guid(a.get("target")),
+                       leader_selected_guid=guid((e.get("leader") or {}).get("selected")),
+                       leader_sample_age_ms=e.get("leader_sample_age_ms"),
+                       actor_x=a.get("x"), actor_y=a.get("y"), actor_z=a.get("z"),
+                       target_x=b.get("x"), target_y=b.get("y"), target_z=b.get("z"),
+                       target_fleeing=b.get("fleeing"), target_assistance_running=b.get("assistance_running"),
+                       actor_casting_spell=a.get("casting"), actor_shooting_spell=a.get("shooting"),
+                       attack_type=e.get("attack_type") if kind == "damage" else "",
+                       damage_type=e.get("damage_type") if kind == "damage" else "")
             writer.writerow({key: safe(value) for key,value in row.items()})
 
 

@@ -43,6 +43,7 @@ Actor Snapshot(Unit* u)
     a.assistanceRunning=motion==ASSISTANCE_MOTION_TYPE||motion==ASSISTANCE_DISTRACT_MOTION_TYPE;
     a.unitState=u->GetUnitState(); a.unitFlags=u->GetUInt32Value(UNIT_FIELD_FLAGS);
     if(Spell* cast=u->GetCurrentSpell(CURRENT_GENERIC_SPELL)) a.casting=cast->m_spellInfo->Id;
+    else if(Spell* channel=u->GetCurrentSpell(CURRENT_CHANNELED_SPELL)) a.casting=channel->m_spellInfo->Id;
     if(Spell* cast=u->GetCurrentSpell(CURRENT_AUTOREPEAT_SPELL)) a.shooting=cast->m_spellInfo->Id;
     a.x=u->GetPositionX(); a.y=u->GetPositionY(); a.z=u->GetPositionZ();
     if(Unit* target=u->GetVictim())
@@ -207,7 +208,12 @@ void Damage(Unit* actor,Unit* target,uint32 requested,uint32 effective,int type,
 {
     if(!Enabled()||(!Relevant(actor)&&!Relevant(target))) return;
     Event e=Make("damage",actor,target,info); e.amount=requested; e.effective=effective; e.periodic=type==DOT;
-    e.targetWasFleeing=targetWasFleeing;
+    e.targetWasFleeing=targetWasFleeing; e.damageType=type;
+    if(clean)
+    {
+        e.attackType=int(clean->attackType);
+        if(!info) e.spellName=clean->attackType==BASE_ATTACK?"Main-hand attack":clean->attackType==OFF_ATTACK?"Off-hand attack":"Ranged weapon attack";
+    }
     if(clean) { e.absorbed=clean->absorb; e.resisted=clean->resist; e.outcome=clean->hitOutCome; e.critical=clean->hitOutCome==MELEE_HIT_CRIT; }
     if(spell) e.cast=spell->m_battleLogCastId;
     recorder.Emit(e);
