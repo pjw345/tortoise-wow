@@ -1,0 +1,25 @@
+name: Party healing policy
+on:
+  pull_request:
+    paths:
+      - 'modules/mod-playerbots/**'
+      - 'tests/playerbot-party-healing/**'
+      - 'tests/playerbot-master-focus/**'
+      - 'tests/playerbot-wand-handoff/**'
+      - '.github/workflows/party-healing.yml'
+  workflow_dispatch:
+jobs:
+  policy:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        suite: [playerbot-party-healing, playerbot-master-focus, playerbot-wand-handoff]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: cmake -S tests/${{ matrix.suite }} -B build-policy
+      - run: cmake --build build-policy --config Release --parallel 2
+      - run: ctest --test-dir build-policy -C Release --output-on-failure

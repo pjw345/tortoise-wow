@@ -1100,3 +1100,50 @@ initial/attached casts and unattributed pool loss, and withhold efficiency ratio
 for affected characters. Pool loss is not assumed to be spell cost. Existing raw
 captures cannot recover missing cast phases. Focused adapter/report tests run on
 Windows; the full native build and gameplay validation await a server-off window.
+
+## Coordinated human-party healing (2026-10-18)
+
+Human-owned PvE companions use current same-map group casts to estimate pending
+single-target direct healing. Preparation, live caster/target, remaining cast,
+LOS and affordable power are required. Read prepared base points and native
+healing-done/taken bonuses without a Spell argument: DropModCharge is a no-op
+without that argument. Prediction does not roll RNG or run spell scripts/procs,
+consume mana/items or retain pointers. Crits, extra dice/level scaling, channels,
+HoTs, shields and Turtle dummy-triggered heals are not invented as guaranteed
+coverage. A native melee-swing pressure allowance and critical-health override
+allow multiple rescuers when required; ranged pressure and scripted healing are
+not fully predicted by this first change.
+
+The existing party patient selector accounts for pending coverage and pressure
+instead of distributing by healer roster index. Injured critical patients win;
+at equal urgency a tank wins the tie. Direct-heal action usefulness and actual
+queued execution recheck coverage. HoT/shield policy, explicit cast commands,
+free bots, PvP and the 50-percent offensive-spell cutoff retain their boundaries.
+
+The existing heal-interrupt reaction is added after saved strategies load for
+owned parties. Ordinary heal cast bars are PREPARING, not the native channel
+CASTING state. A heal-qualified native interrupt rechecks the patient's health
+at execution and copies spell identity before cancellation can destroy it. It
+never clears GCD or charges/refunds power itself.
+
+A DPS bot with offheal defers routine direct heals while a living same-map
+primary healer is unoccupied, in range/LOS, able to act and able to afford a
+known ready direct heal. Critical patients override the preference. Native
+wand auto-repeat does not make the primary unavailable; its existing qualified
+handoff remains responsible for stopping shooting. Vanilla Paladin offheal also
+covers the medium-health tier when primary healing is unavailable.
+
+The owned melee backup Paladin may override master focus to peel an already
+engaged, attackable, LOS-valid enemy currently within melee reach of a grouped
+primary healer. CC/runner policy remains enforced. Once holding that enemy it
+keeps it until the tank recovers its attention; distant ranged attackers do not
+qualify for this pursuit exception. No new roaming or pull targets are acquired.
+Alon's role is a separate reversible saved-strategy configuration: Retribution
+plus offheal rather than Holy, retaining his talents, gear and professions.
+
+Focused tests compile extracted production helpers, selector, interruption and
+action methods. Cover sufficient/partial pending healing, critical and incoming
+pressure, same-map ownership, unavailable primary healers, native dummy-effect
+Paladin heals, stale cancellation, healer peeling and return to master focus.
+Windows local tests passed; full Linux build and gameplay acceptance remain
+separate. Retest the 410-mana waste example and Priest/Paladin healing roles.

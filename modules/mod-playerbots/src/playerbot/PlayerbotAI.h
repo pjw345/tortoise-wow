@@ -418,6 +418,12 @@ public:
     void Reset(bool full = false);
     static bool IsTank(Player* player, bool inGroup = true);
     static bool IsHeal(Player* player, bool inGroup = true);
+    bool UsesCoordinatedPartyHealing();
+    uint32 GetPartyHealingPressure(Unit* target);
+    uint32 GetPendingPartyHealing(Unit* target);
+    bool IsPartyHealCovered(Unit* target);
+    bool IsBackupPartyHealAllowed(Unit* target);
+
     bool IsRanged(Player* player, bool inGroup = true);
     bool IsMelee(Player* player, bool inGroup = true);
     Creature* GetCreature(ObjectGuid guid) const;

@@ -2,6 +2,7 @@
 #include "playerbot/playerbot.h"
 #include "GenericActions.h"
 #include "UseItemAction.h"
+#include "playerbot/strategy/triggers/HealthTriggers.h"
 
 using namespace ai;
 
@@ -305,6 +306,27 @@ bool CastAoeHealSpellAction::isUseful()
     return CastSpellAction::isUseful();
 }
 
+bool CastHealingSpellAction::isUseful()
+{
+    if (!CastAuraSpellAction::isUseful()) return false;
+    if (!ai->UsesCoordinatedPartyHealing() || !bot->IsInCombat()) return true;
+    Unit* target = GetTarget();
+    if (!target || target->FindMap() != bot->FindMap()) return false;
+    SpellEntry const* info = sServerFacade.LookupSpellInfo(spellId);
+    if (!info || (!info->HasEffect(SPELL_EFFECT_HEAL) &&
+        !(info->SpellFamilyName == SPELLFAMILY_PALADIN && (info->SpellIconID == 70 || info->SpellIconID == 242))))
+        return true; // HoTs and shields retain native policy; Turtle Paladin heals use dummy effects.
+    return target->GetHealth() < target->GetMaxHealth() && !ai->IsPartyHealCovered(target) &&
+        ai->IsBackupPartyHealAllowed(target);
+}
+
+bool CastHealingSpellAction::Execute(Event& event)
+{
+    // A queued action must recheck coverage when it actually executes.
+    if (ai->UsesCoordinatedPartyHealing() && bot->IsInCombat() && !isUseful()) return false;
+    return CastAuraSpellAction::Execute(event);
+}
+
 bool HealHotPartyMemberAction::isUseful()
 {
     return HealPartyMemberAction::isUseful() && !ai->HasAura(GetSpellName(), GetTarget());
@@ -488,6 +510,11 @@ bool RemoveBuffAction::Execute(Event& event)
 
 bool InterruptCurrentSpellAction::isUseful()
 {
+    if (getQualifier() == "heal")
+    {
+        HealTargetFullHealthTrigger trigger(ai);
+        return trigger.IsActive();
+    }
     if (getQualifier() == "wand")
     {
         Spell* shooting = bot->GetCurrentSpell(CURRENT_AUTOREPEAT_SPELL);
@@ -505,6 +532,18 @@ bool InterruptCurrentSpellAction::isUseful()
 
 bool InterruptCurrentSpellAction::Execute(Event& event)
 {
+    if (getQualifier() == "heal")
+    {
+        // Re-evaluate the real patient after the reaction was queued: somebody
+        // injured again must not lose a useful heal to a stale full-HP event.
+        if (!isUseful()) return false;
+        Spell* cast = bot->GetCurrentSpell(CURRENT_GENERIC_SPELL);
+        if (!cast || !cast->CanBeInterrupted()) return false;
+        uint32 const spellId = cast->m_spellInfo->Id;
+        bot->InterruptSpell(CURRENT_GENERIC_SPELL);
+        ai->SpellInterrupted(spellId);
+        return true;
+    }
     if (getQualifier() == "wand")
     {
         if (!isUseful())
@@ -527,8 +566,9 @@ bool InterruptCurrentSpellAction::Execute(Event& event)
         Spell* currentSpell = bot->GetCurrentSpell((CurrentSpellTypes)type);
         if (currentSpell && currentSpell->CanBeInterrupted())
         {
+            uint32 const spellId = currentSpell->m_spellInfo->Id;
             bot->InterruptSpell((CurrentSpellTypes)type);
-            ai->SpellInterrupted(currentSpell->m_spellInfo->Id);
+            ai->SpellInterrupted(spellId);
             interrupted = true;
         }
     }

@@ -77,6 +77,8 @@ struct PlayerbotAI {
     bool IsPlayerMasterSpellAllowed(SpellEntry const*, Unit*) { return allowed; }
     void SpellInterrupted(uint32 id) { interruptedId = id; }
 };
+// Heal-qualified cancellation is exercised by playerbot-party-healing.
+struct HealTargetFullHealthTrigger { explicit HealTargetFullHealthTrigger(PlayerbotAI*){} bool IsActive(){return false;} };
 struct ServerFacade {
     std::unordered_map<uint32, SpellEntry*> spells;
     SpellEntry const* LookupSpellInfo(uint32 id) { auto i=spells.find(id); return i==spells.end() ? nullptr : i->second; }
