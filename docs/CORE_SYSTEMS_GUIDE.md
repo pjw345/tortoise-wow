@@ -486,3 +486,23 @@ Human-owned companions never pursue hostile fleeing units. Melee bots exclude ru
 ## Safe party corpse recovery (2026-10-17)
 
 Automatic corpse reclaim for active human-owned PvE companions requires a living, nearby, same-map/group leader out of combat with LOS, and no live hostile inside its native aggro radius at the bot revival position. A fresh unvalidated no-LOS discovery avoids ghost visibility/attackability and cached-target omissions; native WorldPosition aggro distances decide safety. Ghosts regroup toward their owner by default rather than independently running to the corpse. The native reclaim handler still enforces ghost state, delay and corpse radius; rejected requests no longer report success or clear corpse-run state. Explicit corpse run changes movement only, not reclaim safety. Explicit spirit-healer revive and accepted player resurrection requests retain native semantics. Automatic self-resurrection uses the same safety gate; explicit owner self-resurrection is preserved. Free bots, battleground recovery and real-player behaviour are unchanged.
+
+
+## Healer damage mana reserve (2026-10-17)
+
+Active human-owned bots with a healing strategy may start damaging spells only above
+50 percent mana. The shared IsPlayerMasterSpellAllowed hook rejects native direct
+damage effects and damaging aura applications at or below 50 percent, including
+mixed healing/damage spells. It is evaluated by the existing action isPossible and
+actual cast paths, independently of the living leader focus rule. Pure heals,
+resurrection, dispels and other utility keep their native rules; existing DoTs are
+not removed. Native ranged auto-repeat (wand Shoot) is exempt and ordinary melee
+attack permission is unchanged. Priest offdps queues Shoot regularly below its
+spell priorities, rather than waiting until the no-mana trigger, so a learned wand
+attack remains available while spell damage is refused. Native heal priorities,
+target/LOS/range, fleeing pursuit and free-bot behaviour are retained.
+
+Regression coverage in tests/playerbot-master-focus extracts the actual policy:
+0/49.9/50 percent reject damage and DoTs, 50.1 permits them; mixed positive spells,
+wand, heal, utility, melee, dead leader, non-healer and free-bot cases are covered.
+Gameplay acceptance must still check Mercy/Cria during a real fight.

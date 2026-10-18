@@ -11,9 +11,10 @@ using uint32=uint32_t; using uint8=uint8_t;
 struct ObjectGuid { int value=0; ObjectGuid()=default; explicit ObjectGuid(int n):value(n){} bool operator==(ObjectGuid b)const{return value==b.value;} bool operator!=(ObjectGuid b)const{return !(*this==b);} };
 enum ReactStates { REACT_PASSIVE, REACT_DEFENSIVE, REACT_AGGRESSIVE };
 enum CurrentSpellTypes { CURRENT_MELEE_SPELL, CURRENT_GENERIC_SPELL, CURRENT_AUTOREPEAT_SPELL, CURRENT_CHANNELED_SPELL, CURRENT_MAX_SPELL };
-constexpr int SPELL_EFFECT_INTERRUPT_CAST=68, UNIT_STAT_FLEEING=1;
+constexpr int SPELL_EFFECT_INTERRUPT_CAST=68, UNIT_STAT_FLEEING=1, MAX_EFFECT_INDEX=3;
+namespace Spells {bool IsDirectDamageEffect(int e){return e==2;}bool IsEffectAppliesAura(int e){return e==6;}bool IsDamagingAuraEffect(int a){return a==3;}}
 constexpr float PET_FOLLOW_DIST=2, PET_FOLLOW_ANGLE=1.57f;
-struct SpellEntry { uint32 Id=1; bool positive=false,area=false,interrupt=false; bool IsAreaOfEffectSpell()const{return area;} };
+struct SpellEntry { uint32 Id=1; int Effect[3]={},EffectApplyAuraName[3]={}; bool wand=false; bool IsAutoRepeatRangedSpell()const{return wand;} bool positive=false,area=false,interrupt=false; bool IsAreaOfEffectSpell()const{return area;} };
 bool IsPositiveSpell(SpellEntry const* s){return s->positive;}
 bool IsSpellHaveEffect(SpellEntry const* s,int){return s->interrupt;}
 struct Spell { SpellEntry* m_spellInfo=nullptr; bool canInterrupt=true; struct { ObjectGuid guid; ObjectGuid getUnitTargetGuid(){return guid;} }m_targets; bool CanBeInterrupted(){return canInterrupt;} };
@@ -21,7 +22,7 @@ struct Motion { int followed=0; template<class T> void MoveFollow(T*,float,float
 struct CreatureAI { ReactStates react=REACT_DEFENSIVE; ReactStates GetReactState(){return react;} void SetReactState(ReactStates r){react=r;} };
 struct Pet;
 struct Unit { ObjectGuid guid; bool alive=true,friendly=false,safe=true,world=true,near=true,los=true,cc=false,attackable=true,fleeing=false; void* map=reinterpret_cast<void*>(1); Unit* chase=nullptr; Unit* victim=nullptr; std::string name="Add"; int stops=0; bool HasUnitState(int){return fleeing;} bool IsWithinLOSInMap(Unit*u){return u->los;} Unit* GetVictim(){return victim;} void AttackStop(){victim=nullptr;++stops;} void* GetMap(){return map;} bool IsInWorld(){return world;} bool IsWithinDistInMap(Unit*,float,bool){return near;} ObjectGuid GetObjectGuid(){return guid;} char const* GetName(){return name.c_str();} };
-struct Player : Unit { ObjectGuid selection; ObjectGuid GetSelectionGuid(){return selection;} bool grouped=true; Pet* pet=nullptr; std::set<Unit*> attackers; std::map<int,Spell*> spells; bool IsInGroup(Player*){return grouped;} Pet* GetPet(){return pet;} std::set<Unit*>& getAttackers(){return attackers;} Spell* GetCurrentSpell(CurrentSpellTypes t){return spells[t];} void InterruptSpell(CurrentSpellTypes t){spells[t]=nullptr;} };
+struct Player : Unit { bool healer=false,hasMana=true; float manaPercent=100; bool HasMana(){return hasMana;}float GetPowerPercent(){return manaPercent;}ObjectGuid selection; ObjectGuid GetSelectionGuid(){return selection;} bool grouped=true; Pet* pet=nullptr; std::set<Unit*> attackers; std::map<int,Spell*> spells; bool IsInGroup(Player*){return grouped;} Pet* GetPet(){return pet;} std::set<Unit*>& getAttackers(){return attackers;} Spell* GetCurrentSpell(CurrentSpellTypes t){return spells[t];} void InterruptSpell(CurrentSpellTypes t){spells[t]=nullptr;} };
 struct Pet:Unit { CreatureAI brain; Motion motion; CreatureAI* AI(){return &brain;} Motion* GetMotionMaster(){return &motion;} };
 struct PossibleAttackTargetsValue {static bool IsPossibleTarget(Unit*u,Player*,float,bool){return u->near&&u->attackable&&!u->cc;}};
 struct Facade { Unit* GetChaseTarget(Unit*u){return u->chase;}  bool IsAlive(Unit* u){return u->alive;} bool IsFriendlyTo(Unit*,Unit* u){return u->friendly;} }sServerFacade;
@@ -37,7 +38,7 @@ struct PlayerbotAI { Player *bot=nullptr,*master=nullptr; Context storage; Conte
  bool HasActivePlayerMaster(){return master && activeMaster;} bool IsRealPlayer(){return real;} bool IsInPvp(){return pvp;} bool IsSafe(Player* p){return p&&p->safe;} static bool IsSafe(Player*,Unit* p){return p&&p->safe;}
  Unit* GetUnit(ObjectGuid g){return world[g.value];} void SpellInterrupted(uint32){++interrupted;}
  bool TellPlayerNoFacing(Player*,std::string text,PlayerbotSecurityLevel,bool,bool){if(silent)return false;warnings.push_back(text);return true;}
- bool IsRanged(Player*){return ranged;} void StopMoving(){++movementStops;bot->chase=nullptr;playerMasterPursuitTarget=ObjectGuid();} bool CanPlayerMasterChase(Unit*);
+ static bool IsHeal(Player*p){return p->healer;} bool IsRanged(Player*){return ranged;} void StopMoving(){++movementStops;bot->chase=nullptr;playerMasterPursuitTarget=ObjectGuid();} bool CanPlayerMasterChase(Unit*);
  bool ShouldAssistPlayerMaster(); Unit* GetPlayerMasterAttackTarget(); bool IsPlayerMasterAttackAllowed(Unit*); bool IsPlayerMasterSpellAllowed(SpellEntry const*,Unit*); void UpdatePlayerMasterAssist();
 };
 #include "NativeMasterFocus.inc"
@@ -146,6 +147,23 @@ int main(){try{
  ai.activeMaster=false;check(ai.CanPlayerMasterChase(&primary),"free bot pursuit unchanged");ai.activeMaster=true;
  ai.pvp=true;check(ai.CanPlayerMasterChase(&primary),"PvP pursuit unchanged");ai.pvp=false;
  primary.fleeing=false;check(ai.CanPlayerMasterChase(&primary),"pursuit allowed after fleeing ends");
+ // Healer damage reserve is independent of leader focus and leaves wand/melee intact.
+ ai.ranged=true;bot.healer=true;master.alive=false;
+ SpellEntry nuke,dot,mixed,wand,utility;nuke.Effect[0]=2;dot.Effect[0]=6;dot.EffectApplyAuraName[0]=3;mixed.Effect[0]=2;mixed.positive=true;wand.Effect[0]=2;wand.wand=true;
+ for(float mana:{0.0f,49.9f,50.0f}){bot.manaPercent=mana;
+ check(!ai.IsPlayerMasterSpellAllowed(&nuke,&primary)&&!ai.IsPlayerMasterSpellAllowed(&dot,&primary),"healer direct damage and DoTs blocked at or below 50 percent");
+ check(!ai.IsPlayerMasterSpellAllowed(&mixed,&bot),"mixed area heal/damage cannot bypass cutoff");
+ check(ai.IsPlayerMasterSpellAllowed(&wand,&primary)&&ai.IsPlayerMasterSpellAllowed(&heal,&bot)&&ai.IsPlayerMasterSpellAllowed(&utility,&primary),"wand, healing and utility allowed");
+ check(ai.IsPlayerMasterAttackAllowed(&primary),"normal melee attack permission preserved");}
+ bot.manaPercent=50.1f;check(ai.IsPlayerMasterSpellAllowed(&nuke,&primary),"damage resumes strictly above 50 percent");
+ bot.manaPercent=10;bot.healer=false;check(ai.IsPlayerMasterSpellAllowed(&nuke,&primary),"non-healer rotation unchanged");bot.healer=true;
+ ai.activeMaster=false;check(ai.IsPlayerMasterSpellAllowed(&nuke,&primary),"free bot reserve unchanged");ai.activeMaster=true;
+ ai.real=true;check(ai.IsPlayerMasterSpellAllowed(&nuke,&primary),"real player unchanged");ai.real=false;
+ bot.hasMana=false;check(ai.IsPlayerMasterSpellAllowed(&nuke,&primary),"non-mana form unchanged");bot.hasMana=true;
+ ai.pvp=true;check(!ai.IsPlayerMasterSpellAllowed(&nuke,&primary),"human-owned healer reserve also applies outside PvE focus");ai.pvp=false;
+ master.alive=true;check(!ai.IsPlayerMasterSpellAllowed(&nuke,&primary),"living leader reserve");
+
+ bot.healer=false;bot.manaPercent=100;master.alive=true;
  ai.pvp=true;ai.UpdatePlayerMasterAssist();check(pet.brain.react==REACT_DEFENSIVE,"pet react restored outside policy");
  std::cout<<"Native master-focus policy, target transitions, spell guards, pet lifecycle and warning cases passed\n";
 }catch(std::exception const& e){std::cerr<<e.what()<<'\n';return 1;} }
