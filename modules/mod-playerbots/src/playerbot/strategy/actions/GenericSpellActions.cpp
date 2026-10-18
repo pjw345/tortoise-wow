@@ -312,7 +312,7 @@ bool CastHealingSpellAction::isUseful()
     if (!ai->UsesCoordinatedPartyHealing() || !bot->IsInCombat()) return true;
     Unit* target = GetTarget();
     if (!target || target->FindMap() != bot->FindMap()) return false;
-    SpellEntry const* info = sServerFacade.LookupSpellInfo(spellId);
+    SpellEntry const* info = sServerFacade.LookupSpellInfo(GetSpellID());
     if (!info || (!info->HasEffect(SPELL_EFFECT_HEAL) &&
         !(info->SpellFamilyName == SPELLFAMILY_PALADIN && (info->SpellIconID == 70 || info->SpellIconID == 242))))
         return true; // HoTs and shields retain native policy; Turtle Paladin heals use dummy effects.

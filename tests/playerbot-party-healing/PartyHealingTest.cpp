@@ -73,7 +73,7 @@ struct Facade {std::map<uint32,SpellEntry*> spells;SpellRangeEntry range;SpellEn
 struct {uint32 criticalHealth=20,globalCoolDown=1500,reactDelay=100;}sPlayerbotAIConfig;
 struct Event {};
 struct CastAuraSpellAction {bool baseUseful=true;int executed=0;bool isUseful(){return baseUseful;}bool Execute(Event&){++executed;return true;}};
-struct CastHealingSpellAction:CastAuraSpellAction {PlayerbotAI* ai;Player* bot;Unit* patient;uint32 spellId=1;Unit* GetTarget(){return patient;}bool isUseful();bool Execute(Event&);};
+struct CastHealingSpellAction:CastAuraSpellAction {PlayerbotAI* ai;Player* bot;Unit* patient;uint32 GetSpellID(){return 1;}Unit* GetTarget(){return patient;}bool isUseful();bool Execute(Event&);};
 struct HealTargetFullHealthTrigger {PlayerbotAI* ai;Player* bot;HealTargetFullHealthTrigger(PlayerbotAI* a):ai(a),bot(a->bot){}Player* GetMaster(){return nullptr;}bool IsActive();};
 struct InterruptCurrentSpellAction {PlayerbotAI* ai;Player* bot;std::string qualifier="heal";std::string GetQualifier(){return qualifier;}std::string getQualifier(){return qualifier;}void SetDuration(uint32){}bool isUseful();bool Execute(Event&);};
 #include "NativeHealing.inc"
