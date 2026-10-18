@@ -16883,7 +16883,7 @@
       "spells",
       "death_reset"
     ],
-    "sha256": "8147A31F4107A7123DBD0E576E259C1AFA18AD80310A3D526F316A1B37E0B7F9"
+    "sha256": "64FB5B62AD7D8F42FD67570D47CB7D78C5C29107E815782EA1DBC86A8E407F6A"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/TravelRoutePolicy.h",
@@ -19575,7 +19575,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "47A77714A4507AC1F3FE0C90782C9E37CA8332D3739284E9BE2B38C0AF0D969C"
+    "sha256": "D2F5438CE7271FEE8FC3C4C76A485E14CDB0C591E062E15C06F6F9EA45C1C173"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/NearestGameObjects.cpp",
@@ -23456,7 +23456,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "778474F4D11B4D2933286A90470B5B47455B5F5CB09B5686BBB2AC6E021206D0"
+    "sha256": "26DC79E7D7AEA6785B1F7EC221E0966A5058D36EDBF9389AEBD6174E063FC746"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/ListQuestsActions.cpp",
@@ -24581,7 +24581,7 @@
       "death_reset",
       "async"
     ],
-    "sha256": "75DD2F037D07EB76CDAC4D3A2B321B24DD5413E2AE664695478C747BCCA635EF"
+    "sha256": "87458BDC0AFCF1A23C0F99BD6AECDD45A8B660FCA42DF425F931A40110F2CCF7"
   },
   {
     "file": "src/game/BattleLog.cpp",

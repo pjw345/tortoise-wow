@@ -908,12 +908,19 @@ bool PlayerbotAI::IsInPve()
 
 bool PlayerbotAI::CanPlayerMasterChase(Unit* target)
 {
-    // Fleeing enemies may only be finished from the existing ranged position.
-    // Keep this restriction when the human master is dead too.
-    return !(sPlayerbotAIConfig.assistPlayerMaster && HasActivePlayerMaster() &&
-        !IsRealPlayer() && !IsInPvp() && target && IsSafe(bot, target) &&
-        target->GetMap() == bot->GetMap() && sServerFacade.IsAlive(target) &&
-        !sServerFacade.IsFriendlyTo(bot, target) && target->HasUnitState(UNIT_STAT_FLEEING));
+    if (!sPlayerbotAIConfig.assistPlayerMaster || !HasActivePlayerMaster() ||
+        IsRealPlayer() || IsInPvp() || !target || !IsSafe(bot, target) ||
+        target->GetMap() != bot->GetMap() || !sServerFacade.IsAlive(target) ||
+        sServerFacade.IsFriendlyTo(bot, target)) return true;
+    // Stop active/path pursuit as well as refusing new movement. Stuns do not
+    // grant pursuit of a runner; an adjacent stunned runner may still be hit.
+    if (target->HasUnitState(UNIT_STAT_FLEEING)) return false;
+    if (!master || !IsSafe(master) || !master->IsInWorld() ||
+        master->GetMap() != bot->GetMap() || !bot->IsInGroup(master)) return true;
+    // An attack toggle/selection is not combat contact. Let pulls come to the
+    // human tank and keep companion pursuit within the existing follow range.
+    // Stationary defense is decided separately from permission to move.
+    return target->IsInCombat() && target->IsWithinDistInMap(master, GetRange("follow"));
 }
 
 Unit* PlayerbotAI::GetPlayerMasterFleeingControlTarget(SpellEntry const* spell)
@@ -938,7 +945,7 @@ Unit* PlayerbotAI::GetPlayerMasterFleeingControlTarget(SpellEntry const* spell)
     {
         Unit* enemy = GetUnit(guid);
         if (!enemy || !IsSafe(bot, enemy) || enemy->FindMap() != bot->FindMap() ||
-            !enemy->IsInWorld() || !enemy->IsAlive() || !enemy->HasUnitState(UNIT_STAT_FLEEING) ||
+            !enemy->IsInWorld() || !enemy->IsAlive() || enemy->IsStunned() || !enemy->HasUnitState(UNIT_STAT_FLEEING) ||
             sServerFacade.IsFriendlyTo(bot, enemy) || !bot->IsWithinLOSInMap(enemy) ||
             !bot->IsWithinDistInMap(enemy, range->maxRange) ||
             PossibleAttackTargetsValue::HasBreakableCC(enemy, bot) ||
@@ -965,10 +972,17 @@ Unit* PlayerbotAI::GetPlayerMasterAttackTarget()
 
     auto canAttack = [this](Unit* target)
     {
-        return target && (CanPlayerMasterChase(target) || IsRanged(bot)) &&
-            IsSafe(bot, target) && target->GetMap() == bot->GetMap() &&
-            sServerFacade.IsAlive(target) && !sServerFacade.IsFriendlyTo(bot, target) &&
-            PossibleAttackTargetsValue::IsPossibleTarget(target, bot, sPlayerbotAIConfig.sightDistance, false) &&
+        if (!target || !IsSafe(bot, target) || target->GetMap() != bot->GetMap() ||
+            !target->IsInWorld() || !sServerFacade.IsAlive(target) || !target->IsInCombat() ||
+            sServerFacade.IsFriendlyTo(bot, target)) return false;
+        // A non-breakable stun on an engaged kill target is a chance to finish,
+        // not protected breakable CC. Preserve fear/root and all native legality.
+        bool const stunOnly = target->IsStunned() &&
+            !PossibleAttackTargetsValue::HasBreakableCC(target, bot) &&
+            !sServerFacade.IsFeared(target) && !sServerFacade.IsInRoots(target);
+        bool const runner = target->HasUnitState(UNIT_STAT_FLEEING);
+        return (!runner || IsRanged(bot) || (stunOnly && bot->CanReachWithMeleeAttack(target))) &&
+            PossibleAttackTargetsValue::IsPossibleTarget(target, bot, sPlayerbotAIConfig.sightDistance, stunOnly) &&
             bot->IsWithinLOSInMap(target);
     };
 
@@ -983,9 +997,10 @@ Unit* PlayerbotAI::GetPlayerMasterAttackTarget()
     // Native attackers already includes combat involving the bot, group and pets.
     // Do not use possible attack targets here: that value calls this policy.
     std::list<ObjectGuid> attackers = aiObjectContext->GetValue<std::list<ObjectGuid>>("attackers")->Get();
-    auto engaged = [&attackers](Unit* target)
+    auto engaged = [this, &attackers](Unit* target)
     {
-        return target && std::find(attackers.begin(), attackers.end(), target->GetObjectGuid()) != attackers.end();
+        return target && target->IsInCombat() && (target == master->GetVictim() ||
+            std::find(attackers.begin(), attackers.end(), target->GetObjectGuid()) != attackers.end());
     };
 
     // A melee backup Paladin protects a healer already under a melee attack.
@@ -1008,12 +1023,12 @@ Unit* PlayerbotAI::GetPlayerMasterAttackTarget()
     }
 
     Unit* selected = GetUnit(master->GetSelectionGuid());
-    if (canAttack(selected) && (selected == master->GetVictim() || engaged(selected)))
+    if (canAttack(selected) && engaged(selected))
         return selected;
 
     // Retain the existing attack victim when no selected unit resolves.
     Unit* victim = master->GetVictim();
-    if (!selected && canAttack(victim))
+    if (!selected && canAttack(victim) && engaged(victim))
         return victim;
 
     // Defensive fallback never acquires an idle hostile merely because it is selected.
@@ -1030,8 +1045,10 @@ Unit* PlayerbotAI::GetPlayerMasterAttackTarget()
 
 bool PlayerbotAI::IsPlayerMasterAttackAllowed(Unit* target)
 {
-    if (!CanPlayerMasterChase(target) && !IsRanged(bot))
-        return false;
+    if (sPlayerbotAIConfig.assistPlayerMaster && HasActivePlayerMaster() && !IsRealPlayer() && !IsInPvp() &&
+        target && IsSafe(bot, target) && target->GetMap() == bot->GetMap() &&
+        !sServerFacade.IsFriendlyTo(bot, target) && target->HasUnitState(UNIT_STAT_FLEEING) &&
+        !IsRanged(bot) && (!target->IsStunned() || !bot->CanReachWithMeleeAttack(target))) return false;
     return !ShouldAssistPlayerMaster() || (target && target == GetPlayerMasterAttackTarget());
 }
 
@@ -1052,8 +1069,8 @@ bool PlayerbotAI::IsPlayerMasterSpellAllowed(SpellEntry const* spell, Unit* targ
     // Allow only in-range pure stun control of an already engaged runner. Damage,
     // attack focus and every movement/pursuit restriction remain unchanged.
     if (target && target == GetPlayerMasterFleeingControlTarget(spell)) return true;
-    if (spell && !IsPositiveSpell(spell) && !CanPlayerMasterChase(target) && !IsRanged(bot))
-        return false;
+    if (spell && !IsPositiveSpell(spell) && !IsRanged(bot) &&
+        !IsPlayerMasterAttackAllowed(target) && target && target->HasUnitState(UNIT_STAT_FLEEING)) return false;
     if (!ShouldAssistPlayerMaster() || !spell || IsPositiveSpell(spell))
         return true;
 
@@ -1080,8 +1097,8 @@ void PlayerbotAI::UpdatePlayerMasterAssist()
     if ((pursuit && !CanPlayerMasterChase(pursuit)) ||
         (nativeChase && !CanPlayerMasterChase(nativeChase)))
         StopMoving();
-    if (!CanPlayerMasterChase(bot->GetVictim()) && !IsRanged(bot))
-        bot->AttackStop();
+    if (Unit* victim = bot->GetVictim())
+        if (!IsPlayerMasterAttackAllowed(victim) && !IsRanged(bot)) bot->AttackStop();
     Pet* companion = bot->GetPet();
     if (companion && !CanPlayerMasterChase(companion->GetVictim()))
     {
@@ -3304,6 +3321,53 @@ uint32 PlayerbotAI::GetPreparedPartyHealing(Player* caster, Spell* cast, Unit* t
     return uint32(std::min<uint64>(amount, target->GetMaxHealth()));
 }
 
+bool PlayerbotAI::CanWaitForPartyHeal(Unit* target, uint32 delayMs)
+{
+    if (!target || target->FindMap() != bot->FindMap() || !target->IsInWorld() || !target->IsAlive()) return false;
+    uint64 damage = 0;
+    for (Unit* attacker : target->getAttackers())
+    {
+        if (!attacker || attacker->FindMap() != bot->FindMap() || !attacker->IsInWorld() ||
+            !attacker->IsAlive() || attacker->GetVictim() != target ||
+            !attacker->CanReachWithMeleeAttack(target)) continue;
+        uint32 const first = attacker->GetAttackTimer(BASE_ATTACK);
+        if (first > delayMs) continue;
+        uint32 const interval = std::max(1u, attacker->GetAttackTime(BASE_ATTACK));
+        uint64 const swings = 1u + uint64(delayMs - first) / interval;
+        uint32 const hit = uint32(std::max(0.0f, (attacker->GetFloatValue(UNIT_FIELD_MINDAMAGE) +
+            attacker->GetFloatValue(UNIT_FIELD_MAXDAMAGE)) / 2.0f));
+        damage += swings * hit;
+        if (damage >= target->GetHealth()) return false;
+    }
+    return true;
+}
+
+bool PlayerbotAI::IsCastingUsefulPartyHeal()
+{
+    if (!UsesCoordinatedPartyHealing()) return false;
+    Spell* cast = bot->GetCurrentSpell(CURRENT_GENERIC_SPELL);
+    if (!cast || cast->getState() != SPELL_STATE_PREPARING || !cast->GetCastedTime() ||
+        !cast->m_spellInfo || !IsHealSpell(cast->m_spellInfo)) return false;
+    Unit* patient = cast->m_targets.getUnitTarget();
+    return patient && patient->FindMap() == bot->FindMap() && patient->IsInWorld() && patient->IsAlive() &&
+        (patient == bot || (patient->IsPlayer() && bot->IsInGroup(patient->ToPlayer()))) &&
+        (patient->GetHealth() < patient->GetMaxHealth() || GetPartyHealingPressure(patient));
+}
+
+float PlayerbotAI::GetPartyHealingSelectionRange()
+{
+    float distance = GetRange("heal");
+    if (!UsesCoordinatedPartyHealing() || !bot->IsInCombat()) return distance;
+    for (auto const& known : bot->GetSpellMap())
+    {
+        SpellEntry const* info = sServerFacade.LookupSpellInfo(known.first);
+        if (!info || !bot->HasSpell(known.first) || !IsHealSpell(info) || info->IsChanneledSpell()) continue;
+        float spellRange = 0.0f;
+        if (GetSpellRange(info->SpellName[0], &spellRange)) distance = std::max(distance, spellRange);
+    }
+    return std::min(distance, sPlayerbotAIConfig.sightDistance);
+}
+
 uint32 PlayerbotAI::GetPendingPartyHealing(Unit* target)
 {
     if (!UsesCoordinatedPartyHealing() || !target || target->FindMap() != bot->FindMap()) return 0;
@@ -3319,6 +3383,9 @@ uint32 PlayerbotAI::GetPendingPartyHealing(Unit* target)
             cast->m_targets.getUnitTargetGuid() != target->GetObjectGuid() ||
             cast->m_spellInfo->IsChanneledSpell() || !member->IsWithinLOSInMap(target)) continue;
         if (cast->m_spellInfo->powerType == POWER_MANA && member->GetPower(POWER_MANA) < cast->GetPowerCost()) continue;
+        // Remaining native cast time includes damage pushback. A heal which is
+        // too late must not reserve this patient away from another rescuer.
+        if (!CanWaitForPartyHeal(target, cast->GetCastedTime())) continue;
         healing += GetPreparedPartyHealing(member, cast, target);
     }
     return uint32(std::min<uint64>(healing, target->GetMaxHealth()));
@@ -3345,8 +3412,8 @@ bool PlayerbotAI::IsBackupPartyHealAllowed(Unit* target)
     // override used between primary healers must not override this role.
     if (target->GetHealthPercent() > sPlayerbotAIConfig.lowHealth &&
         target->GetHealth() > GetPartyHealingPressure(target)) return false;
-    // Even partial healing already underway belongs to the primary healer;
-    // keep the backup on damage/protection rather than racing that cast.
+    // Timely partial healing belongs to the primary. Delayed casts which cannot
+    // beat incoming melee damage have already been excluded from coverage.
     if (GetPendingPartyHealing(target)) return false;
     for (GroupReference* ref = bot->GetGroup()->GetFirstMember(); ref; ref = ref->next())
     {
@@ -3375,6 +3442,7 @@ bool PlayerbotAI::IsBackupPartyHealAllowed(Unit* target)
             SpellRangeEntry const* range = sServerFacade.LookupSpellRangeEntry(info->rangeIndex);
             if (!range || !member->IsWithinDistInMap(target, range->maxRange)) continue;
             if (info->powerType == POWER_MANA && member->GetPower(POWER_MANA) < Spell::CalculatePowerCost(info, member)) continue;
+            if (!CanWaitForPartyHeal(target, GetSpellCastTime(info, member))) continue;
             return false;
         }
     }

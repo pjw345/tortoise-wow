@@ -152,3 +152,16 @@ permission against a runner. Automatic owned-PvE Blink is disabled pending a
 safe-landing contract. Same-map near teleports no longer close battle capture.
 Focused extracted production regressions cover these policies. Full compilation,
 image verification and live gameplay acceptance must be reported separately.
+
+
+### 2026-10-18 Mercy rescue and pursuit follow-up
+
+Reopened SelectNewTargetAction, master-focus/CC validation, Reach/Chase paths,
+native remaining cast time, native swing timers and the learned heal range
+resolver. Useful friendly heals now block hostile retarget cancellation.
+Coordinated coverage/primary availability reject healing which cannot beat
+estimated pending melee damage. Existing native spells, map ownership, cost,
+GCD, movement and action lifecycles remain in use. Source-extracted tests cover
+stale target caches, live chase cancellation, adjacent stunned runners, protected
+CC, delayed emergency coverage, retarget continuity and range boundaries.
+Full server/image compilation and playtesting remain deferred by user request.

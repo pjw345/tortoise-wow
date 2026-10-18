@@ -3,6 +3,8 @@ project(PartyHealingTest LANGUAGES CXX)
 enable_testing()
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    extract.py
+    ../../modules/mod-playerbots/src/playerbot/strategy/actions/ChooseTargetActions.cpp
     ../../modules/mod-playerbots/src/playerbot/PlayerbotAI.cpp
     ../../modules/mod-playerbots/src/playerbot/strategy/values/PartyMemberToHeal.cpp
     ../../modules/mod-playerbots/src/playerbot/strategy/triggers/HealthTriggers.cpp

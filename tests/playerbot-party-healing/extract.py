@@ -10,7 +10,8 @@ def block(text, marker):
 ai=(base/'PlayerbotAI.cpp').read_text(encoding='utf-8')
 methods=[block(ai,'bool PlayerbotAI::UsesCoordinatedPartyHealing(')]
 methods += [block(ai,signature) for signature in ['uint32 PlayerbotAI::GetPartyHealingPressure(', 'uint32 PlayerbotAI::GetPreparedPartyHealing(',
-    'uint32 PlayerbotAI::GetPendingPartyHealing(', 'bool PlayerbotAI::IsPartyHealCovered(',
+    'bool PlayerbotAI::CanWaitForPartyHeal(', 'bool PlayerbotAI::IsCastingUsefulPartyHeal(',
+    'float PlayerbotAI::GetPartyHealingSelectionRange(', 'uint32 PlayerbotAI::GetPendingPartyHealing(', 'bool PlayerbotAI::IsPartyHealCovered(',
     'bool PlayerbotAI::IsBackupPartyHealAllowed(']]
 triggers=(base/'strategy/triggers/HealthTriggers.cpp').read_text(encoding='utf-8')
 methods += [block(triggers,'bool HealTargetFullHealthTrigger::IsActive(')]
@@ -21,6 +22,12 @@ methods += [block(actions,marker) for marker in ['bool CastHealingSpellAction::i
 selector=(base/'strategy/values/PartyMemberToHeal.cpp').read_text(encoding='utf-8')
 selection=block(selector,'    if (coordinated)')
 methods += ['Unit* Select(PlayerbotAI* ai, Player* bot, std::vector<Unit*> needHeals) { bool coordinated=true;\n'+selection.replace('[this]','[&]')+'\nreturn nullptr;\n}']
+choose=(base/'strategy/actions/ChooseTargetActions.cpp').read_text(encoding='utf-8')
+retarget=block(choose,'bool SelectNewTargetAction::Execute(')
+prefix=retarget[retarget.index('{')+1:retarget.index('    Unit* target')]
+methods += ['bool CanRetarget(PlayerbotAI* ai) {'+prefix+'return true;}']
+methods += ['bool InHealingSelectionRange(PlayerbotAI* ai, Player* bot, Unit* player) {'+
+    block(selector,'bool PartyMemberToHeal::Check(').split('{',1)[1].replace('    bool isBg = bot->InBattleGround();','    bool isBg = false;')]
 # These are integration boundaries the isolated fake world does not execute.
 reset=block(ai,'void PlayerbotAI::ResetStrategies(')
 assert reset.index('sPlayerbotDbStore.Load(this)') < reset.index('reactionEngine->addStrategy("heal interrupt")')
