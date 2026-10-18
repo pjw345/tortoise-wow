@@ -147,6 +147,10 @@ void ClassRaidStrategy::InitDeadTriggers(std::list<TriggerNode*>& triggers)
 void AoeStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
 {
     triggers.push_back(new TriggerNode(
+        "owned explosive",
+        NextAction::array(0, new NextAction("throw grenade", ACTION_HIGH), NULL)));
+
+    triggers.push_back(new TriggerNode(
         "melee very high aoe",
         NextAction::array(0, new NextAction("goblin sapper", ACTION_HIGH + 1), NULL)));
 
@@ -614,6 +618,10 @@ void ClassRaidStrategy::InitDeadTriggers(std::list<TriggerNode*>& triggers)
 
 void AoeStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
 {
+    triggers.push_back(new TriggerNode(
+        "owned explosive",
+        NextAction::array(0, new NextAction("throw grenade", ACTION_HIGH), NULL)));
+
     triggers.push_back(new TriggerNode(
         "melee very high aoe",
         NextAction::array(0, new NextAction("goblin sapper", ACTION_HIGH + 1), NULL)));
@@ -1085,6 +1093,10 @@ void ClassRaidStrategy::InitDeadTriggers(std::list<TriggerNode*>& triggers)
 
 void AoeStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
 {
+    triggers.push_back(new TriggerNode(
+        "owned explosive",
+        NextAction::array(0, new NextAction("throw grenade", ACTION_HIGH), NULL)));
+
     triggers.push_back(new TriggerNode(
         "melee very high aoe",
         NextAction::array(0, new NextAction("goblin sapper", ACTION_HIGH + 1), NULL)));

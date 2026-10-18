@@ -8,6 +8,9 @@
 #include "playerbot/strategy/values/ItemUsageValue.h"
 #include "playerbot/TravelMgr.h"
 #include "CheckMountStateAction.h"
+#include "playerbot/strategy/values/PossibleTargetsValue.h"
+#include "playerbot/strategy/values/PossibleAttackTargetsValue.h"
+#include <tuple>
 #include "TellLosAction.h"
 #include "playerbot/strategy/values/ItemUsageValue.h"
 #include "playerbot/strategy/values/ItemCountValue.h"
@@ -410,7 +413,7 @@ bool UseAction::UseItemInternal(Player* requester, uint32 itemId, Unit* unit, Ga
 
     // If bot has no item cheat (or other conditions) it needs to own the item to cast
     Item* itemUsed = nullptr;
-    if (RequiresItemToUse(proto, ai, bot))
+    if (UseInventoryItemOnly() || RequiresItemToUse(proto, ai, bot))
     {
         std::list<Item*> items = AI_VALUE2(std::list<Item*>, "inventory items", ChatHelper::formatQItem(itemId));
         if (!items.empty())
@@ -1175,6 +1178,143 @@ bool UseItemIdAction::Execute(Event& event)
     }
 }
 
+bool ThrowGrenadeAction::UsesOwnedExplosives() const
+{
+    return ai->HasActivePlayerMaster() && !ai->IsRealPlayer() && !ai->IsInPvp();
+}
+
+bool ThrowGrenadeAction::isUseful()
+{
+#ifndef MANGOSBOT_ZERO
+    if (bot->InArena())
+        return false;
+#endif
+    Unit* target = GetTarget();
+    if (!target)
+        return false;
+
+    if (UsesOwnedExplosives())
+        return sServerFacade.IsInCombat(bot) && !PlayerbotAI::IsHeal(bot) &&
+            !bot->IsMounted() && !bot->IsNonMeleeSpellCasted(true) &&
+            UseTargetedItemIdAction::isUseful();
+
+    return UseTargetedItemIdAction::isUseful() &&
+        (target->IsNonMeleeSpellCasted(false) || !target->IsStopped()) &&
+        bot->GetSkillValue(202) >= 175 && bot->GetLevel() >= 52;
+}
+
+uint32 ThrowGrenadeAction::GetItemId()
+{
+    if (UsesOwnedExplosives())
+        return FindLowestOwnedExplosive();
+    if (bot->GetSkillValue(202) >= 325)
+        return 23737;
+    if (bot->GetSkillValue(202) >= 260)
+        return 15993;
+    return 4390;
+}
+
+bool ThrowGrenadeAction::IsSafeOwnedExplosive(SpellEntry const* spell, Unit* target)
+{
+    if (!target || !ai->IsSafe(target) || !sServerFacade.IsAlive(target) ||
+        !sServerFacade.IsInCombat(target) || !ai->IsPlayerMasterAttackAllowed(target) ||
+        !ai->IsPlayerMasterSpellAllowed(spell, target) ||
+        PossibleAttackTargetsValue::HasBreakableCC(target, bot) || !bot->IsWithinLOSInMap(target))
+        return false;
+
+    auto const attackers = AI_VALUE(std::list<ObjectGuid>, "attackers");
+    if (std::find(attackers.begin(), attackers.end(), target->GetObjectGuid()) == attackers.end())
+        return false;
+
+    auto const* range = sSpellRangeStore.LookupEntry(spell->rangeIndex);
+    float const distance = bot->GetDistance(target);
+    if (!range || distance < Spells::GetSpellMinRange(range) || distance > Spells::GetSpellMaxRange(range))
+        return false;
+
+    float radius = 0.0f;
+    for (int i = 0; i < MAX_EFFECT_INDEX; ++i)
+    {
+        // The safety scan is centred on the requested destination. Caster blasts,
+        // summons and other special explosives need their own native action.
+        if (spell->Effect[i] && spell->EffectImplicitTargetA[i] != TARGET_ENUM_UNITS_ENEMY_AOE_AT_DEST_LOC &&
+            spell->EffectImplicitTargetB[i] != TARGET_ENUM_UNITS_ENEMY_AOE_AT_DEST_LOC)
+            return false;
+        radius = std::max(radius, Spells::GetSpellRadius(sSpellRadiusStore.LookupEntry(spell->EffectRadiusIndex[i])));
+    }
+    if (radius <= 0.0f)
+        return false; // This action supports targeted blast explosives, not unknown special items.
+
+    float const searchRange = distance + radius + bot->GetCombatReach() + target->GetCombatReach();
+    PossibleTargetsValue nearby(ai, "owned explosive safety", searchRange, true);
+    // Fresh, unvalidated discovery: CC, invisibility and target filters must not hide a bystander.
+    nearby.Qualify(std::to_string(static_cast<uint32>(searchRange + 1.0f)) + ":1");
+    for (ObjectGuid guid : nearby.Calculate())
+    {
+        Unit* unit = ai->GetUnit(guid);
+        if (!unit || !ai->IsSafe(unit) || !sServerFacade.IsAlive(unit) ||
+            !target->IsWithinDistInMap(unit, radius))
+            continue;
+        if (PossibleAttackTargetsValue::HasBreakableCC(unit, bot) ||
+            std::find(attackers.begin(), attackers.end(), guid) == attackers.end())
+            return false;
+    }
+    return true;
+}
+
+uint32 ThrowGrenadeAction::FindLowestOwnedExplosive()
+{
+    uint32 selected = 0;
+    std::tuple<uint32, uint32, uint32, uint32> best;
+    auto const items = ai->InventoryParseItems("inventory", IterateItemsMask::ITERATE_ITEMS_IN_BAGS);
+    auto const& skipSpells = AI_VALUE(std::set<uint32>&, "skip spells list");
+    for (Item* item : items)
+    {
+        if (!item || !item->GetCount() || item->IsInTrade())
+            continue;
+        auto const* proto = item->GetProto();
+        if (!proto || proto->Class != ITEM_CLASS_TRADE_GOODS || proto->SubClass != ITEM_SUBCLASS_EXPLOSIVES ||
+            bot->CanUseItem(item) != EQUIP_ERR_OK || HasItemCooldown(proto->ItemId))
+            continue;
+
+        bool supported = false;
+        bool rejected = false;
+        for (int i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
+        {
+            auto const& data = proto->Spells[i];
+            if (!data.SpellId)
+                continue;
+            if (skipSpells.find(data.SpellId) != skipSpells.end())
+            {
+                rejected = true;
+                break;
+            }
+#ifdef MANGOSBOT_ZERO
+            if (data.SpellTrigger != ITEM_SPELLTRIGGER_ON_USE && data.SpellTrigger != ITEM_SPELLTRIGGER_ON_NO_DELAY_USE)
+#else
+            if (data.SpellTrigger != ITEM_SPELLTRIGGER_ON_USE)
+#endif
+                continue;
+            auto const* spell = sServerFacade.LookupSpellInfo(data.SpellId);
+            if (!spell || !spell->HasEffect(SPELL_EFFECT_SCHOOL_DAMAGE) ||
+                !IsSafeOwnedExplosive(spell, GetTarget()))
+            {
+                rejected = true;
+                break;
+            }
+            supported = true;
+        }
+        if (!supported || rejected)
+            continue;
+        auto const tier = std::make_tuple(proto->ItemLevel, proto->RequiredLevel, proto->RequiredSkillRank, proto->ItemId);
+        if (!selected || tier < best)
+        {
+            selected = proto->ItemId;
+            best = tier;
+        }
+    }
+    return selected;
+}
+
 bool UseItemIdAction::isPossible()
 {
     uint32 itemId = GetItemId();
@@ -1188,7 +1328,7 @@ bool UseItemIdAction::isPossible()
     if (HasItemCooldown(itemId))
         return false;
 
-        if (!ai->HasCheat(BotCheatMask::item) && !bot->HasItemCount(itemId, 1))
+    if ((UseInventoryItemOnly() || !ai->HasCheat(BotCheatMask::item)) && !bot->HasItemCount(itemId, 1))
         return false;
 
 

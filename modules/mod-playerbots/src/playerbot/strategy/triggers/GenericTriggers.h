@@ -256,6 +256,17 @@ namespace ai
         virtual bool IsActive() override;
     };
 
+    class OwnedExplosiveTrigger : public Trigger
+    {
+    public:
+        OwnedExplosiveTrigger(PlayerbotAI* ai) : Trigger(ai, "owned explosive", 5) {}
+        bool IsActive() override
+        {
+            return ai->HasActivePlayerMaster() && !ai->IsRealPlayer() && !ai->IsInPvp() &&
+                sServerFacade.IsInCombat(bot) && !PlayerbotAI::IsHeal(bot);
+        }
+    };
+
     class AoeTrigger : public AttackerCountTrigger
     {
     public:

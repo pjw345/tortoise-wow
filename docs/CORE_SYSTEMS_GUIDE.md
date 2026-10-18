@@ -506,3 +506,29 @@ Regression coverage in tests/playerbot-master-focus extracts the actual policy:
 0/49.9/50 percent reject damage and DoTs, 50.1 permits them; mixed positive spells,
 wand, heal, utility, melee, dead leader, non-healer and free-bot cases are covered.
 Gameplay acceptance must still check Mercy/Cria during a real fight.
+
+
+## Owned engineering explosives (2026-10-17)
+
+ThrowGrenadeAction now selects a real carried explosive for active human-owned
+PvE companions. Player::CanUseItem(Item*) enforces the item's actual level, skill,
+spell, class/race, binding and reputation requirements. Inventory trade/empty
+stacks, skip-spell entries, missing spell data and item cooldowns are excluded.
+Selection ascends ItemLevel, RequiredLevel, RequiredSkillRank, ItemId, exhausting
+lower usable tiers first. No engineering rank or player level is invented.
+
+Only destination-centred damaging blast explosives with known native range and
+radius are supported; special/caster explosives retain their dedicated actions.
+The target must be a native group attacker allowed by master/fleeing/spell policy
+with LOS and range. A fresh unvalidated local scan rejects live CC or unengaged
+bystanders in the blast. It does not chase to obtain range or open combat.
+The existing AoE strategy registers a five-second owned-explosive combat trigger,
+including single targets. Disabling AoE still disables this automatic scheduling.
+Healing bots, mounted bots and active casts are excluded. Free bots and PvP retain
+legacy grenade rules/selection; no potion or buff-item behavior changes.
+
+UseInventoryItemOnly forces possession and the existing native SetCastItem path,
+even with item cheats: native Spell owns cooldown, cast time and consumption.
+No parallel scheduler, persistence or inventory mutation is introduced. Existing
+action diagnostics remain available. Extracted policy tests are separate from
+full core compilation and in-game item consumption acceptance.

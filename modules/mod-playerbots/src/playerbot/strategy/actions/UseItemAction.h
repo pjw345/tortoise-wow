@@ -49,6 +49,7 @@ namespace ai
         //void TellConsumableUse(Player* requester, Item* item, std::string action, float percent);
 
         bool HasItemCooldown(uint32 itemId) const;
+        virtual bool UseInventoryItemOnly() const { return false; }
 
     private:
         bool UseItemInternal(Player* requester, uint32 itemId, Unit* target, GameObject* gameObjectTarget, Item* itemTarget);
@@ -546,40 +547,15 @@ namespace ai
     {
     public:
         ThrowGrenadeAction(PlayerbotAI* ai) : UseTargetedItemIdAction(ai, "throw grenade") {}
+        std::string GetTargetName() override { return "current target"; }
+        bool isUseful() override;
+        uint32 GetItemId() override;
 
-        virtual std::string GetTargetName() override { return "current target"; }
-
-        virtual bool isUseful() override
-        {
-#ifndef MANGOSBOT_ZERO
-            if (bot->InArena())
-                return false;
-#endif
-
-            Unit* target = GetTarget();
-            if (!target)
-                return false;
-
-            if (!UseTargetedItemIdAction::isUseful())
-                return false;
-
-            if (!target->IsNonMeleeSpellCasted(false) && target->IsStopped())
-                return false;
-
-            if (bot->GetSkillValue(202) < 175)
-                return false;
-
-            return bot->GetLevel() >= 52;
-        }
-
-        virtual uint32 GetItemId() override
-        { 
-            if (bot->GetSkillValue(202) >= 325)
-                return 23737;
-            if (bot->GetSkillValue(202) >= 260)
-                return 15993;
-            return 4390; 
-        }
+    protected:
+        bool UsesOwnedExplosives() const;
+        bool UseInventoryItemOnly() const override { return UsesOwnedExplosives(); }
+        uint32 FindLowestOwnedExplosive();
+        bool IsSafeOwnedExplosive(SpellEntry const* spell, Unit* target);
     };
 
     class UseDarkRuneAction : public UseItemIdAction
