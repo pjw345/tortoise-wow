@@ -625,3 +625,10 @@ pressure, same-map ownership, unavailable primary healers, native dummy-effect
 Paladin heals, stale cancellation, healer peeling and return to master focus.
 Windows local tests passed; full Linux build and gameplay acceptance remain
 separate. Retest the 410-mana waste example and Priest/Paladin healing roles.
+
+The cancellation reaction is installed for owned PvE companions even before a
+group invitation, because SetMaster/ResetStrategies precedes later invitations.
+Coordination itself still requires a group. Explicit `preheal` keeps its native
+patient/cast policy and does not acquire automatic full-health cancellation;
+manual heal-interrupt configuration remains authoritative. Extracted lifecycle
+checks cover group-less login, later grouping, preheal, free bots and PvP.

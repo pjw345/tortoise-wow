@@ -60,9 +60,9 @@ struct GroupReference {Player* member=nullptr;GroupReference* nextRef=nullptr;Pl
 struct Group {GroupReference* first=nullptr;GroupReference* GetFirstMember(){return first;}};
 struct PlayerbotAI
 {
-    Player* bot=nullptr;bool owned=true,real=false,pvp=false,offheal=false;uint32 interrupted=0;
+    Player* bot=nullptr;bool owned=true,real=false,pvp=false,offheal=false,preheal=false;uint32 interrupted=0;
     bool HasActivePlayerMaster(){return owned;}bool IsRealPlayer(){return real;}bool IsInPvp(){return pvp;}
-    bool HasStrategy(std::string name,BotState){return offheal&&name=="offheal";}
+    bool HasStrategy(std::string name,BotState){return (offheal&&name=="offheal")||(preheal&&name=="preheal");}
     static bool IsHeal(Player* p){return p->healer;}bool IsTank(Player* p){return p->tank;}
     static bool IsHealSpell(SpellEntry const* s){return s->HasEffect(SPELL_EFFECT_HEAL)||(s->SpellFamilyName==SPELLFAMILY_PALADIN&&(s->SpellIconID==70||s->SpellIconID==242));}
     void SpellInterrupted(uint32 id){interrupted=id;}void TellPlayerNoFacing(Player*,std::string){}
@@ -84,6 +84,13 @@ int main(){try{
     PlayerbotAI ai;ai.bot=&a;
     SpellEntry heal;Spell pending;pending.m_spellInfo=&heal;pending.m_targets.patient=&patient;pending.m_targets.guid=patient.GetObjectGuid();b.casts[CURRENT_GENERIC_SPELL]=&pending;
     check(ai.UsesCoordinatedPartyHealing(),"owned party scope");
+    ReactionSetup setup;Group* savedGroup=a.group;a.group=nullptr;WireInterrupt(&ai,&setup);
+    check(setup.added==1,"cancellation installed before group invite");a.group=savedGroup;
+    ai.preheal=true;check(!ai.UsesCoordinatedPartyHealing(),"explicit preheal keeps legacy patient policy");
+    WireInterrupt(&ai,&setup);check(setup.added==1,"explicit preheal does not gain automatic cancellation");ai.preheal=false;
+    ai.owned=false;WireInterrupt(&ai,&setup);check(setup.added==1,"free bots do not gain cancellation strategy");ai.owned=true;
+    ai.pvp=true;WireInterrupt(&ai,&setup);check(setup.added==1,"PvP does not gain cancellation strategy");ai.pvp=false;
+
     check(ai.GetPendingPartyHealing(&patient)==500&&ai.IsPartyHealCovered(&patient),"other heal covers deficit");
     Unit attacker;attacker.victim=&patient;patient.attackers.insert(&attacker);attacker.hit=300;
     check(!ai.IsPartyHealCovered(&patient),"incoming pressure permits second heal");

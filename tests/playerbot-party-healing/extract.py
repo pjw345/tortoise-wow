@@ -24,6 +24,11 @@ methods += ['Unit* Select(PlayerbotAI* ai, Player* bot, std::vector<Unit*> needH
 # These are integration boundaries the isolated fake world does not execute.
 reset=block(ai,'void PlayerbotAI::ResetStrategies(')
 assert reset.index('sPlayerbotDbStore.Load(this)') < reset.index('reactionEngine->addStrategy("heal interrupt")')
+wire=block(reset,'    if (HasActivePlayerMaster() && !IsRealPlayer() && !IsInPvp() &&')
+for name in ['HasActivePlayerMaster','IsRealPlayer','IsInPvp','HasStrategy']:
+    wire=wire.replace(name+'(', 'ai->'+name+'(')
+methods += ['struct ReactionSetup { int added=0; void addStrategy(char const*) { ++added; } }; void WireInterrupt(PlayerbotAI* ai, ReactionSetup* reactionEngine) { '+wire+' }']
+
 assert 'interrupt current spell::heal' in (base/'strategy/generic/CombatStrategy.cpp').read_text(encoding='utf-8')
 assert 'coordinated || !IsTargetOfSpellCast(player, predicate)' in selector
 assert 'if (!spell || spell->HasModifierApplied(mod))' in (root/'src/game/Objects/Player.cpp').read_text(encoding='utf-8')

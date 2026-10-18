@@ -3198,7 +3198,13 @@ void PlayerbotAI::ResetStrategies(bool autoLoad)
     if (autoLoad && HasPlayerRelation()) sPlayerbotDbStore.Load(this);
     // Applied after saved strategies so existing human-owned companions receive
     // the corrected native cancellation reaction too.
-    if (UsesCoordinatedPartyHealing()) reactionEngine->addStrategy("heal interrupt");
+    // Group invitations may happen after login/reset. Install the reaction for
+    // an owned companion now, while preserving deliberately selected prehealing.
+    if (HasActivePlayerMaster() && !IsRealPlayer() && !IsInPvp() &&
+        !HasStrategy("preheal", BotState::BOT_STATE_COMBAT))
+    {
+        reactionEngine->addStrategy("heal interrupt");
+    }
 
     // A role handed out by the dungeon finder wins over both the talent spec
     // and the stored strategy set - hence applied last. addStrategy() drops the
@@ -3222,7 +3228,7 @@ void PlayerbotAI::ResetStrategies(bool autoLoad)
 bool PlayerbotAI::UsesCoordinatedPartyHealing()
 {
     return HasActivePlayerMaster() && !IsRealPlayer() && !IsInPvp() &&
-        bot->IsInWorld() && bot->GetGroup();
+        bot->IsInWorld() && bot->GetGroup() && !HasStrategy("preheal", BotState::BOT_STATE_COMBAT);
 }
 
 uint32 PlayerbotAI::GetPartyHealingPressure(Unit* target)
