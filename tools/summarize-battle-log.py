@@ -66,7 +66,7 @@ def analyze(events, errors=None):
             return None
         if key not in stats:
             stats[key] = {"guid": key, "damage": 0, "damage_taken": 0, "dot_damage": 0, "wand_damage": 0,
-                          "pet_damage": 0, "healing": 0, "healing_others": 0, "self_healing": 0,
+                          "pet_damage": 0, "absorbed_damage_taken": 0, "healing": 0, "healing_others": 0, "self_healing": 0,
                           "healing_outside_party": 0, "raw_healing": 0, "overheal": 0, "self_or_friendly_damage_taken": 0,
                           "mana_spent": 0, "rage_raw_spent": 0, "other_resources": {}, "resource_gains": {}, "pool_gains": {}, "pool_losses": {},
                           "dps_spell_launches": 0, "heal_spell_launches": 0, "wand_launches": 0,
@@ -122,6 +122,7 @@ def analyze(events, errors=None):
                                                "runner_exception": bool(e.get("target_was_fleeing", b.get("fleeing")))})
             if receiver:
                 receiver["damage_taken"] += effective
+                receiver["absorbed_damage_taken"] += max(0, e.get("absorbed", 0))
                 if own: receiver["self_or_friendly_damage_taken"] += effective
         elif kind == "heal" and row:
             overheal = max(0, amount - effective)
@@ -239,6 +240,7 @@ def analyze(events, errors=None):
             "native_threat_victim_changes": aggro, "native_assistance_signals": assistance,
             "limits": ["Threat/contact/movement chronology does not prove which actor caused an add.",
                        "Overlapping heals can be appropriate; assess them with effective healing and overhealing.",
+                       "Shield absorption is recorded on incoming damage where native data is supplied, but is not credited to its caster or counted as healing. Passive health regeneration is not counted as cast healing.",
                        "Wand time is estimated from state samples; gaps above two seconds are excluded.",
                        "Damage per mana is a whole-battle ratio including free attacks, not per-spell causal attribution.",
                        "Periodic damage is not charged mana again. Native rage values are divided by ten for display.",
@@ -307,7 +309,7 @@ def write_timeline(events, path):
               "actor_health", "actor_max_health", "target_health", "target_max_health",
               "actor_selected_guid", "actor_victim_guid", "leader_selected_guid", "leader_sample_age_ms",
               "actor_x", "actor_y", "actor_z", "target_x", "target_y", "target_z",
-              "target_fleeing", "target_assistance_running", "actor_casting_spell", "actor_shooting_spell", "attack_type", "damage_type"]
+              "target_fleeing", "target_assistance_running", "actor_casting_spell", "actor_shooting_spell", "attack_type", "damage_type", "absorbed", "resisted", "periodic", "critical", "triggered"]
     def safe(value):
         return "'" + value if isinstance(value, str) and value.startswith(("=", "+", "-", "@")) else value
     def guid(value):
@@ -339,7 +341,10 @@ def write_timeline(events, path):
                        target_fleeing=b.get("fleeing"), target_assistance_running=b.get("assistance_running"),
                        actor_casting_spell=a.get("casting"), actor_shooting_spell=a.get("shooting"),
                        attack_type=e.get("attack_type") if kind == "damage" else "",
-                       damage_type=e.get("damage_type") if kind == "damage" else "")
+                       damage_type=e.get("damage_type") if kind == "damage" else "",
+                       absorbed=e.get("absorbed") if kind == "damage" else "",
+                       resisted=e.get("resisted") if kind == "damage" else "",
+                       periodic=e.get("periodic"), critical=e.get("critical"), triggered=e.get("triggered"))
             writer.writerow({key: safe(value) for key,value in row.items()})
 
 

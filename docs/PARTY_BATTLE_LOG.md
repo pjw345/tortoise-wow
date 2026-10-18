@@ -142,3 +142,5 @@ stacks, and compare Priest/Paladin healing and Mage spell/wand activity. Do not
 mark the combat AI fixed based on diagnostic build or fixture success.
 
 Native assistance runs are recorded separately from the ordinary fleeing unit flag. MoveSeekAssistance can run without UNIT_STAT_FLEEING; runner observations include both assistance movement phases. Native flee-for-assistance, scheduled assistance and call-for-help requests appear in the report timeline. Requests do not prove that helpers responded or which party member caused an add.
+
+Healing totals cover native explicit heals and periodic heal ticks. Passive health regeneration is not cast healing. Incoming damage includes native absorption/resistance values when supplied; absorbed damage is not credited to an individual shield caster and must not be treated as evidence that a shielding priest contributed nothing.
