@@ -271,14 +271,23 @@ bool AddGatheringLootAction::AddLoot(Player* requester, ObjectGuid guid, bool ex
     if (loot.IsEmpty() || !wo)
         return false;
 
-    if (!sServerFacade.IsWithinLOSInMap(bot, wo))
-        return false;
-
     if (loot.skillId == SKILL_NONE)
         return false;
 
-    if (!loot.IsLootPossible(bot))
+    bool const debugLoot = ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT);
+    if (!sServerFacade.IsWithinLOSInMap(bot, wo))
+    {
+        if (debugLoot)
+            sLog.outLoot("bot=%s event=gather-reject guid=%lu reason=line-of-sight", bot->GetName(), guid.GetRawValue());
         return false;
+    }
+
+    if (!loot.IsLootPossible(bot))
+    {
+        if (debugLoot)
+            sLog.outLoot("bot=%s event=gather-reject guid=%lu reason=loot-policy", bot->GetName(), guid.GetRawValue());
+        return false;
+    }
 
     float gatheringDistanceToUse = sPlayerbotAIConfig.gatheringDistance;
 
@@ -309,39 +318,36 @@ bool AddGatheringLootAction::AddLoot(Player* requester, ObjectGuid guid, bool ex
 
     if (sServerFacade.IsDistanceGreaterThan(sServerFacade.GetDistance2d(requester, wo), gatheringDistanceToUse))
     {
+        if (debugLoot)
+            sLog.outLoot("bot=%s event=gather-reject guid=%lu reason=range master-distance=%.1f cap=%.1f",
+                bot->GetName(), guid.GetRawValue(), sServerFacade.GetDistance2d(requester, wo), gatheringDistanceToUse);
         return false;
     }
 
-    //check hostile units after distance checks, to avoid unnecessary calculations
-
-    float MOB_AGGRO_DISTANCE = 30.0f;
-    std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(wo, MOB_AGGRO_DISTANCE);
-    std::list<Unit*> strongHostiles;
-    for (auto hostile : hostiles)
+    // Followers use the same configured destination safety as ordinary loot.
+    // AddAllLootAction rechecks it immediately before admission, and the native
+    // selection/movement paths recheck it again. Preserve solo/leader policy.
+    if (!isInGroup || ai->IsGroupLeader())
     {
-        if (!(bot->GetLevel() > hostile->GetLevel() + 7))
+        float MOB_AGGRO_DISTANCE = 30.0f;
+        std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(wo, MOB_AGGRO_DISTANCE);
+        std::list<Unit*> strongHostiles;
+        for (auto hostile : hostiles)
         {
-            strongHostiles.push_back(hostile);
+            if (!(bot->GetLevel() > hostile->GetLevel() + 7))
+            {
+                strongHostiles.push_back(hostile);
+            }
         }
-    }
 
-    if (isInGroup && !ai->IsGroupLeader())
-    {
-        if (hostiles.size() > 0)
-        {
-            std::ostringstream out;
-            out << hostiles.front()->GetName() << " is blocking " << wo->GetName() << ", need to kill it or I will not gather";
-            ai->TellError(requester, out.str());
-            return false;
-        }
-    }
-    else
-    {
         if (strongHostiles.size() > 1)
         {
             std::ostringstream out;
             out << strongHostiles.front()->GetName() << " is blocking " << wo->GetName() << ", need to kill it or I will not gather";
             ai->TellError(requester, out.str());
+            if (debugLoot)
+                sLog.outLoot("bot=%s event=gather-reject guid=%lu reason=solo-hostiles radius=%.0f",
+                    bot->GetName(), guid.GetRawValue(), MOB_AGGRO_DISTANCE);
             return false;
         }
     }

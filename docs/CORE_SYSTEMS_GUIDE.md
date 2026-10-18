@@ -440,8 +440,10 @@ This corrects the fixed 24-second normal item wait without changing regeneration
 item costs, healing priorities, recovery start thresholds or unrelated waits.
 
 UseGameObject decodes the chest through native LootObject before selecting it.
-Mining/herbalism requirements the bot lacks (or has insufficient skill for) are
-silent skips, without changing its selected loot or attempting open loot. Other
+Bots without Mining/Herbalism silently skip those nodes. An explicit use command
+with a trained but insufficient profession reports the formatted node and native
+current/required skill. Both cases leave selected loot untouched and do not
+attempt open loot. Automatic gathering remains silent. Other
 chests, lockpicking, eligible gatherers, missing-tool/open errors and existing
 quest-chest behavior retain their native paths and failure reports.
 
@@ -722,3 +724,21 @@ attackability and tapping remain checked. A stunned runner may be struck in
 melee reach without pursuit; ranged bots retain their finish-from-position lock.
 
 See PARTY_COMBAT_SAFETY_2026-10-18.md for battle evidence and validation limits.
+
+
+## Gathering follower safety consistency (2026-10-18)
+
+Automatic gathering previously rejected grouped followers for any hostile within
+an extra hard-coded 30 yards, before the shared loot admission path applied
+LootHostileDistance (20 on the test VM). Grouped followers now use that existing
+shared safety check, including its configured opt-out and later selection/movement
+rechecks. Solo/group-leader gathering retains its native 30-yard strong-hostile
+policy. Gathering discovery range, LOS, native profession/tool/loot eligibility,
+bag capacity and spell opening are unchanged. Explicit `u go` retains its native
+manual interaction path; it does not establish automatic admission eligibility.
+
+Opt-in debug-loot gathering rejects now identify LOS, loot policy, gathering
+range and solo-hostile failures. The shared parent reports configured hostile
+blocks. No new UI chatter, configuration, logging stream or scheduler is added.
+This corrects a proven policy inconsistency; the old Alon action log only said
+FAILED and does not prove which filter rejected his particular Copper Vein.

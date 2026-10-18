@@ -1188,3 +1188,17 @@ correlate cast_start/cast_finish, native failure codes, HP and attack timing in
 the battle capture. Current mean-melee estimates are conservative and omit
 ranged bursts/DoTs/mitigation. No new logging stream, per-tick trace or retention
 policy was added for this follow-up; existing action logging can be disabled.
+
+
+## Automatic gathering rejection records (2026-10-18)
+
+Existing non-combat `debug loot` enables `event=gather-reject` for eligible
+profession objects rejected by LOS, native loot/skill/tool policy, master range
+or the retained solo-hostile check. Shared follower hostile safety is logged by
+the existing parent reject record. `loot-policy` is a grouped category, not a
+claim of a particular missing skill/tool. Failed discovery before a valid
+LootObject exists remains unclassified. Output follows the existing scan rate,
+logger and retention controls. Disable `debug loot` to remove these records.
+Automatic scans add no chat messages or logging thread. Explicit `u go` can
+reply when a trained gatherer lacks the required skill, including the node and
+current/required values. Bots without the profession remain silent.
