@@ -2650,7 +2650,7 @@ bool MovementAction::ChaseTo(WorldObject* obj, float distance, float angle)
     if (pursuit && !ai->CanPlayerMasterChase(pursuit))
     {
         if (BattleLog::Enabled())
-            BattleLog::Movement(bot, pursuit, pursuit->GetPositionX(), pursuit->GetPositionY(), pursuit->GetPositionZ(), "chase_blocked_policy");
+            BattleLog::Movement(bot, pursuit, 0, 0, 0, "chase_blocked_policy");
         return false;
     }
     if (!ai->CanMove())
@@ -2686,8 +2686,8 @@ bool MovementAction::ChaseTo(WorldObject* obj, float distance, float angle)
 
     UpdateMovementState();
     ai->SetPlayerMasterPursuitTarget(pursuit);
-    if (BattleLog::Enabled())
-        BattleLog::Movement(bot, pursuit, obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ(), "chase_intent");
+    if (BattleLog::Enabled() && pursuit)
+        BattleLog::Movement(bot, pursuit, 0, 0, 0, "chase_intent");
 
     bot->HandleEmoteState(0);
     if (!bot->IsStandState())

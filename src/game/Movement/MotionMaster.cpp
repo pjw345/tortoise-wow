@@ -411,7 +411,7 @@ void MotionMaster::MoveChase(Unit* target, float dist, float angle)
     if (!target)
         return;
 
-    BattleLog::Movement(m_owner, target, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), "chase_request");
+    BattleLog::Movement(m_owner, target, 0, 0, 0, "chase_request");
     DEBUG_FILTER_LOG(LOG_FILTER_AI_AND_MOVEGENSS, "%s chase to %s", m_owner->GetGuidStr().c_str(), target->GetGuidStr().c_str());
 
     if (m_owner->IsPlayer())

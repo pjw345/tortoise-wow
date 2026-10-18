@@ -827,7 +827,7 @@ uint32 Unit::DealDamage(Unit* pVictim, uint32 damage, CleanDamage const* cleanDa
 
     if (!damage)
     {
-        BattleLog::Damage(this, pVictim, 0, 0, damagetype, spellProto, cleanDamage, spell, BattleLog::Enabled() && BattleLog::IsRunner(pVictim));
+        BattleLog::Damage(this, pVictim, 0, 0, damagetype, spellProto, cleanDamage, spell, BattleLog::Enabled() && pVictim->FindMap() == FindMap() && BattleLog::IsRunner(pVictim));
         if (cleanDamage)
         {
             //sLog.outString("[ABSORB] Deal Damage sur %s (Dam%u|Absorb%u|Resist%u)", pVictim->GetName(), cleanDamage->damage, cleanDamage->absorb, cleanDamage->resist);
@@ -986,7 +986,7 @@ uint32 Unit::DealDamage(Unit* pVictim, uint32 damage, CleanDamage const* cleanDa
     }
 
     uint32 battleEffective = 0;
-    bool battleWasFleeing = BattleLog::Enabled() && BattleLog::IsRunner(pVictim);
+    bool battleWasFleeing = BattleLog::Enabled() && pVictim->FindMap() == FindMap() && BattleLog::IsRunner(pVictim);
     if (health <= damage && pVictim->GetInvincibilityHpThreshold() == 0)
     {
         if (auto player = pVictim->ToPlayer(); player && player->IsHardcore() && sWorld.HitsDiffThreshold())

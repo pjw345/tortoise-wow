@@ -232,7 +232,9 @@ void Threat(Unit* enemy,Unit* actor,float delta,float total)
 void Movement(Unit* actor,Unit* target,float x,float y,float z,char const* reason)
 {
     if(!Enabled()||!Relevant(actor)) return;
-    Event e=Make("movement",actor,target); std::ostringstream out; out << reason << " destination=" << x << ',' << y << ',' << z; e.detail=out.str(); recorder.Emit(e);
+    Event e=Make("movement",actor,target);
+    if(target&&e.kind!="scope_gap") { x=e.target.x;y=e.target.y;z=e.target.z; }
+    std::ostringstream out; out << reason << " destination=" << x << ',' << y << ',' << z; e.detail=out.str(); recorder.Emit(e);
 }
 void Decision(Unit* actor,Unit* target,std::string const& action,char const* result)
 {
