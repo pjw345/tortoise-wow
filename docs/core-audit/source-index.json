@@ -25708,7 +25708,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "31F1D2ECD0F54BD9A5A22750E2E462F5EBA8E0B66A241E87419F21EC6EC29764"
+    "sha256": "E44A12410E5EC4B0E273CE7E440E38195002001269F9A0F7E1A5D151D40FABA7"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/LootRollAction.cpp",
