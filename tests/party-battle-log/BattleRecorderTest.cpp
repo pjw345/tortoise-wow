@@ -46,6 +46,7 @@ int main(int argc,char** argv) {
         cfg.directory=base/"unknown";r.Configure(cfg);leader=Member(1,true);r.Start(leader,{1,2},{leader},Event{},"test",3000);
         leader.combat=false;r.Observe(leader,{1,2},3001);Require(r.Contains(1),"Unknown/off-map member was silently idle");
         priest=Member(2,false);r.Observe(priest,{1,2},3002);Require(!r.Contains(1),"Off-map member's observed idle state was ignored");
+        Require(ReadAll(cfg.directory).find("\"complete\":false")!=std::string::npos,"Initial off-map observation gap claimed completeness");
 
         cfg.directory=base/"roster";r.Configure(cfg);r.Start(leader,{1,2},{leader,priest},Event{},"test",4000);r.Observe(leader,{1},4001);
         Require(ReadAll(cfg.directory).find("party_changed")!=std::string::npos,"Roster change was not incomplete");

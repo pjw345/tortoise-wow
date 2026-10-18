@@ -203,6 +203,7 @@ public:
             s.path=settings.directory/("battle-"+std::to_string(wall)+"-"+std::to_string(leader.guid)+"-"+std::to_string(++serial)+".jsonl");
             s.file.reset(std::fopen(s.path.string().c_str(),"wb")); if(!s.file) return false;
             for(auto const& a:initial) { s.actors[a.guid]=a; s.observedAt[a.guid]=now; s.sawCombat |= a.combat; }
+            s.scopeGap=s.actors.size()<s.roster.size(); // initially off-map members were not atomically observed
             std::string rosterJson="["; for(Guid g:s.roster) { if(rosterJson!="[") rosterJson+=','; rosterJson+=Quote(std::to_string(g)); } rosterJson+=']';
             std::string partyJson="["; for(auto const& a:initial) { if(partyJson!="[") partyJson+=','; partyJson+=a.Json(); } partyJson+=']';
             if(!Write(s,"\"kind\":\"battle_start\",\"leader\":"+leader.Json()+",\"roster\":"+rosterJson+",\"party\":"+partyJson+",\"revision\":"+Quote(revision)+",\"wall_time_us\":"+std::to_string(wall),now)) return false;
