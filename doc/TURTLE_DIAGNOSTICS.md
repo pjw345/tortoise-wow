@@ -1213,3 +1213,6 @@ Focused tests and deployment receipts are offline artifacts, not runtime telemet
 
 Classic group-roll equipment recovery reuses the existing equip/action logs and
 packet queue; no additional diagnostic output or runtime switches are added.
+
+Two-hand eligibility correction adds no logs or runtime switches; native inventory
+errors and the existing roll/equip feedback remain the observation points.

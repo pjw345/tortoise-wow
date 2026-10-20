@@ -229,3 +229,23 @@ inventory changes inside the packet-send hook are introduced.
 The regression constructs the native 34-byte Classic wire layout, delivers only
 the win notification (no item-push), and checks actual scan execution, foreign
 winners, short packets and repeats. Full server build and gameplay remain pending.
+
+## Two-handed upgrade eligibility with an occupied offhand (2026-10-20)
+
+Cria's saved Blackrock Mace plus Runic Stave scores 0 + 68 with the Holy scale;
+Lesser Staff of the Spire scores 198. She has Staves skill. Native CanEquipItem
+rejects a two-hander with an equipped offhand when not_loading=false, before
+the comparison. That mode intentionally avoids implicit offhand displacement
+during loading; it does not answer whether a live upgrade can be equipped.
+
+GetEquipDestination requests live native placement validation for a two-hander
+with an occupied offhand, for both real carried instances and unseen roll
+items. CanEquipUnseenItem forwards that optional flag; its existing default is
+unchanged for other callers. Native CanUnequipItem and CanStoreItem must succeed,
+so a locked offhand or lack of bag space still rejects the change. The comparison
+still includes the combined equipped hand scores. No forced unequip, item-specific
+exception, skill training, scoring-data change or inventory rewrite is added.
+
+The focused regression fails against the old caller and passes after correction;
+carried and unseen replacements and rejected offhand storage are covered. Full
+native build, Linux checks and gameplay validation remain pending.
