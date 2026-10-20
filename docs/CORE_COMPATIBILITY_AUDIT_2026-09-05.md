@@ -208,3 +208,24 @@ Focused fixtures exercise production methods under Windows and Linux toolchains.
 Full image compilation and gameplay acceptance must be recorded separately in the
 release receipt. A successful fixture/build does not prove live equipment, consumable
 use, movement or combat acceptance. Deadmines floor/path behavior remains parked.
+
+## Classic group-roll equipment notification (2026-10-20)
+
+Flore won Shimmering Gloves (6565) at 16:01:08 UTC on e7aa6ff5, but no
+equip-upgrades action followed. Native Group::CountTheRoll stores Need/Greed
+awards and calls OnReceivedItem without SendNewItem; OnReceivedItem only handles
+save/log policy. The bot previously listened for SMSG_ITEM_PUSH_RESULT only.
+
+The Classic bot adapter now queues SMSG_LOOT_ROLL_WON through its existing
+packet/trigger engine and invokes the existing gear scan only for the winning
+bot. The native award, roll votes and item-store contracts are unchanged. The
+notification is not permission to equip the rolled template: the scan evaluates
+real carried instances and still uses native equipment restrictions. Duplicate
+events are harmless, other winners and truncated packets are rejected. Combat
+item restrictions remain authoritative. This packet layout is Classic-only;
+TBC/WotLK registration is unchanged. No new timers, logs, SQL writes or synchronous
+inventory changes inside the packet-send hook are introduced.
+
+The regression constructs the native 34-byte Classic wire layout, delivers only
+the win notification (no item-push), and checks actual scan execution, foreign
+winners, short packets and repeats. Full server build and gameplay remain pending.

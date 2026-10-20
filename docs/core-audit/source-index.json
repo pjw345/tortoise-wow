@@ -17746,7 +17746,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "22E19538EB268E1565402D2BA251C4F40C7A64A4004AAE5A2381ADB65003A6B6"
+    "sha256": "4B5B35D2E5FAA8D71E2DD46F40539B54E75C54E114EAB6DB13B4D6D5770E0D3E"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/triggers/RpgTriggers.h",
@@ -20599,7 +20599,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "E013CD35BFF8F8DD14044787F7D3233A48879205A39C335CF9A3BF7E2A12D72F"
+    "sha256": "9B55D3A5E1344636244134642415DDC63E24F8EC3C379B032451771B241AB33C"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/warrior/ProtectionWarriorStrategy.cpp",
@@ -22963,7 +22963,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "B79E029944A97677069308ACB2489A7FCD5731087F15D825D1E77271E8B8396A"
+    "sha256": "34B48386D3413128B52832B1FD5CA1C513F29DAE890334DAE3AE072346C184B2"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/CustomStrategyEditAction.h",
@@ -24581,7 +24581,7 @@
       "death_reset",
       "async"
     ],
-    "sha256": "72651CDC3E069259CA10F67E556FA7F1885D6B01EFACAF85C0610DFB954F0C2C"
+    "sha256": "34B3DF9D878C3467CFF172A037A3EF1EAADC06AC6E453604268288137A88BC5C"
   },
   {
     "file": "src/game/BattleLog.cpp",

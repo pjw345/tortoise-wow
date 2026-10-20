@@ -270,6 +270,22 @@ bool EquipUpgradesAction::Execute(Event& event)
             return false;
         }
     }
+#ifdef MANGOSBOT_ZERO
+    else if (event.getSource() == "loot roll won")
+    {
+        // Group::SendLootRollWon: loot GUID, four uint32 fields, winner GUID,
+        // roll number and vote. Every eligible party member receives this packet.
+        WorldPacket& data = event.getPacket();
+        if (data.size() < 2 * sizeof(uint64) + 4 * sizeof(uint32) + 2 * sizeof(uint8))
+            return false;
+        data.rpos(0);
+        ObjectGuid lootGuid, winnerGuid;
+        uint32 lootSlot, itemId, suffixFactor, randomPropertyId;
+        data >> lootGuid >> lootSlot >> itemId >> suffixFactor >> randomPropertyId >> winnerGuid;
+        if (winnerGuid != bot->GetObjectGuid())
+            return false;
+    }
+#endif
     else if (event.getSource() == "item push result")
     {
         bool valid = false;
