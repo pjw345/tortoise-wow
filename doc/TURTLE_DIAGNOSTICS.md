@@ -1202,3 +1202,11 @@ logger and retention controls. Disable `debug loot` to remove these records.
 Automatic scans add no chat messages or logging thread. Explicit `u go` can
 reply when a trained gatherer lacks the required skill, including the node and
 current/required values. Bots without the profession remain silent.
+
+## Equipment/consumable corrections (2026-10-20)
+
+No new logging stream, timer, per-tick probe or retention policy was introduced.
+Existing EquipAction events/chat now require a verified native equipment result.
+Existing opt-in roll feedback reports the final vote after player priority and
+loot policy. Existing debug equip output remains controlled by that strategy.
+Focused tests and deployment receipts are offline artifacts, not runtime telemetry.

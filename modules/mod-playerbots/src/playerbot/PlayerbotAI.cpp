@@ -920,7 +920,8 @@ bool PlayerbotAI::CanPlayerMasterChase(Unit* target)
     // An attack toggle/selection is not combat contact. Let pulls come to the
     // human tank and keep companion pursuit within the existing follow range.
     // Stationary defense is decided separately from permission to move.
-    return target->IsInCombat() && target->IsWithinDistInMap(master, GetRange("follow"));
+    return target->IsInCombat() && (master->CanReachWithMeleeAttack(target) ||
+        target->IsWithinDistInMap(master, GetRange("follow")));
 }
 
 Unit* PlayerbotAI::GetPlayerMasterFleeingControlTarget(SpellEntry const* spell)
@@ -3262,6 +3263,12 @@ void PlayerbotAI::ResetStrategies(bool autoLoad)
     {
         reactionEngine->addStrategy("heal interrupt");
     }
+
+    // Restore automatic owned buff-item use after loading legacy saved strategies.
+    // The existing action retains native use, stacking and cooldown checks.
+    if (sPlayerbotAIConfig.autoBuffConsumables && HasActivePlayerMaster() &&
+        !IsRealPlayer() && !IsInPvp())
+        engines[(uint8)BotState::BOT_STATE_NON_COMBAT]->addStrategy("consumables");
 
     // A role handed out by the dungeon finder wins over both the talent spec
     // and the stored strategy set - hence applied last. addStrategy() drops the

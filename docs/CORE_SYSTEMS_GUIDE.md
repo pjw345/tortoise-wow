@@ -742,3 +742,46 @@ range and solo-hostile failures. The shared parent reports configured hostile
 blocks. No new UI chatter, configuration, logging stream or scheduler is added.
 This corrects a proven policy inconsistency; the old Alon action log only said
 FAILED and does not prove which filter rejected his particular Copper Vein.
+
+## Companion equipment and buff-item decisions (2026-10-20)
+
+CanPlayerMasterChase accepts engaged enemies inside the human master's native
+melee reach as well as the existing follow offset. A master can fight at normal
+melee reach while the companion catches up from behind; selection alone still
+does not authorize a pull. Fleeing targets never authorize pursuit.
+
+ItemUsageValue selects ring/trinket/dual-wield destinations by comparing legal
+native CanEquipItem candidates, rather than assuming NULL_SLOT selects the worst
+item. Roll and automatic-equipment classification share this destination and
+include random properties/enchantments even for equal base item IDs. Miscellaneous
+jewelry/held slots are separate from armor-material preferences. Native class,
+level, skill, uniqueness, binding and inventory constraints stay authoritative.
+
+Upgrade scans retain current hand equipment, refresh candidate classifications
+after mutations, and verify the actual native equipment result before reporting
+success. Two-handed upgrades compare against the combined equipped hand scores;
+an offhand alone cannot evict a two-hander. The scan is conservative: it does not
+search every possible pair of currently inferior bag weapons for a combined upgrade.
+Player Need still takes priority over bot Need, and feedback describes the final
+vote. Irrelevant damage-school bonuses no longer erase useful base caster stats.
+Existing stat-weight data is retained; this is not a new universal gear ranking.
+
+AiPlayerbot.AutoBuffConsumables defaults to 1 and installs the existing non-combat
+consumables strategy for human-owned PvE bots after legacy saved strategies load.
+Set it to 0 to disable automatic addition; an explicitly saved consumables strategy
+remains a separate user choice. Free bots, real players and PvP defaults are unchanged.
+
+Generic classic consumables are classified through their spell effects. Combat
+health regeneration is recognized; physical armor buffs are distinct from reserved
+elemental protection items; stat scrolls are not blocked by a food buff. Selection
+uses real carried items, native cooldowns, native spell-group/rank exclusion and
+self targeting. Lower usable tiers are selected first, existing conflicting effects
+are retained until expiry, and irrelevant Strength/Agility buffs are skipped by
+casters/healers. A rejected candidate does not starve unrelated usable buffs.
+Emergency healing/mana potion scheduling remains separate from this preparation.
+
+tests/playerbot-gear-consumables extracts the production classification, destination,
+scan, equip-dispatch, buff-selection and strategy-reset methods. The master-focus
+fixture covers native melee contact outside the follow offset and retained pursuit
+limits. These fixtures do not establish gameplay, native navmesh or live aura-data
+acceptance; test the actual party after deployment.

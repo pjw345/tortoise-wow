@@ -82,6 +82,7 @@ namespace ai
         ItemUsageValue(PlayerbotAI* ai, std::string name = "item usage") : CalculatedValue<ItemUsage>(ai, name), Qualified() {}
         virtual ItemUsage Calculate() override;
 
+        static InventoryResult GetEquipDestination(ItemQualifier& itemQualifier, Player* bot, uint16& dest);
         static ItemUsage QueryItemUsageForEquip(ItemQualifier& itemQualifier, Player* bot);
         static uint32 GetSmallestBagSize(Player* bot);
         static std::string ReasonForNeed(ItemUsage usage, ItemQualifier qualifier = ItemQualifier(), uint32 count = 1, Player* bot = nullptr);

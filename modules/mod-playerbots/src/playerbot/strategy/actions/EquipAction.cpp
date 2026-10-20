@@ -160,74 +160,30 @@ uint8 EquipAction::GetSmallestBagSlot(Player* bot)
 
 void EquipAction::EquipItemToSlot(Player* requester, Item* item, uint8 targetSlot)
 {
-    uint8 bagIndex = item->GetBagSlot();
-    uint8 slot = item->GetSlot();
-    uint32 itemId = item->GetProto()->ItemId;
-
-    uint16 dest;
-    InventoryResult msg = bot->CanEquipItem(targetSlot, dest, item, true);
-    if (msg != EQUIP_ERR_OK)
-    {
-        bot->SendEquipError(msg, item, nullptr);
-        return;
-    }
-
-    uint8 destSlot = dest & 0xFF;
-    if (destSlot != targetSlot)
-    {
-        ai->TellPlayer(requester, "Cannot equip this item to the specified slot.");
-        return;
-    }
-
-    Item* oldItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, targetSlot);
-    Item* oldOffhand = nullptr;
-    if (destSlot == EQUIPMENT_SLOT_MAINHAND && item->GetProto()->InventoryType == INVTYPE_2HWEAPON)
-        oldOffhand = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND);
-
-    uint16 src = ((bagIndex << 8) | slot);
-    uint16 dstPos = ((INVENTORY_SLOT_BAG_0 << 8) | targetSlot);
-
-    bot->SwapItem(src, dstPos);
-
-    RESET_AI_VALUE2(ItemUsage, "item usage", ItemQualifier(item).GetQualifier());
-
-    if (oldItem)
-        RESET_AI_VALUE2(ItemUsage, "item usage", ItemQualifier(oldItem).GetQualifier());
-    if (oldOffhand)
-        RESET_AI_VALUE2(ItemUsage, "item usage", ItemQualifier(oldOffhand).GetQualifier());
-
-    sPlayerbotAIConfig.logEvent(ai, "EquipAction", item->GetProto()->Name1, std::to_string(item->GetProto()->ItemId));
-
-    std::map<std::string, std::string> args;
-    args["%item"] = chat->formatItem(item);
-    ai->TellPlayer(requester, BOT_TEXT2("equip_command", args), PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
+    EquipItem(ai, requester, item, false, targetSlot);
 }
 
-void EquipAction::EquipItem(PlayerbotAI* ai, Player* requester, Item* item, bool silent)
+bool EquipAction::EquipItem(PlayerbotAI* ai, Player* requester, Item* item, bool silent, uint8 targetSlot)
 {
     Player* bot = ai->GetBot();
-    AiObjectContext* context = ai->GetAiObjectContext();
-
     uint8 bagIndex = item->GetBagSlot();
     uint8 slot = item->GetSlot();
     uint32 itemId = item->GetProto()->ItemId;
 
     uint16 dest;
-    InventoryResult result = bot->CanEquipItem(NULL_SLOT, dest, item, !item->IsBag());
-
-    Item* oldItem = nullptr;
-    Item* oldOffhand = nullptr;
-    if (result == EQUIP_ERR_OK)
+    InventoryResult result = bot->CanEquipItem(targetSlot, dest, item, !item->IsBag());
+    // Bag replacement is handled below, including the native empty-bag swap.
+    // With all bag slots occupied, the no-swap preflight has no free destination.
+    if (result != EQUIP_ERR_OK && item->GetProto()->InventoryType != INVTYPE_AMMO && !item->IsBag())
     {
-        oldItem = bot->GetItemByPos(dest);
-
-        if (oldItem && oldItem->GetSlot() == EQUIPMENT_SLOT_MAINHAND && item->GetProto()->InventoryType == INVTYPE_2HWEAPON)
-            oldOffhand = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND);
+        if (!silent) bot->SendEquipError(result, item, nullptr);
+        return false;
     }
 
     if (item->GetProto()->InventoryType == INVTYPE_AMMO)
     {
         bot->SetAmmo(itemId);
+        if (bot->GetUInt32Value(PLAYER_AMMO_ID) != itemId) return false;
     }
     else
     {
@@ -265,20 +221,26 @@ void EquipAction::EquipItem(PlayerbotAI* ai, Player* requester, Item* item, bool
             }
         }
 
-        if (!equipedBag) 
+        if (!equipedBag)
         {
-            WorldPacket packet(CMSG_AUTOEQUIP_ITEM, 2);
-            packet << bagIndex << slot;
-            bot->GetSession()->HandleAutoEquipItemOpcode(packet);
+            if (item->IsBag()) return false;
+            if (targetSlot != NULL_SLOT)
+                bot->SwapItem(item->GetPos(), dest);
+            else
+            {
+                WorldPacket packet(CMSG_AUTOEQUIP_ITEM, 2);
+                packet << bagIndex << slot;
+                bot->GetSession()->HandleAutoEquipItemOpcode(packet);
+            }
         }
+        // Native handlers can reject a swap (combat, full bags, uniqueness).
+        // Only report/invalidate a completed change.
+        if (item->GetBagSlot() != INVENTORY_SLOT_BAG_0 || item->GetSlot() >= INVENTORY_SLOT_BAG_END ||
+            bot->GetItemByPos(INVENTORY_SLOT_BAG_0, item->GetSlot()) != item)
+            return false;
     }
 
-    RESET_AI_VALUE2(ItemUsage, "item usage", ItemQualifier(item).GetQualifier());
-
-    if (oldItem)
-        RESET_AI_VALUE2(ItemUsage, "item usage", ItemQualifier(oldItem).GetQualifier());
-    if (oldOffhand)
-        RESET_AI_VALUE2(ItemUsage, "item usage", ItemQualifier(oldOffhand).GetQualifier());
+    ai->GetAiObjectContext()->ClearValues("item usage");
 
     sPlayerbotAIConfig.logEvent(ai, "EquipAction", item->GetProto()->Name1, std::to_string(item->GetProto()->ItemId));
 
@@ -288,6 +250,7 @@ void EquipAction::EquipItem(PlayerbotAI* ai, Player* requester, Item* item, bool
         args["%item"] = ChatHelper::formatItem(item);
         ai->TellPlayer(requester, BOT_TEXT2("equip_command", args), PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
     }
+    return true;
 }
 
 bool EquipUpgradesAction::Execute(Event& event)
@@ -355,23 +318,14 @@ bool EquipUpgradesAction::Execute(Event& event)
         }
     }
 
-    Item* oldMainhand = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND);
-    Item* oldOffhand = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND);
-        
-    if (oldMainhand)
-        UnequipAction::UnequipItem(ai, bot, oldMainhand, true);
-    if (oldOffhand)
-        UnequipAction::UnequipItem(ai, bot, oldOffhand, true);
-
-    context->ClearExpiredValues("item usage", 10); //Clear old item usage.
-
-    std::list<Item*> items;
-
+    // Keep the equipped baseline intact. Bag candidates are re-evaluated after
+    // each native mutation; a cached upgrade must not replace a better new item.
+    context->ClearValues("item usage");
     FindItemUsageVisitor visitor(bot, ItemUsage::ITEM_USAGE_EQUIP);
     ai->InventoryIterateItems(&visitor, IterateItemsMask::ITERATE_ITEMS_IN_BAGS);
     visitor.SetUsage(ItemUsage::ITEM_USAGE_BAD_EQUIP);
     ai->InventoryIterateItems(&visitor, IterateItemsMask::ITERATE_ITEMS_IN_BAGS);
-    items = visitor.GetResult();
+    std::list<Item*> items = visitor.GetResult();
 
     bool didEquip = false;
 
@@ -391,14 +345,17 @@ bool EquipUpgradesAction::Execute(Event& event)
             continue;
 #endif
 
-        ItemUsage usage = AI_VALUE2(ItemUsage, "item usage", ItemQualifier(item).GetQualifier());
+        ItemQualifier qualifier(item);
+        RESET_AI_VALUE2(ItemUsage, "item usage", qualifier.GetQualifier());
+        ItemUsage usage = AI_VALUE2(ItemUsage, "item usage", qualifier.GetQualifier());
         if (usage == ItemUsage::ITEM_USAGE_EQUIP || usage == ItemUsage::ITEM_USAGE_BAD_EQUIP)
         {
             sLog.outDetail("Bot #%d <%s> auto equips item %d (%s)", bot->GetGUIDLow(), bot->GetName(), item->GetProto()->ItemId, usage == ItemUsage::ITEM_USAGE_EQUIP ? "better than current" : usage == ItemUsage::ITEM_USAGE_BAD_EQUIP ? "wrong item but empty slot" : "");
             ai->TellDebug(ai->GetMaster(), "Equipping: " + chat->formatItem(item) + " - " + ItemUsageValue::ReasonForNeed(usage, item, 1, bot), "debug equip");
 
-            EquipItem(ai, GetMaster(), item, item == oldMainhand || item == oldOffhand);   
-            didEquip = true;
+            uint16 dest;
+            if (ItemUsageValue::GetEquipDestination(qualifier, bot, dest) == EQUIP_ERR_OK)
+                didEquip = EquipItem(ai, GetMaster(), item, false, uint8(dest & 255)) || didEquip;
         }
     }
 

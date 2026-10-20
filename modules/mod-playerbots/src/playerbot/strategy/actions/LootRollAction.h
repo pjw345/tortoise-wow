@@ -48,7 +48,7 @@ namespace ai
 
     protected:
         virtual ItemQualifier GetRollItem(ObjectGuid lootGuid, uint32 slot);
-        virtual RollVote CalculateRollVote(ItemQualifier& itemQualifier);
+        virtual RollVote CalculateRollVote(ItemQualifier& itemQualifier, bool humanNeeds = false);
         virtual bool RollOnItemInSlot(RollVote type, ObjectGuid lootGuid, uint32 slot);
         bool RollWithEtiquette(ObjectGuid lootGuid, uint32 slot);
         bool HumansStillDeciding(ObjectGuid lootGuid, uint32 slot, bool& humanNeeds);

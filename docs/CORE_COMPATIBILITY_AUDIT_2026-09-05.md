@@ -184,3 +184,27 @@ current/required values). Both return before selecting or opening loot. Native
 LootObject lock requirements and GetSkillValue remain authoritative; automatic
 scan admission, tools and open-error handling are unchanged. The existing
 source-extracted profession-command fixture covers these boundaries.
+
+### 2026-10-20 equipment, buff-item and melee-contact follow-up
+
+Reviewed the native item-push packet, CanEquipItem/FindEquipSlot, SwapItem and
+auto-equip handler contracts, native group voting, spell aura/rank/stack-group
+checks and legacy strategy restoration before changing their Playerbot adapters.
+NULL_SLOT indicates a legal destination, not the least valuable equipped item.
+Automatic scans previously unequipped hand items and reused cached upgrade results;
+same-template variants and generic-subclass buff consumables were also misclassified.
+
+The adapters now compare fresh equipment/variants and legal paired destinations,
+verify completed native mutations, preserve player Need priority, and enable owned
+non-combat buff preparation after saved strategies load. Native melee reach corrects
+the demonstrated catch-up failure without authorizing unengaged or fleeing pursuit.
+Turtle spell-group/rank checks protect existing consumable effects. Native content,
+spell casts, equipment mutations and loot resolution are reused; stat-weight SQL and
+character inventories are not rewritten. Current upstream/main has no corresponding
+Playerbot module implementation to transplant; variant config templates retain the
+existing shared adapter while Turtle-specific spell-group calls are MANGOS-gated.
+
+Focused fixtures exercise production methods under Windows and Linux toolchains.
+Full image compilation and gameplay acceptance must be recorded separately in the
+release receipt. A successful fixture/build does not prove live equipment, consumable
+use, movement or combat acceptance. Deadmines floor/path behavior remains parked.

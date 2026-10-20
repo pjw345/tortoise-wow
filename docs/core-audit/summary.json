@@ -1,6 +1,6 @@
 {
-  "source_commit": "1d0129fd9f42c9f8379f770ca86a7cb1e3cfff4a",
-  "generated_utc": "2026-10-18T13:16:13.716431+00:00",
+  "source_commit": "f45f5ca5dcd1a9c14bf384e2c0131df9456b353e",
+  "generated_utc": "2026-10-20T15:16:31.2790842Z",
   "maps": 70,
   "instance_maps": 44,
   "creature_templates": 14339,
@@ -13,5 +13,6 @@
   "missing_spawn_templates": 0,
   "missing_spawn_maps": 0,
   "no_runtime_validation": true,
-  "scanner_limit": "Lexical dependencies and literal legacy registrations only; not proof of all dynamic summons, preprocessing, runtime registrations or encounter completeness."
+  "scanner_limit": "Lexical dependencies and literal legacy registrations only; not proof of all dynamic summons, preprocessing, runtime registrations or encounter completeness.",
+  "source_state": "working tree: companion gear, consumables and melee-contact corrections"
 }
