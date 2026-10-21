@@ -842,7 +842,7 @@ native. No fixed use count, forced state transition or new timer was introduced.
 AiPlayerbot.AutoLootSkipItems is a configurable default item-policy exclusion:
 20516 (Bobbing Apple), plus Turtle Classic 51751 (Bone Chew Toy). Classic's
 custom ID is not applied to TBC/WotLK defaults. Active quest needs and the existing
-always-loot override take precedence; existing explicit skip-list precedence
+always-loot and forced Need/Greed overrides take precedence; existing explicit skip-list precedence
 is unchanged. Source admission declines only known templates consisting wholly
 of those excluded items, preserving unknown and mixed loot. Existing inventory
 is not deleted. The initial confirmed sources are Apple Bob (300203) and

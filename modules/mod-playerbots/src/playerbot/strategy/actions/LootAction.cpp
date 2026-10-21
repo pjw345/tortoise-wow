@@ -715,6 +715,9 @@ bool StoreLootAction::IsLootExcludedByDefault(uint32 itemId, PlayerbotAI* ai)
     // Existing explicit always-loot requests and actual quest needs take
     // precedence over the deployment's default novelty exclusions.
     AiObjectContext* context = ai->GetAiObjectContext();
+    ForceItemUsage forced = AI_VALUE2_EXISTS(ForceItemUsage, "force item usage", itemId, ForceItemUsage::FORCE_USAGE_NONE);
+    if (forced == ForceItemUsage::FORCE_USAGE_NEED || forced == ForceItemUsage::FORCE_USAGE_GREED)
+        return false;
     std::set<uint32>& alwaysLoot = AI_VALUE(std::set<uint32>&, "always loot list");
     return alwaysLoot.find(itemId) == alwaysLoot.end() &&
         !ItemUsageValue::IsNeededForQuest(ai->GetBot(), itemId);

@@ -11,6 +11,8 @@ constexpr int SKILL_MINING=186,SKILL_HERBALISM=182,GAMEOBJECT_TYPE_CHEST=3,GAMEO
 constexpr int GO_READY=1,GO_ACTIVATED=2,GO_JUST_DEACTIVATED=3,LOOT_CORPSE=1,LOOT_SKINNING=6;
 constexpr int NOT_GROUP_TYPE_LOOT=0,SPELL_EFFECT_CREATE_ITEM=24,MAX_QUEST_LOG_SIZE=25;
 enum class BotState{BOT_STATE_NON_COMBAT};
+enum class ForceItemUsage{FORCE_USAGE_NONE,FORCE_USAGE_NEED,FORCE_USAGE_GREED};
+ForceItemUsage forced=ForceItemUsage::FORCE_USAGE_NONE;
 struct AiObjectContext{};
 struct ObjectGuid {uint32 id=1;bool go=true;bool IsGameObject()const{return go;}};
 struct ItemPrototype {uint32 MaxCount=0,StartQuest=0;std::string Name1="Test item";};
@@ -56,6 +58,7 @@ template<>LootObjectStack* value<LootObjectStack*>(std::string){return &stack;}
 template<class T,class K>T value2(std::string n,K){return n=="item count"?0:100;}
 #define AI_VALUE(type,name) value<type>(name)
 #define AI_VALUE2(type,name,key) value2<type>(name,key)
+#define AI_VALUE2_EXISTS(type,name,key,fallback) ::forced
 #define GAI_VALUE2(type,name,key) sourceItems
 struct StoreLootAction {PlayerbotAI* ai;Player* bot;static bool IsLootExcludedByDefault(uint32,PlayerbotAI*);
  static bool IsLootAllowed(ItemQualifier&,PlayerbotAI*);bool QueueNextMiningAttempt(Player*,ObjectGuid);};
@@ -94,6 +97,9 @@ int main(){try{
  sourceItems={20516,1205};check(selection.Calculate(),"mixed source still opens for useful loot");
  sourceItems={};check(selection.Calculate(),"unknown sources keep native inspection");
  sourceItems={20516};alwaysLoot.insert(20516);check(selection.Calculate(),"explicit always-loot permits source discovery too");alwaysLoot.clear();
+ forced=ForceItemUsage::FORCE_USAGE_NEED;check(StoreLootAction::IsLootAllowed(apple,&ai)&&selection.Calculate(),"existing forced Need overrides novelty defaults for item and source");
+ forced=ForceItemUsage::FORCE_USAGE_GREED;check(StoreLootAction::IsLootAllowed(apple,&ai)&&selection.Calculate(),"existing forced Greed overrides novelty defaults for item and source");
+ skipItems.insert(20516);check(!StoreLootAction::IsLootAllowed(apple,&ai),"explicit skip still overrides forced usage");skipItems.clear();forced=ForceItemUsage::FORCE_USAGE_NONE;
  sPlayerbotAIConfig.autoLootSkipItems.clear();check(StoreLootAction::IsLootAllowed(apple,&ai)&&selection.Calculate(),"empty configuration restores native policy");
  std::cout<<"Native mining depletion/requeue, novelty policy and source-admission cases passed\n";
 }catch(std::exception const& e){std::cerr<<e.what()<<'\n';return 1;}}

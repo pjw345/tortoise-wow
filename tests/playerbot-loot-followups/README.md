@@ -5,7 +5,7 @@ exclusion/policy and next-mining-admission methods. It exercises empty generated
 loot on a READY vein, repeated native uses versus depletion/despawn/in-use state,
 combat/death/disabled gathering, normal admission rejection, herbs/containers,
 configured novelty sources, mixed/unknown loot, quest needs and existing manual
-loot-list precedence. The extractor verifies that retry admission occurs after
+loot-list and forced Need/Greed precedence. The extractor verifies that retry admission occurs after
 native release and only after a successful item transfer.
 
 The existing gathering-safety fixture executes the actual admission method for

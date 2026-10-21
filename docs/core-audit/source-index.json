@@ -22279,7 +22279,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "A766618881DC60DA88639AF3E4E3616DD4E6C901AAE9663AEF2BB134013B9BBC"
+    "sha256": "7FF5984CB2B39C74DED15F49469B2E288C07CA065F252C84099F02B97D105378"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/PullActions.cpp",
