@@ -384,6 +384,7 @@ public:
     void EnsureDefaultMovementStrategy(Player* requester = nullptr);
 	std::string HandleRemoteCommand(std::string command);
     void HandleCommand(uint32 type, const std::string& text, Player& fromPlayer, const uint32 lang = LANG_UNIVERSAL);
+    bool AdmitQuestSyncSend();
     bool IsBotCommandMessage(std::string message);
     void QueueChatResponse(uint32 msgType, ObjectGuid guid1, ObjectGuid guid2, std::string message, std::string chanName, std::string name, bool noDelay = false);
 	void HandleBotOutgoingPacket(const WorldPacket& packet);
@@ -867,6 +868,9 @@ protected:
     BotState currentState;
     ChatHelper chatHelper;
     std::queue<ChatCommandHolder> chatCommands;
+    std::atomic<time_t> questSyncLastQueued{0};
+    std::atomic<time_t> questSyncLastSent{0};
+    std::atomic<bool> questSyncQueued{false};
     std::queue<ChatQueuedReply> chatReplies;
     std::mutex chatRepliesMutex;
     std::mutex updateExecutionMutex;

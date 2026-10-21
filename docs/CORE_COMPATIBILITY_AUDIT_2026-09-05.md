@@ -269,3 +269,22 @@ without changing shared hostile searches or native aggro. Engaged enemies stay
 blocking. A destination LOS check is not proof of route safety; absent VMAP
 collision cannot be repaired by this adapter. Existing geometric aggro and
 release semantics remain native. No DB writes or new asynchronous owner exist.
+
+### 2026-10-21 authorized party quest snapshots
+
+The older human quest queries are formatted chat and do not carry a reliable
+atomic snapshot or historical reward boundary. The user now explicitly requests
+both server support and integration with the installed pfQuest tracker. Reuse
+PlayerbotMgr's validated ingress, the native bot command queue/owner and
+Player::SendAddonMessage's local LANG_ADDON delivery rather than parsing human
+whispers, issuing gameplay commands or reading the database from an AddOn.
+
+The narrow exact-prefix protocol rechecks master and group ownership after a
+GUID-based queued request is resolved, with bounded admission/packet assembly,
+no retained requester pointer, and explicit current versus rewarded-history
+states. pfQuest's real public row/layout functions are wrapped in a separate
+extension; its source/database and normal Quest Log controls remain untouched.
+The production adapter/protocol and shipped Lua have focused regressions,
+including actual native packet consumption and optional installed pfQuest
+function extraction under Lua 5.0.3/5.1. Full native build and live graphics,
+transport and gameplay acceptance remain pending while the server is in use.

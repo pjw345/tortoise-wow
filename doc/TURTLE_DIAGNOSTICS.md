@@ -1227,3 +1227,20 @@ default exclusions. Existing always/skip loot lists retain their documented
 precedence. Floor-separated safety uses native LOS; current blocker logs still
 name rather than uniquely identify a hostile. Live tower geometry and approach
 safety must be checked in gameplay, not inferred from the test fixtures.
+
+## Party-bot quest snapshots (2026-10-21)
+
+QuestSync adds no log stream, background thread, database polling or diagnostic
+flag. The paced read-only request is the feature's data transport. There is at
+most one pending request per bot; queued and sent requests have independent
+five-second limits. Responses are bounded and unchanged snapshots receive one
+small freshness packet. The client normally polls each roster member every 15
+seconds, spaces requests by half a second and retains stale snapshots on error.
+Manual/player-quest refreshes retain a six-second client minimum per member.
+
+The AddOn exposes pending/offline/unavailable/stale state and last-response time
+in its tracker hover and comparison panel. Requests and replies use the exact
+PFQBOT AddOn prefix and never generate human-chat/conversation messages. Disable
+the companion AddOn to stop requests; no server configuration cleanup is needed.
+Native full build, actual AddOn delivery, client graphics and live quest state
+acceptance remain separate from the source-extracted and Lua API-fixture tests.

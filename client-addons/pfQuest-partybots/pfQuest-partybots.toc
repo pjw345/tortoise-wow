@@ -1,0 +1,11 @@
+## Interface: 11200
+## Title: pfQuest Party Bots
+## Notes: Live Playerbot quest progress in the pfQuest tracker and party comparison.
+## Author: pjw345
+## Version: 1.0.0
+## Dependencies: pfQuest
+## OptionalDeps: pfQuest-turtle
+## SavedVariablesPerCharacter: pfQuestPartyBotsDB
+Core.lua
+Tracker.lua
+Panel.lua

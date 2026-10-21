@@ -16883,7 +16883,7 @@
       "spells",
       "death_reset"
     ],
-    "sha256": "64FB5B62AD7D8F42FD67570D47CB7D78C5C29107E815782EA1DBC86A8E407F6A"
+    "sha256": "F3C9EF77474B56A445816ED830D3E4F63232A0CD599510ABDC8234ED05A34013"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/TravelRoutePolicy.h",
@@ -24581,7 +24581,7 @@
       "death_reset",
       "async"
     ],
-    "sha256": "34B3DF9D878C3467CFF172A037A3EF1EAADC06AC6E453604268288137A88BC5C"
+    "sha256": "000F974BDC64FB88545A4D66536D6366003B817814665F1064133E84C9B00DD5"
   },
   {
     "file": "src/game/BattleLog.cpp",
@@ -24608,5 +24608,29 @@
       "death_reset"
     ],
     "sha256": "06493460387C0AFA78628A43F59C7CC6C6B138EAA5CD5E647E034866242263FD"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/QuestSync.cpp",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "5ABB59629B6FA9BC0AC1D410E7634896C0DE835083399F18FE5B07802153A032"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/QuestSync.h",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "060C9673228963211F51BC9728C40201DDAD7E9A9ACD4B10D78EB39EE7704388"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/QuestSyncProtocol.h",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "C2C4CD75D3E0A2840CFC05F914578E15131080D188EE452A2341D7D0B6807EF3"
   }
 ]

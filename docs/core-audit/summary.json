@@ -1,11 +1,11 @@
 {
-  "source_commit": "ea7841a784e4e82ab171dbca2acf4751bdf084bb",
-  "generated_utc": "2026-10-21T15:15:04.1375931Z",
+  "source_commit": "c6af462dc055f69d2169e3ea90b62b0d8cb0950c",
+  "generated_utc": "2026-10-21T16:49:10.5016271Z",
   "maps": 70,
   "instance_maps": 44,
   "creature_templates": 14339,
   "map_template_references": 11582,
-  "source_files": 2518,
+  "source_files": 2521,
   "dungeon_source_files": 280,
   "registrations": 1231,
   "encounter_map_template_rows": 1520,
@@ -14,5 +14,5 @@
   "missing_spawn_maps": 0,
   "no_runtime_validation": true,
   "scanner_limit": "Lexical dependencies and literal legacy registrations only; not proof of all dynamic summons, preprocessing, runtime registrations or encounter completeness.",
-  "source_state": "working tree: preserve explicit forced loot usage in default exclusions"
+  "source_state": "working tree: owner-authorized party quest snapshots and pfQuest companion extension"
 }

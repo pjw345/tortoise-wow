@@ -855,3 +855,47 @@ hostile-unit query and creature aggro mechanics are unchanged. This destination
 check does not establish path-wide safety or repair missing collision geometry.
 Source-extracted loot-followups, gathering-safety and loot-safety regressions
 cover these contracts; full image compilation and live acceptance are separate.
+
+## Party-bot quest snapshots and pfQuest extension (2026-10-21)
+
+The exact LANG_ADDON `PFQBOT` prefix is a read-only request protocol, not ordinary
+bot chat. PlayerbotMgr's existing authenticated chat ingress reaches
+PlayerbotAI::HandleCommand; only the named bot's real-player master in the same
+group can enqueue a valid version-1 request. A five-second atomic admission gate
+and one-pending flag bound ingress. A private native ChatCommandHolder carries
+the requester's GUID rather than retaining its Player pointer. HandleCommands
+resolves that identity again on the bot's serialized AI owner and rechecks
+master/group authorization before reading quest slots/status/counters. A second
+send-rate gate bounds replies. Logout, master change and group departure cancel
+access. Capture does not invoke a gameplay action, interrupt casts, traverse a
+foreign player's quest map, query SQL or mutate quest state.
+
+QuestSync's adapter reads actual slots first, retaining active repeated quests
+even when earlier reward history exists. Requested IDs absent from the log use
+the native saved-in-memory reward flag for historical R versus absent N; absence
+alone is never a turn-in. Read-only map find operations avoid inserting status
+rows. Item and creature/GO/cast counters, exploration and required money preserve
+their native meanings; ready/failed remain native quest states.
+
+Player::SendAddonMessage provides the existing LANG_ADDON local-recipient GUILD
+packet shape; this does not broadcast to a guild or use human whispers. Replies
+contain version/token/bot/hash/part metadata with 128-byte payload chunks and a
+192-chunk maximum. Unchanged data sends one freshness packet. The client accepts
+only its own native sender identity, an outstanding token and a current roster
+member, validates the complete bounded data snapshot, then atomically replaces
+the last valid cache. Partial/malformed/timed-out responses retain stale data.
+The hash is an equality tag, not a security primitive.
+
+client-addons/pfQuest-partybots wraps the installed pfQuest 8.0.1 ButtonEvent,
+ButtonEnter and DoLayout surface. Personal quest data, pfQuest database/maps,
+normal row interactions, Quest Log bindings and helper commands remain native.
+Bot-only rows use a companion footer/panel, never synthetic personal quest slots.
+Current roster names are derived from client unit APIs. The comparison includes
+stable quest IDs, while tracker rows show compact per-bot progress and hovers
+show objective counts. Freshness/offline/unknown states stay explicit.
+
+tests/playerbot-quest-sync compiles the production adapter/protocol with host API
+fakes and checks actual native packets in the shipped Lua decoder. Lua 5.0.3 and
+5.1 tests can extract the installed pfQuest's unmodified row/layout functions.
+These checks are separate from full native image compilation, socket/client
+AddOn delivery, actual graphics and live quest-progress acceptance.
