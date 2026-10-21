@@ -284,6 +284,9 @@ GUID-based queued request is resolved, with bounded admission/packet assembly,
 no retained requester pointer, and explicit current versus rewarded-history
 states. pfQuest's real public row/layout functions are wrapped in a separate
 extension; its source/database and normal Quest Log controls remain untouched.
+The extension and client tests are maintained separately at
+https://github.com/pjw345/pfQuest-partybots; this repository owns the server
+adapter/protocol and native tests.
 The production adapter/protocol and shipped Lua have focused regressions,
 including actual native packet consumption and optional installed pfQuest
 function extraction under Lua 5.0.3/5.1. Full native build and live graphics,
