@@ -1216,3 +1216,14 @@ packet queue; no additional diagnostic output or runtime switches are added.
 
 Two-hand eligibility correction adds no logs or runtime switches; native inventory
 errors and the existing roll/equip feedback remain the observation points.
+
+## Play-session loot follow-ups (2026-10-21)
+
+No new logging stream, scan timer, thread, or per-tick probe. Mining continuation
+uses the existing gathering admission records, defer queue and LootTargetRetryDelay;
+source/item policy remains observable through debug loot. AutoLootSkipItems is
+a behaviour configuration, not a diagnostic switch; an empty list disables its
+default exclusions. Existing always/skip loot lists retain their documented
+precedence. Floor-separated safety uses native LOS; current blocker logs still
+name rather than uniquely identify a hostile. Live tower geometry and approach
+safety must be checked in gameplay, not inferred from the test fixtures.

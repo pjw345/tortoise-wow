@@ -866,6 +866,11 @@ AiPlayerbot.LootDistance = 25.0
 # Hostile search radius around ordinary loot targets. Set to 0 to disable
 # hostile-proximity blocking; bots still stop looting while actually in combat.
 AiPlayerbot.LootHostileDistance = 30.0
+
+# Item IDs excluded from automatic loot unless needed for an active quest or
+# explicitly requested with the existing always-loot list. Empty = no defaults.
+# Bobbing Apple (20516); Turtle Classic Bone Chew Toy (51751).
+AiPlayerbot.AutoLootSkipItems = "20516"
 # Seconds without meaningful approach progress before an unreachable target is
 # paused for the same interval instead of monopolising movement.
 AiPlayerbot.LootTargetRetryDelay = 10

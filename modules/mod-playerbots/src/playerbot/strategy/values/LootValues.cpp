@@ -2,6 +2,7 @@
 #include "SharedValueContext.h"
 #include "LootValues.h"
 #include "playerbot/strategy/actions/LootAction.h"
+#include "playerbot/ServerFacade.h"
 
 using namespace ai;
 
@@ -437,6 +438,33 @@ bool ShouldLootObject::Calculate()
 
 	if (!object)
 		return false;
+
+    if (object->IsGameObject())
+    {
+        GameObject* go = static_cast<GameObject*>(object);
+        // Do not travel to a still-unopened source whose entire known loot
+        // template is excluded. Unknown/mixed sources retain native inspection.
+        if (go->GetGOInfo()->GetLootId())
+        {
+            std::list<uint32> items = GAI_VALUE2(std::list<uint32>, "entry loot list", -int(go->GetEntry()));
+            bool excludedOnly = !items.empty();
+            for (uint32 item : items)
+                excludedOnly = excludedOnly && StoreLootAction::IsLootExcludedByDefault(item, ai);
+            if (excludedOnly)
+                return false;
+        }
+
+        // A native mining release clears the generated loot even when it
+        // leaves the vein READY for another use. That empty old loot is not
+        // depletion. Re-admission still checks skill, tools, range and safety.
+        if (go->GetGoType() == GAMEOBJECT_TYPE_CHEST && go->GetLootState() == GO_READY &&
+            sServerFacade.isSpawned(go) && !go->IsInUse())
+        {
+            LootObject node(bot, go->GetObjectGuid());
+            if (node.skillId == SKILL_MINING)
+                return true;
+        }
+    }
 
 	// Penqle has m_loot only on Creature/GameObject; check via cast.
 	Loot* objLoot = nullptr;

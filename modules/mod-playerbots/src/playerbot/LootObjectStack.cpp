@@ -317,11 +317,19 @@ bool LootObject::IsApproachSafe(Player* bot, Unit** blocker)
     if (!object)
         return false;
     std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(object, sPlayerbotAIConfig.lootHostileDistance);
-    if (hostiles.empty())
-        return true;
-    if (blocker)
-        *blocker = hostiles.front();
-    return false;
+    for (Unit* hostile : hostiles)
+    {
+        // Native creature aggro requires LOS. A wall or tower floor can
+        // separate an idle hostile from this destination despite a short 3D
+        // distance. Keep engaged enemies conservative; do not alter the shared
+        // hostile query or invent a vertical-distance threshold.
+        if (!hostile->IsInCombat() && !hostile->IsWithinLOSInMap(object, true))
+            continue;
+        if (blocker)
+            *blocker = hostile;
+        return false;
+    }
+    return true;
 }
 
 bool LootObject::IsLootPossible(Player* bot, bool* suppressRediscovery)

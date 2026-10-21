@@ -1,6 +1,7 @@
 
 #include "playerbot/playerbot.h"
 #include "LootAction.h"
+#include "AddLootAction.h"
 
 #include "playerbot/LootObjectStack.h"
 #include "playerbot/PlayerbotAIConfig.h"
@@ -672,9 +673,54 @@ bool StoreLootAction::Execute(Event& event)
     packet << guid;
     bot->GetSession()->HandleLootReleaseOpcode(packet);
 
+    // The native release decides whether a mineral vein has another use and
+    // clears its old loot. Only then may normal gathering admit the next cast.
+    if (!transferFailed && itemsTaken > 0)
+        QueueNextMiningAttempt(requester, guid);
+
     ai->AccelerateRespawn(guid);
 
     return true;
+}
+
+bool StoreLootAction::QueueNextMiningAttempt(Player* requester, ObjectGuid guid)
+{
+    if (!guid.IsGameObject() || !requester || !bot->IsAlive() || bot->IsInCombat() ||
+        !ai->HasStrategy("gather", BotState::BOT_STATE_NON_COMBAT))
+        return false;
+
+    GameObject* go = ai->GetGameObject(guid);
+    if (!go || !sServerFacade.isSpawned(go) || go->GetGoType() != GAMEOBJECT_TYPE_CHEST ||
+        go->GetLootState() != GO_READY || go->IsInUse())
+        return false;
+
+    LootObject node(bot, guid);
+    if (node.skillId != SKILL_MINING)
+        return false;
+
+    AddGatheringLootAction gathering(ai);
+    if (!gathering.AddLoot(requester, guid))
+        return false;
+
+    AI_VALUE(LootObjectStack*, "available loot")->Defer(guid, sPlayerbotAIConfig.lootTargetRetryDelay);
+    return true;
+}
+
+bool StoreLootAction::IsLootExcludedByDefault(uint32 itemId, PlayerbotAI* ai)
+{
+    if (std::find(sPlayerbotAIConfig.autoLootSkipItems.begin(),
+        sPlayerbotAIConfig.autoLootSkipItems.end(), itemId) == sPlayerbotAIConfig.autoLootSkipItems.end())
+        return false;
+
+    // Existing explicit always-loot requests and actual quest needs take
+    // precedence over the deployment's default novelty exclusions.
+    AiObjectContext* context = ai->GetAiObjectContext();
+    ForceItemUsage forced = AI_VALUE2_EXISTS(ForceItemUsage, "force item usage", itemId, ForceItemUsage::FORCE_USAGE_NONE);
+    if (forced == ForceItemUsage::FORCE_USAGE_NEED || forced == ForceItemUsage::FORCE_USAGE_GREED)
+        return false;
+    std::set<uint32>& alwaysLoot = AI_VALUE(std::set<uint32>&, "always loot list");
+    return alwaysLoot.find(itemId) == alwaysLoot.end() &&
+        !ItemUsageValue::IsNeededForQuest(ai->GetBot(), itemId);
 }
 
 bool StoreLootAction::IsLootAllowed(ItemQualifier& itemQualifier, PlayerbotAI *ai)
@@ -691,6 +737,9 @@ bool StoreLootAction::IsLootAllowed(ItemQualifier& itemQualifier, PlayerbotAI *a
 
     std::set<uint32>& skipItems = AI_VALUE(std::set<uint32>&, "skip loot list");
     if (skipItems.find(itemQualifier.GetId()) != skipItems.end())
+        return false;
+
+    if (IsLootExcludedByDefault(itemQualifier.GetId(), ai))
         return false;
 
     uint32 max = proto->MaxCount;

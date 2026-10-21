@@ -249,3 +249,23 @@ exception, skill training, scoring-data change or inventory rewrite is added.
 The focused regression fails against the old caller and passes after correction;
 carried and unseen replacements and rejected offhand storage are covered. Full
 native build, Linux checks and gameplay validation remain pending.
+
+### 2026-10-21 mining, novelty loot and floor-separated hostiles
+
+Traced native mineral release through use-count/depletion and loot clearing.
+READY veins with empty old loot were rejected by ShouldLootObject; explicit
+post-release gathering re-admission now retains the same node only after a real
+item transfer, with existing bounded defer and normal admission gates.
+
+Confirmed novelty item/source IDs with read-only world queries: Bobbing Apple
+20516 from Apple Bob 300203; Bone Chew Toy 51751 from 1000380 is a quest item.
+A configurable default exclusion reuses item/source selection and preserves
+active quest needs, manual loot-list precedence, mixed/unknown sources and
+existing inventories. Custom Classic item IDs are not expansion-wide defaults.
+
+The Ilgalar barrel report was a 3D-radius rejection, not a 2D height omission.
+The loot-specific safety predicate now checks native LOS for idle blockers,
+without changing shared hostile searches or native aggro. Engaged enemies stay
+blocking. A destination LOS check is not proof of route safety; absent VMAP
+collision cannot be repaired by this adapter. Existing geometric aggro and
+release semantics remain native. No DB writes or new asynchronous owner exist.
