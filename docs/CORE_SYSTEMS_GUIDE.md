@@ -886,7 +886,8 @@ member, validates the complete bounded data snapshot, then atomically replaces
 the last valid cache. Partial/malformed/timed-out responses retain stale data.
 The hash is an equality tag, not a security primitive.
 
-client-addons/pfQuest-partybots wraps the installed pfQuest 8.0.1 ButtonEvent,
+The separate [pfQuest-partybots repository](https://github.com/pjw345/pfQuest-partybots)
+contains the AddOn, client tests and release downloads. It wraps the installed pfQuest 8.0.1 ButtonEvent,
 ButtonEnter and DoLayout surface. Personal quest data, pfQuest database/maps,
 normal row interactions, Quest Log bindings and helper commands remain native.
 Bot-only rows use a companion footer/panel, never synthetic personal quest slots.
@@ -895,7 +896,9 @@ stable quest IDs, while tracker rows show compact per-bot progress and hovers
 show objective counts. Freshness/offline/unknown states stay explicit.
 
 tests/playerbot-quest-sync compiles the production adapter/protocol with host API
-fakes and checks actual native packets in the shipped Lua decoder. Lua 5.0.3 and
-5.1 tests can extract the installed pfQuest's unmodified row/layout functions.
+fakes and can emit actual native packets. The companion repository owns the Lua
+decoder tests and consumes those packets via --wire. Lua 5.0.3 and 5.1 tests can
+extract the installed pfQuest's unmodified row/layout functions. See
+`docs/playerbots/PFQUEST_PARTY_PROGRESS.md` for installation and cross-repository validation.
 These checks are separate from full native image compilation, socket/client
 AddOn delivery, actual graphics and live quest-progress acceptance.

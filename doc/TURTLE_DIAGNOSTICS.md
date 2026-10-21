@@ -1242,5 +1242,7 @@ The AddOn exposes pending/offline/unavailable/stale state and last-response time
 in its tracker hover and comparison panel. Requests and replies use the exact
 PFQBOT AddOn prefix and never generate human-chat/conversation messages. Disable
 the companion AddOn to stop requests; no server configuration cleanup is needed.
+The AddOn and client tests are maintained at https://github.com/pjw345/pfQuest-partybots;
+server/native test instructions are in tests/playerbot-quest-sync/README.md.
 Native full build, actual AddOn delivery, client graphics and live quest state
 acceptance remain separate from the source-extracted and Lua API-fixture tests.
