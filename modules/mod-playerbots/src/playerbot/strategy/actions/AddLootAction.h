@@ -51,9 +51,10 @@ namespace ai
     {
     public:
         AddGatheringLootAction(PlayerbotAI* ai) : AddAllLootAction(ai, "add gathering loot") {}
+        // Reuse normal gathering admission after a native vein release.
+        bool AddLoot(Player* requester, ObjectGuid guid, bool explicitTarget = false) override;
 
     private:
-        bool AddLoot(Player* requester, ObjectGuid guid, bool explicitTarget = false) override;
         bool AllowsGatheringTargets() const override { return true; }
 
 #ifdef GenerateBotHelp

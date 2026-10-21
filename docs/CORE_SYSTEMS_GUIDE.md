@@ -826,3 +826,32 @@ exception, skill training, scoring-data change or inventory rewrite is added.
 The focused regression fails against the old caller and passes after correction;
 carried and unseen replacements and rejected offhand storage are covered. Full
 native build, Linux checks and gameplay validation remain pending.
+
+## Play-session loot follow-ups (2026-10-21)
+
+Native LootHandler::DoLootRelease owns mineral-vein use counts, random depletion,
+GO_READY versus GO_JUST_DEACTIVATED, and loot clearing. ShouldLootObject now
+recognizes a spawned, idle READY mining vein even when its previous generated
+loot is empty. After actual item transfer and native release, StoreLootAction
+re-admits that same vein through AddGatheringLootAction and the existing bounded
+LootTargetRetryDelay. Normal gathering strategy, master range, skill/tool, bags,
+LOS and hostile admission remain authoritative; combat/death/in-use/depletion
+prevent automatic continuation. Herb and ordinary-container lifecycles remain
+native. No fixed use count, forced state transition or new timer was introduced.
+
+AiPlayerbot.AutoLootSkipItems is a configurable default item-policy exclusion:
+20516 (Bobbing Apple), plus Turtle Classic 51751 (Bone Chew Toy). Classic's
+custom ID is not applied to TBC/WotLK defaults. Active quest needs and the existing
+always-loot override take precedence; existing explicit skip-list precedence
+is unchanged. Source admission declines only known templates consisting wholly
+of those excluded items, preserving unknown and mixed loot. Existing inventory
+is not deleted. The initial confirmed sources are Apple Bob (300203) and
+Bone Chew Toy (1000380), not blanket seasonal/quality/name categories.
+
+Follower loot safety retains the configured native 3D radius. Within that radius,
+idle hostiles without native geometric LOS to the destination no longer block
+it solely through walls/floors. Engaged enemies remain conservative. The shared
+hostile-unit query and creature aggro mechanics are unchanged. This destination
+check does not establish path-wide safety or repair missing collision geometry.
+Source-extracted loot-followups, gathering-safety and loot-safety regressions
+cover these contracts; full image compilation and live acceptance are separate.

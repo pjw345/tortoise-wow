@@ -1,6 +1,6 @@
 {
-  "source_commit": "c8c97d0eb6759780dac9dc5699c85a4a6b2f5ca6",
-  "generated_utc": "2026-10-20T16:15:12.3655703Z",
+  "source_commit": "d4758750dd56b9219e6d300e433e030392fe85f6",
+  "generated_utc": "2026-10-21T15:05:35.8469061Z",
   "maps": 70,
   "instance_maps": 44,
   "creature_templates": 14339,
@@ -14,5 +14,5 @@
   "missing_spawn_maps": 0,
   "no_runtime_validation": true,
   "scanner_limit": "Lexical dependencies and literal legacy registrations only; not proof of all dynamic summons, preprocessing, runtime registrations or encounter completeness.",
-  "source_state": "working tree: two-handed native offhand-storage eligibility"
+  "source_state": "working tree: play-session mining, novelty loot and destination LOS follow-ups"
 }

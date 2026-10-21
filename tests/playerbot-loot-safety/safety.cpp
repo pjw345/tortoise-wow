@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 struct Event {};
-struct Unit {};
+struct Unit {bool combat=false,los=true;bool IsInCombat(){return combat;}bool IsWithinLOSInMap(struct WorldObject*,bool){return los;}};
 struct WorldObject {};
 struct ObjectGuid { int id=0; unsigned long GetRawValue() const {return id;} bool IsCreature() const {return true;} };
 struct PlayerbotAI {
@@ -41,6 +41,13 @@ int main() {
     ai.hostiles={&hostile};
     check(!loot.IsApproachSafe(&bot,&blocker)&&blocker==&hostile,"active master cannot bypass safety");
     ai.activeMaster=false;check(!loot.IsApproachSafe(&bot),"inactive master still protected");
+    hostile.los=false;
+    check(loot.IsApproachSafe(&bot,&blocker)&&blocker==nullptr,"idle enemy separated by wall/floor does not block destination");
+    hostile.combat=true;
+    check(!loot.IsApproachSafe(&bot,&blocker)&&blocker==&hostile,"engaged enemy remains conservative despite missing LOS");
+    hostile.combat=false;hostile.los=true;
+    check(!loot.IsApproachSafe(&bot),"visible same-floor or ramp threat still blocks destination");
+
     ai.activeMaster=true;
     MoveToLootAction move{&bot,&ai};
     check(!move.Execute(event)&&nativeMoves==0&&stack.defers==1&&current.object==nullptr,"new hostile blocks queued movement and defers target");

@@ -10,7 +10,7 @@ using uint8=uint8_t;using uint32=uint32_t;
 enum class BotState {BOT_STATE_NON_COMBAT};constexpr int SKILL_NONE=0;
 struct ObjectGuid{uint64_t value=1;uint64_t GetRawValue(){return value;}};
 struct WorldObject{bool los=true;std::string name="Copper Vein";char const* GetName(){return name.c_str();}};
-struct Unit:WorldObject{uint32 level=25;float distance=0;uint32 GetLevel(){return level;}};
+struct Unit:WorldObject{bool combat=false,hostileLos=true;bool IsInCombat(){return combat;}bool IsWithinLOSInMap(WorldObject*,bool){return hostileLos;}uint32 level=25;float distance=0;uint32 GetLevel(){return level;}};
 struct Map{bool IsDungeon(){return false;}};
 struct Group{};
 struct Player:Unit{Group* group=nullptr;Map map;Group* GetGroup(){return group;}Map* GetMap(){return &map;}};

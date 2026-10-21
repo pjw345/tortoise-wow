@@ -137,6 +137,7 @@ public:
     uint32 lowMana, mediumMana;
 
     uint32 openGoSpell;
+    std::list<uint32> autoLootSkipItems;
     bool randomBotAutologin;
     BotAutoLogin botAutologin;
     std::string randomBotMapsAsString;
