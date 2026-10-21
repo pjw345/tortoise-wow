@@ -1,3 +1,4 @@
+#include "WmoOutputName.h"
 #include "model.h"
 #include "dbcfile.h"
 #include "adtfile.h"
@@ -89,11 +90,12 @@ void ExtractGameobjectModels()
 
         if (result)
         {
+            const std::string outputName = !strcmp(ch_ext, ".wmo") ? WmoOutputName(path) : name;
             uint32 displayId = it->getUInt(0);
-            uint32 path_length = strlen(name);
+            uint32 path_length = outputName.size();
             fwrite(&displayId, sizeof(uint32), 1, model_list);
             fwrite(&path_length, sizeof(uint32), 1, model_list);
-            fwrite(name, sizeof(char), path_length, model_list);
+            fwrite(outputName.data(), sizeof(char), path_length, model_list);
         }
     }
 

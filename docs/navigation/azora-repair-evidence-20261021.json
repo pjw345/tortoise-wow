@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-21",
+  "issue": 62,
+  "native_spawn_id": 71434,
+  "native_tree_index": 26386,
+  "source_path": "World\\wmo\\Azeroth\\Buildings\\Magetower\\magetower.wmo",
+  "base_root_sha256": "6de3f39d928dfb5a92d62a4d9a602a9ca31e70afc8720f927908d1917bbcfcd6",
+  "wrong_deployed_model_sha256": "6adc5b551079e0c51c0b84dc7cf53431288d2671811e22f99f75b7af415acfe7",
+  "alias": "wmo_e5a88432c8aa603d_Magetower.wmo",
+  "assets": {
+    "vmaps/000_33_49.vmtile": {
+      "bytes": 24160,
+      "sha256": "86e9ce53941b7e3777e8b9be251422d0dbdaa4e1ad7fe353e2423a0d5ff4be70"
+    },
+    "vmaps/000_33_50.vmtile": {
+      "bytes": 56071,
+      "sha256": "98434f895afbc278ec6a8ce1d55d355828181b3e31801394e8a837a13208ca40"
+    },
+    "vmaps/wmo_e5a88432c8aa603d_Magetower.wmo.vmo": {
+      "bytes": 329600,
+      "sha256": "cff9bfa4cff797f655b67a35ce229923bfbb2d8ad103bc76f93359e9e847dfe0"
+    },
+    "mmaps/0004933.mmtile": {
+      "bytes": 1364124,
+      "sha256": "b479828fd5272ab7aff1896a35aa6c80edb0e49844d0c5919da3d0753f2bb72f"
+    },
+    "mmaps/0005033.mmtile": {
+      "bytes": 988176,
+      "sha256": "e35cff87f095df9a76e8a6fbe630d8c8b1cdbaf2590cd7e91c679d7d0e5a5d33"
+    }
+  },
+  "validation": {
+    "identity_test": "GCC and MSVC Release passed",
+    "native_model_tool_tests": 9,
+    "positive_native_routes": 18,
+    "expected_negative_controls": 6,
+    "unrelated_record_bytes_preserved": true,
+    "existing_native_mmap_parameters_preserved": true,
+    "custom_model_untouched": true,
+    "live_gameplay": "pending"
+  },
+  "limits": [
+    "Native Detour connectivity is not gameplay acceptance.",
+    "Simplified funnel corner collision-edge probes do not reproduce the native smoothed movement spline.",
+    "Full fresh extraction requires matching metadata and navigation migration; only the Azora spawn is rebound in this repair."
+  ],
+  "client_archives": {
+    "wmo.MPQ": {
+      "bytes": 363610878,
+      "sha256": "07b85f5d5939e9cbc7c80b766725de8056de64b2927863387eebee15c3392089"
+    },
+    "model.MPQ": {
+      "bytes": 191194646,
+      "sha256": "21cb93a3f6e591df8855fcbb0c559c70a0518a20408f7ee4cf59304731e5f8b9"
+    },
+    "patch.MPQ": {
+      "bytes": 1909274748,
+      "sha256": "05d1dab7a9ff95485dd0bd8cbd6e63cd5aef1957b9036cc2688c1e5ac89f9386"
+    }
+  }
+}
