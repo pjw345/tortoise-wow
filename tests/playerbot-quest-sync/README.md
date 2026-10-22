@@ -27,3 +27,9 @@ with a modified server. Coordinate protocol-version changes across repositories.
 
 These focused checks do not replace the full native build, actual client AddOn
 delivery/rendering or live quest-progress acceptance.
+
+The native suite covers colon-delimited Vanilla-safe requests, legacy requests,
+mixed/invalid delimiters, duplicate/oversized IDs, group/owner/logout checks and
+shared throttling. The emitted native wire fixture now originates from a colon
+request; response bytes remain unchanged. The companion send stub checks the
+Vanilla pipe-escape restriction before recording a send.

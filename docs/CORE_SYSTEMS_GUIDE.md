@@ -907,3 +907,18 @@ AddOn delivery, actual graphics and live quest-progress acceptance.
 ## Collision asset identity and Tower of Azora (2026-10-21)
 
 WMO extraction must retain complete source-path identity. Vanilla and custom Turtle assets can share a basename; flattening them can bind a map spawn to the wrong geometry. Root outputs and ADT, WDT/global and game-object references now share `WmoOutputName`. Existing model-name substring controls and the native Zeppelin adjustment are preserved; M2 naming and native collision/navigation formats are unchanged. See `docs/navigation/AZORA_WMO_COLLISION_REPAIR.md` for provenance, native reader/writer repair, the two Azora tile references and migration limits. A full fresh extraction must regenerate matching metadata/navigation together; never mix new names with legacy references. Offline connectivity success is not live movement acceptance.
+
+## Vanilla quest request transport correction (2026-10-22)
+
+Live testing found `Core.lua:126: Invalid escape code in chat message`: the
+1.12 client validates pipes in SendAddonMessage before transmitting. Requests
+now use `Q:1:token:bot:hash:questIds`. ParseRequest accepts that complete envelope
+and retains legacy `Q|1|...` input; mixed delimiters and doubled-pipe input are
+rejected. Snapshot/reply formats, queued GUID ownership, native capture, rate
+limits and size/row bounds are unchanged. This corrects the transport rather
+than bypassing the client's validation or parsing human chat.
+
+Companion 1.0.1 requires this parser; deployed image 2151c15b does not accept
+colon requests. Focused tests can run on the Windows workstation while playing;
+full server compilation/activation must wait until the game services are stopped.
+Live transport and UI acceptance remain pending.

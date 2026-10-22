@@ -296,3 +296,18 @@ transport and gameplay acceptance remain pending while the server is in use.
 ## WMO basename aliasing discovered at Azora (2026-10-21)
 
 Different complete client WMO paths shared the output basename Magetower.wmo. The deployed model matched a custom variant; the original client's model restores native connectivity after scoped binding correction and regeneration. `WmoOutputName` is shared by extraction and all WMO reference writers (ADT, WDT/global, game objects). Native formats/ownership/lifecycle remain unchanged. Source and data validation, existing no-LOS substring controls, preserved custom variants and fresh-extraction migration constraints are documented in `docs/navigation/AZORA_WMO_COLLISION_REPAIR.md`. Full extraction and in-game stair clearance remain unverified.
+
+## Vanilla quest request transport correction (2026-10-22)
+
+Live testing found `Core.lua:126: Invalid escape code in chat message`: the
+1.12 client validates pipes in SendAddonMessage before transmitting. Requests
+now use `Q:1:token:bot:hash:questIds`. ParseRequest accepts that complete envelope
+and retains legacy `Q|1|...` input; mixed delimiters and doubled-pipe input are
+rejected. Snapshot/reply formats, queued GUID ownership, native capture, rate
+limits and size/row bounds are unchanged. This corrects the transport rather
+than bypassing the client's validation or parsing human chat.
+
+Companion 1.0.1 requires this parser; deployed image 2151c15b does not accept
+colon requests. Focused tests can run on the Windows workstation while playing;
+full server compilation/activation must wait until the game services are stopped.
+Live transport and UI acceptance remain pending.
