@@ -311,3 +311,7 @@ Companion 1.0.1 requires this parser; deployed image 2151c15b does not accept
 colon requests. Focused tests can run on the Windows workstation while playing;
 full server compilation/activation must wait until the game services are stopped.
 Live transport and UI acceptance remain pending.
+
+## Missing overlapping WMO references in Stormwind (2026-10-22)
+
+The native Stormwind placement overlaps 16 tiles but deployed metadata referenced it in only six. Tile 30,47 consequently had no city floor at the captured bot/master positions, and native navigation could not place either endpoint. Completing existing placement references and rebuilding with unchanged defaults restores native floors and a complete route. The assembler completes bounded non-global WMO coverage generically; native fixture tests preserve M2/global handling and deduplicate added references. See `docs/navigation/STORMWIND_WMO_TILE_COVERAGE.md`. This establishes an offline data defect and repair, not gameplay acceptance for all city movement or area-trigger transitions.

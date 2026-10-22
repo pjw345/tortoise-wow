@@ -20,6 +20,7 @@
 #include "MapTree.h"
 #include "BIH.h"
 #include "VMapDefinitions.h"
+#include "WmoTileCoverage.h"
 
 #include <set>
 #include <iomanip>
@@ -94,6 +95,25 @@ bool TileAssembler::convertWorld2()
 
             mapSpawns.push_back(&(entry->second));
             spawnedModelFiles.insert(entry->second.name);
+        }
+
+        // ADT overlays can omit a repeated WMO placement even though the same
+        // bounded building still crosses that tile. Both runtime collision and
+        // MoveMapGen load per-tile references; complete coverage from the native
+        // placement bounds without changing models, tree indices or transforms.
+        TileMap& coverageEntries = map_iter->second->TileEntries;
+        std::set<std::pair<uint32, uint32>> references(coverageEntries.begin(), coverageEntries.end());
+        for (ModelSpawn const* spawn : mapSpawns)
+        {
+            if ((spawn->flags & (MOD_M2 | MOD_WORLDSPAWN)) || !(spawn->flags & MOD_HAS_BOUND))
+                continue;
+            const AABox& bounds = spawn->getBounds();
+            for (auto const& tile : WmoTileCoverage(bounds.low().x, bounds.low().y, bounds.high().x, bounds.high().y))
+            {
+                const uint32 tileID = StaticMapTree::packTileID(tile.first, tile.second);
+                if (references.emplace(tileID, spawn->ID).second)
+                    coverageEntries.emplace(tileID, spawn->ID);
+            }
         }
 
         printf("Creating map tree...\n");
