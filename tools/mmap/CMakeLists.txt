@@ -79,3 +79,8 @@ target_link_libraries(MoveMapGen PUBLIC
                         )
 
 install(TARGETS MoveMapGen DESTINATION ${BIN_DIR})
+
+# Read-only native-format connectivity verification for staged navigation data.
+add_executable(mmap_path_check path_check.cpp)
+target_link_libraries(mmap_path_check PRIVATE Detour)
+install(TARGETS mmap_path_check DESTINATION ${BIN_DIR})

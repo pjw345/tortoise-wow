@@ -902,3 +902,8 @@ extract the installed pfQuest's unmodified row/layout functions. See
 `docs/playerbots/PFQUEST_PARTY_PROGRESS.md` for installation and cross-repository validation.
 These checks are separate from full native image compilation, socket/client
 AddOn delivery, actual graphics and live quest-progress acceptance.
+
+
+## Collision asset identity and Tower of Azora (2026-10-21)
+
+WMO extraction must retain complete source-path identity. Vanilla and custom Turtle assets can share a basename; flattening them can bind a map spawn to the wrong geometry. Root outputs and ADT, WDT/global and game-object references now share `WmoOutputName`. Existing model-name substring controls and the native Zeppelin adjustment are preserved; M2 naming and native collision/navigation formats are unchanged. See `docs/navigation/AZORA_WMO_COLLISION_REPAIR.md` for provenance, native reader/writer repair, the two Azora tile references and migration limits. A full fresh extraction must regenerate matching metadata/navigation together; never mix new names with legacy references. Offline connectivity success is not live movement acceptance.

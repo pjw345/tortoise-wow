@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "WmoOutputName.h"
 #include "vmapexport.h"
 #include "adtfile.h"
 
@@ -172,7 +173,7 @@ bool ADTFile::init(uint32 map_num, uint32 tileX, uint32 tileY, StringSet& failed
                     fixnamen(s, strlen(s));
                     fixname2(s, strlen(s));
                     p = p + strlen(p) + 1;
-                    WmoInstansName[q++] = s;
+                    WmoInstansName[q++] = WmoOutputName(path);
                 }
                 delete[] buf;
             }

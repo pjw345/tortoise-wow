@@ -291,3 +291,8 @@ The production adapter/protocol and shipped Lua have focused regressions,
 including actual native packet consumption and optional installed pfQuest
 function extraction under Lua 5.0.3/5.1. Full native build and live graphics,
 transport and gameplay acceptance remain pending while the server is in use.
+
+
+## WMO basename aliasing discovered at Azora (2026-10-21)
+
+Different complete client WMO paths shared the output basename Magetower.wmo. The deployed model matched a custom variant; the original client's model restores native connectivity after scoped binding correction and regeneration. `WmoOutputName` is shared by extraction and all WMO reference writers (ADT, WDT/global, game objects). Native formats/ownership/lifecycle remain unchanged. Source and data validation, existing no-LOS substring controls, preserved custom variants and fresh-extraction migration constraints are documented in `docs/navigation/AZORA_WMO_COLLISION_REPAIR.md`. Full extraction and in-game stair clearance remain unverified.

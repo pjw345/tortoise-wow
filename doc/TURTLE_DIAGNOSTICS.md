@@ -1246,3 +1246,8 @@ The AddOn and client tests are maintained at https://github.com/pjw345/pfQuest-p
 server/native test instructions are in tests/playerbot-quest-sync/README.md.
 Native full build, actual AddOn delivery, client graphics and live quest state
 acceptance remain separate from the source-extracted and Lua API-fixture tests.
+
+
+## Offline WMO identity/navigation verification (2026-10-21)
+
+Extractor-only tools `vmap_model_tool` and `mmap_path_check` inspect native collision records and native Detour paths in staged files. They add no runtime hook, timer, log writer or production overhead. `vmap_model_tool` refuses existing outputs, mismatched/duplicate identities and malformed records; unaffected record bytes stay exact. `mmap_path_check` treats partial or exhausted paths as failure. Build with USE_EXTRACTORS; remove the optional targets/helpers and focused tests together if retired. See `docs/navigation/AZORA_WMO_COLLISION_REPAIR.md` for source provenance, rollback and live-test limits.

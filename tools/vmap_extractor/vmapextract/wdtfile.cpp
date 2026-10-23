@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "WmoOutputName.h"
 #include "vmapexport.h"
 #include "wdtfile.h"
 #include "adtfile.h"
@@ -84,7 +85,7 @@ bool WDTFile::init(char* map_id, unsigned int mapID)
                     char* s = wdtGetPlainName(p);
                     fixnamen(s, strlen(s));
                     p = p + strlen(p) + 1;
-                    gWmoInstansName[q++] = s;
+                    gWmoInstansName[q++] = WmoOutputName(path);
                 }
                 delete[] buf;
             }
