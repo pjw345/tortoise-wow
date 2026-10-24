@@ -275,7 +275,18 @@ bool AddGatheringLootAction::AddLoot(Player* requester, ObjectGuid guid, bool ex
         return false;
 
     bool const debugLoot = ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT);
-    if (!sServerFacade.IsWithinLOSInMap(bot, wo))
+    // Classic native opening spells permit mineral chests embedded in terrain.
+    // Admission and post-release re-admission must not reject those same nodes.
+    // Other variants retain their existing check until their native rule is verified.
+    bool nativeGatheringLosExemption = false;
+#ifdef MANGOSBOT_ZERO
+    if (guid.IsGameObject())
+    {
+        GameObject* go = ai->GetGameObject(guid);
+        nativeGatheringLosExemption = go && go->GetGOInfo()->IsRepeatableGatheringChest();
+    }
+#endif
+    if (!nativeGatheringLosExemption && !sServerFacade.IsWithinLOSInMap(bot, wo))
     {
         if (debugLoot)
             sLog.outLoot("bot=%s event=gather-reject guid=%lu reason=line-of-sight", bot->GetName(), guid.GetRawValue());
