@@ -27,6 +27,11 @@ void SOAPThread::Work()
 {
     struct soap soap;
     soap_init(&soap);
+    // Core DEBUG builds enable gSOAP wire logs, including Basic auth headers.
+    // Keep administrator credentials and command payloads out of those files.
+    soap_set_recv_logfile(&soap, nullptr);
+    soap_set_sent_logfile(&soap, nullptr);
+    soap_set_test_logfile(&soap, nullptr);
     soap_set_imode(&soap, SOAP_C_UTFSTRING);
     soap_set_omode(&soap, SOAP_C_UTFSTRING);
 
