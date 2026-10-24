@@ -160,7 +160,7 @@ public:
         void SyncEventTimers();
         void AddOfflineGroupBots();
         static Item* CreateTempItem(uint32 item, uint32 count, Player const* player, uint32 randomPropertyId = 0);
-        static InventoryResult CanEquipUnseenItem(Player* player, uint8 slot, uint16& dest, uint32 item);
+        static InventoryResult CanEquipUnseenItem(Player* player, uint8 slot, uint16& dest, uint32 item, bool not_loading = false);
 
         bool AddRandomBot(uint32 bot);
         bool CreateRandomBot(const std::string& name, uint8 race, uint8 cls, uint32 level);

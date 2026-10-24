@@ -16617,7 +16617,7 @@
       "death_reset",
       "instance_state"
     ],
-    "sha256": "ADD802F1D33DF6DCB97253B7578BBDE7EA4B5F0B202325D388A18D0B80C9CCE4"
+    "sha256": "CF05D35FA535F56F85E45F884974A798172712A3D9D910BAB70C3027E85E7EEA"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/RandomPlayerbotFactory.cpp",
@@ -19731,7 +19731,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "54F68794991CAB93D791FE97F1FE7038C2235AD09A53D5DA1FE1D1F8159D0BFD"
+    "sha256": "DAA4F3F69F4C15305EAB04B72B7E39B9278612E964EFD8421E31D01F8404EE1F"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/EngineValues.h",
@@ -20259,7 +20259,7 @@
       "death_reset",
       "instance_state"
     ],
-    "sha256": "21390F932997F268A6FC7BDCA8BB3415F384DA1162CB6632D02225BD32DC5EA3"
+    "sha256": "B122C1B6F122B4275EF472CA6CDB3F721407F0E87142AF01B2B18D571CF2409B"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/PlayerbotAIConfig.h",

@@ -47,7 +47,7 @@ struct ItemQualifier {ItemPrototype const* proto;uint32 variant=0,bonus=0;ItemQu
 struct FindItemByIdVisitor {uint32 id;std::list<Item*> result;explicit FindItemByIdVisitor(uint32 n):id(n){}std::list<Item*>GetResult(){return result;}};
 struct PlayerbotAI;struct AiObjectContext;
 struct Session {template<class T>void HandleAutoEquipItemOpcode(T&) {}};
-struct Player {uint32 ammo=0;Session session;Session*GetSession(){return &session;}void SetAmmo(uint32 id){if(!failSwap)ammo=id;}uint32 GetUInt32Value(int){return ammo;}int cls=CLASS_PRIEST,spec=14;bool dual=false,failSwap=false;std::map<uint8,Item*> gear;std::vector<Item*> bags;std::set<uint8> blocked;
+struct Player {uint32 ammo=0;Session session;Session*GetSession(){return &session;}void SetAmmo(uint32 id){if(!failSwap)ammo=id;}uint32 GetUInt32Value(int){return ammo;}int cls=CLASS_PRIEST,spec=14;bool dual=false,failSwap=false,canStoreOffhand=true;std::map<uint8,Item*> gear;std::vector<Item*> bags;std::set<uint8> blocked;
  void SendEquipError(InventoryResult,Item*,Item*){}
  void SwapItem(uint16 a,uint16 b){if(failSwap)return;Item*source=nullptr;for(auto*i:bags)if(i->GetPos()==a)source=i;if(!source)return;
  Item*old=GetItemByPos(b);bags.erase(std::remove(bags.begin(),bags.end(),source),bags.end());if(old){old->slot=a&255;bags.push_back(old);}gear[b&255]=source;source->slot=b&255;}int getClass(){return cls;}uint8 GetGUIDLow(){return 1;}char const*GetName(){return "Bot";}bool CanDualWield(){return dual;}
@@ -59,10 +59,15 @@ struct Player {uint32 ammo=0;Session session;Session*GetSession(){return &sessio
  case INVTYPE_WEAPON:return dual&&!GetItemByPos(16)?16:15;case INVTYPE_HOLDABLE:case INVTYPE_SHIELD:return 16;default:return 4;}}
  InventoryResult check(uint8 slot,uint16&dest,ItemPrototype const*p){if(CanUseItem(p)!=EQUIP_ERR_OK)return EQUIP_ERR_ITEM_CANT_BE_EQUIPPED;
  dest=slot==NULL_SLOT?defaultSlot(p):slot;if(blocked.count(dest))return EQUIP_ERR_ITEM_CANT_BE_EQUIPPED;return EQUIP_ERR_OK;}
- InventoryResult CanEquipItem(uint8 s,uint16&d,Item*i,bool swap,bool=true){if(i->IsBag()&&!swap)return EQUIP_ERR_ITEM_CANT_BE_EQUIPPED;return check(s,d,i->proto);}
+ InventoryResult CanEquipItem(uint8 s,uint16&d,Item*i,bool swap,bool not_loading=true){
+ if(i->IsBag()&&!swap)return EQUIP_ERR_ITEM_CANT_BE_EQUIPPED;
+ // Native Turtle rejects two-handed loading placement if an offhand is equipped;
+ // live placement instead checks whether that real offhand can be stored.
+ if(i->proto->InventoryType==INVTYPE_2HWEAPON&&GetItemByPos(16)&&(!not_loading||!canStoreOffhand))return EQUIP_ERR_ITEM_CANT_BE_EQUIPPED;
+ return check(s,d,i->proto);}
 };
 std::map<uint32,ItemPrototype*> prototypes;
-struct RandomPlayerbotMgr {static InventoryResult CanEquipUnseenItem(Player*b,uint8 s,uint16&d,uint32 id){return b->check(s,d,prototypes.at(id));}};
+struct RandomPlayerbotMgr {static InventoryResult CanEquipUnseenItem(Player*b,uint8 s,uint16&d,uint32 id,bool not_loading=false){Item temp{prototypes.at(id)};return b->CanEquipItem(s,d,&temp,true,not_loading);}};
 struct RandomItemMgr {struct Scale {struct {uint32 id=1;std::string name="holy";}info;};std::map<uint32,Scale>m_weightScales;
  uint32 GetPlayerSpecId(Player*p){return p->spec;}uint32 ItemStatWeight(Player*,ItemQualifier&q){return q.proto->score+q.bonus;}
  uint32 ItemStatWeight(Player*b,Item*i){ItemQualifier q(i);return ItemStatWeight(b,q);}
@@ -159,6 +164,10 @@ int main(){try{
  c=proto(3,40,INVTYPE_2HWEAPON);c.Class=ITEM_CLASS_WEAPON;p.gear.clear();p.gear[15]=&old;p.gear[16]=&best;p.bags={&middle};q=ItemQualifier(&middle);
  check(ItemUsageValue::QueryItemUsageForEquip(q,&p)==ItemUsage::ITEM_USAGE_NONE,"two-hander must beat both hands together");
  c.score=60;check(ItemUsageValue::QueryItemUsageForEquip(q,&p)==ItemUsage::ITEM_USAGE_EQUIP,"better two-handed configuration accepted");
+ p.bags.clear();check(ItemUsageValue::QueryItemUsageForEquip(q,&p)==ItemUsage::ITEM_USAGE_EQUIP,"unseen two-handed loot can replace weaker one-hand plus offhand");
+ p.canStoreOffhand=false;check(ItemUsageValue::QueryItemUsageForEquip(q,&p)==ItemUsage::ITEM_USAGE_NONE,"unseen upgrade cannot bypass native offhand storage rejection");
+ p.bags={&middle};check(ItemUsageValue::QueryItemUsageForEquip(q,&p)==ItemUsage::ITEM_USAGE_NONE,"carried upgrade cannot bypass native offhand storage rejection");p.canStoreOffhand=true;
+
  p.gear.clear();p.gear[15]=&middle;p.bags={&best};q=ItemQualifier(&best);
  check(ItemUsageValue::QueryItemUsageForEquip(q,&p)==ItemUsage::ITEM_USAGE_NONE,"offhand alone cannot evict two-hander");
  // Actual production native-dispatch wrapper: success means equipment really moved.

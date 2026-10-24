@@ -20,3 +20,6 @@ native image must compile and actual party behavior must be tested separately.
 
 Classic group-roll tests also deliver the native win packet without an item-push
 notification: own win, other winner, truncation and repeat are covered.
+
+Two-handed placement models Turtle loading-mode rejection with an equipped offhand
+and tests real/unseen upgrades plus native offhand-storage failure.

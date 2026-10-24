@@ -574,10 +574,14 @@ InventoryResult ItemUsageValue::GetEquipDestination(ItemQualifier& qualifier, Pl
     ItemPrototype const* proto = qualifier.GetProto();
     if (!proto) return EQUIP_ERR_ITEM_NOT_FOUND;
     Item* item = FindQualifiedEquipment(bot, qualifier);
+    // Loading placement refuses to displace an offhand unconditionally. A real
+    // two-hand replacement must instead ask native live unequip/storage checks.
+    bool const validateOffhandStorage = proto->InventoryType == INVTYPE_2HWEAPON &&
+        bot->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND);
     auto check = [&](uint8 slot, uint16& position)
     {
-        return item ? bot->CanEquipItem(slot, position, item, true, false) :
-            RandomPlayerbotMgr::CanEquipUnseenItem(bot, slot, position, proto->ItemId);
+        return item ? bot->CanEquipItem(slot, position, item, true, validateOffhandStorage) :
+            RandomPlayerbotMgr::CanEquipUnseenItem(bot, slot, position, proto->ItemId, validateOffhandStorage);
     };
     InventoryResult result = check(NULL_SLOT, dest);
 

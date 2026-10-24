@@ -1,6 +1,6 @@
 {
-  "source_commit": "e7aa6ff5195d7383d48e5e2b6366d22ee2226921",
-  "generated_utc": "2026-10-20T16:07:19.7154349Z",
+  "source_commit": "c8c97d0eb6759780dac9dc5699c85a4a6b2f5ca6",
+  "generated_utc": "2026-10-20T16:15:12.3655703Z",
   "maps": 70,
   "instance_maps": 44,
   "creature_templates": 14339,
@@ -14,5 +14,5 @@
   "missing_spawn_maps": 0,
   "no_runtime_validation": true,
   "scanner_limit": "Lexical dependencies and literal legacy registrations only; not proof of all dynamic summons, preprocessing, runtime registrations or encounter completeness.",
-  "source_state": "working tree: Classic group-roll equipment notification"
+  "source_state": "working tree: two-handed native offhand-storage eligibility"
 }
