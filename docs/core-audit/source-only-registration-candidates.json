@@ -1,16 +1,103 @@
 [
   {
-    "name": "go_book_celebras",
-    "file": "src/scripts/dungeons/maraudon/boss_celebras_the_cursed.cpp",
-    "line": 341,
+    "name": "go_fixed_trap",
+    "file": "src/scripts/dungeons/dire_maul/instance_dire_maul.cpp",
+    "line": 2488,
     "cmake_listed": true,
     "file_loader_call_found": true,
     "dependency_signals": [
       "ai_update",
       "spells",
+      "movement",
+      "summons",
       "death_reset",
       "instance_state",
       "doors",
+      "timers",
+      "threat"
+    ]
+  },
+  {
+    "name": "spell_ubrs_freeze_rookery_egg",
+    "file": "src/scripts/dungeons/blackrock_spire/instance_blackrock_spire.cpp",
+    "line": 1031,
+    "cmake_listed": true,
+    "file_loader_call_found": true,
+    "dependency_signals": [
+      "movement",
+      "summons",
+      "instance_state",
+      "doors",
+      "timers",
+      "threat"
+    ]
+  },
+  {
+    "name": "go_urok_challenge",
+    "file": "src/scripts/dungeons/blackrock_spire/boss_urok.cpp",
+    "line": 370,
+    "cmake_listed": true,
+    "file_loader_call_found": true,
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "movement",
+      "summons",
+      "death_reset",
+      "timers",
+      "threat"
+    ]
+  },
+  {
+    "name": "boss_mother_smolderweb",
+    "file": "src/scripts/dungeons/blackrock_spire/boss_mother_smolderweb.cpp",
+    "line": 100,
+    "cmake_listed": true,
+    "file_loader_call_found": false,
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "death_reset",
+      "timers"
+    ]
+  },
+  {
+    "name": "boss_wushoolay",
+    "file": "src/scripts/dungeons/zulgurub/boss_wushoolay.cpp",
+    "line": 82,
+    "cmake_listed": true,
+    "file_loader_call_found": false,
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "death_reset",
+      "threat"
+    ]
+  },
+  {
+    "name": "boss_hazzarah",
+    "file": "src/scripts/dungeons/zulgurub/boss_hazzarah.cpp",
+    "line": 107,
+    "cmake_listed": true,
+    "file_loader_call_found": false,
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "summons",
+      "death_reset",
+      "threat"
+    ]
+  },
+  {
+    "name": "boss_grilek",
+    "file": "src/scripts/dungeons/zulgurub/boss_grilek.cpp",
+    "line": 90,
+    "cmake_listed": true,
+    "file_loader_call_found": false,
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "death_reset",
       "threat"
     ]
   },
@@ -23,22 +110,6 @@
     "dependency_signals": [
       "ai_update",
       "death_reset",
-      "timers",
-      "threat"
-    ]
-  },
-  {
-    "name": "ossirian_crystal",
-    "file": "src/scripts/dungeons/ruins_of_ahnqiraj/boss_ossirian.cpp",
-    "line": 371,
-    "cmake_listed": true,
-    "file_loader_call_found": true,
-    "dependency_signals": [
-      "ai_update",
-      "spells",
-      "summons",
-      "death_reset",
-      "instance_state",
       "timers",
       "threat"
     ]
@@ -61,9 +132,9 @@
     ]
   },
   {
-    "name": "go_fixed_trap",
-    "file": "src/scripts/dungeons/dire_maul/instance_dire_maul.cpp",
-    "line": 2488,
+    "name": "npc_scarlet_spirit",
+    "file": "src/scripts/dungeons/stratholme/boss_sc_attunement.cpp",
+    "line": 491,
     "cmake_listed": true,
     "file_loader_call_found": true,
     "dependency_signals": [
@@ -72,52 +143,35 @@
       "movement",
       "summons",
       "death_reset",
-      "instance_state",
-      "doors",
       "timers",
       "threat"
     ]
   },
   {
-    "name": "boss_mother_smolderweb",
-    "file": "src/scripts/dungeons/blackrock_spire/boss_mother_smolderweb.cpp",
-    "line": 100,
+    "name": "boss_silver_hand_bosses",
+    "file": "src/scripts/dungeons/stratholme/boss_order_of_silver_hand.cpp",
+    "line": 153,
     "cmake_listed": true,
     "file_loader_call_found": false,
     "dependency_signals": [
       "ai_update",
       "spells",
       "death_reset",
-      "timers"
+      "instance_state"
     ]
   },
   {
-    "name": "go_urok_challenge",
-    "file": "src/scripts/dungeons/blackrock_spire/boss_urok.cpp",
-    "line": 370,
+    "name": "ossirian_crystal",
+    "file": "src/scripts/dungeons/ruins_of_ahnqiraj/boss_ossirian.cpp",
+    "line": 371,
     "cmake_listed": true,
     "file_loader_call_found": true,
     "dependency_signals": [
       "ai_update",
       "spells",
-      "movement",
       "summons",
       "death_reset",
-      "timers",
-      "threat"
-    ]
-  },
-  {
-    "name": "spell_ubrs_freeze_rookery_egg",
-    "file": "src/scripts/dungeons/blackrock_spire/instance_blackrock_spire.cpp",
-    "line": 1031,
-    "cmake_listed": true,
-    "file_loader_call_found": true,
-    "dependency_signals": [
-      "movement",
-      "summons",
       "instance_state",
-      "doors",
       "timers",
       "threat"
     ]
@@ -145,6 +199,44 @@
       "ai_update",
       "spells",
       "death_reset",
+      "threat"
+    ]
+  },
+  {
+    "name": "boss_headless_horseman",
+    "file": "src/scripts/dungeons/scarlet_monastery/boss_headless_horseman.cpp",
+    "line": 90,
+    "cmake_listed": true,
+    "file_loader_call_found": false,
+    "dependency_signals": [
+      "ai_update",
+      "death_reset"
+    ]
+  },
+  {
+    "name": "boss_azshir_the_sleepless",
+    "file": "src/scripts/dungeons/scarlet_monastery/boss_azshir_the_sleepless.cpp",
+    "line": 96,
+    "cmake_listed": true,
+    "file_loader_call_found": false,
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "death_reset"
+    ]
+  },
+  {
+    "name": "go_book_celebras",
+    "file": "src/scripts/dungeons/maraudon/boss_celebras_the_cursed.cpp",
+    "line": 341,
+    "cmake_listed": true,
+    "file_loader_call_found": true,
+    "dependency_signals": [
+      "ai_update",
+      "spells",
+      "death_reset",
+      "instance_state",
+      "doors",
       "threat"
     ]
   },
@@ -197,98 +289,6 @@
       "death_reset",
       "instance_state",
       "threat"
-    ]
-  },
-  {
-    "name": "boss_wushoolay",
-    "file": "src/scripts/dungeons/zulgurub/boss_wushoolay.cpp",
-    "line": 82,
-    "cmake_listed": true,
-    "file_loader_call_found": false,
-    "dependency_signals": [
-      "ai_update",
-      "spells",
-      "death_reset",
-      "threat"
-    ]
-  },
-  {
-    "name": "boss_hazzarah",
-    "file": "src/scripts/dungeons/zulgurub/boss_hazzarah.cpp",
-    "line": 107,
-    "cmake_listed": true,
-    "file_loader_call_found": false,
-    "dependency_signals": [
-      "ai_update",
-      "spells",
-      "summons",
-      "death_reset",
-      "threat"
-    ]
-  },
-  {
-    "name": "boss_grilek",
-    "file": "src/scripts/dungeons/zulgurub/boss_grilek.cpp",
-    "line": 90,
-    "cmake_listed": true,
-    "file_loader_call_found": false,
-    "dependency_signals": [
-      "ai_update",
-      "spells",
-      "death_reset",
-      "threat"
-    ]
-  },
-  {
-    "name": "boss_headless_horseman",
-    "file": "src/scripts/dungeons/scarlet_monastery/boss_headless_horseman.cpp",
-    "line": 90,
-    "cmake_listed": true,
-    "file_loader_call_found": false,
-    "dependency_signals": [
-      "ai_update",
-      "death_reset"
-    ]
-  },
-  {
-    "name": "boss_azshir_the_sleepless",
-    "file": "src/scripts/dungeons/scarlet_monastery/boss_azshir_the_sleepless.cpp",
-    "line": 96,
-    "cmake_listed": true,
-    "file_loader_call_found": false,
-    "dependency_signals": [
-      "ai_update",
-      "spells",
-      "death_reset"
-    ]
-  },
-  {
-    "name": "npc_scarlet_spirit",
-    "file": "src/scripts/dungeons/stratholme/boss_sc_attunement.cpp",
-    "line": 491,
-    "cmake_listed": true,
-    "file_loader_call_found": true,
-    "dependency_signals": [
-      "ai_update",
-      "spells",
-      "movement",
-      "summons",
-      "death_reset",
-      "timers",
-      "threat"
-    ]
-  },
-  {
-    "name": "boss_silver_hand_bosses",
-    "file": "src/scripts/dungeons/stratholme/boss_order_of_silver_hand.cpp",
-    "line": 153,
-    "cmake_listed": true,
-    "file_loader_call_found": false,
-    "dependency_signals": [
-      "ai_update",
-      "spells",
-      "death_reset",
-      "instance_state"
     ]
   },
   {
