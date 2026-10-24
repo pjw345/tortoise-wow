@@ -17,8 +17,8 @@
 
 set(EXECUTABLE_NAME mangosd)
 
-# SOAP remote-command interface. The gsoap C++ runtime is vendored as a Linux
-# static lib (dep/lib/gsoap/libgsoap++.a), so SOAP does not build on Windows.
+# SOAP remote-command interface. Build the matching vendored gsoap runtime
+# from source so its libc requirements match the target toolchain.
 # Default: ON for Linux, OFF for Windows. Override with -DENABLE_SOAP=ON/OFF.
 if(WIN32)
   set(_ENABLE_SOAP_DEFAULT OFF)
@@ -159,12 +159,12 @@ target_link_libraries(${EXECUTABLE_NAME}
     libdeflate
 )
 
-# SOAP remote-command interface: vendored gsoap C++ runtime (2.8.135).
-# Linux-only (vendored static lib); guard behind ENABLE_SOAP so Windows can build.
+# SOAP remote-command interface: matching vendored gsoap C++ runtime (2.8.135).
+# The prebuilt archive requires newer glibc symbols than Ubuntu 22.04 provides.
 if(ENABLE_SOAP)
   target_compile_definitions(${EXECUTABLE_NAME} PRIVATE ENABLE_SOAP)
-  target_link_libraries(${EXECUTABLE_NAME}
-      ${CMAKE_SOURCE_DIR}/dep/lib/gsoap/libgsoap++.a
+  target_sources(${EXECUTABLE_NAME} PRIVATE
+      ${CMAKE_SOURCE_DIR}/dep/src/gsoap/stdsoap2.cpp
   )
 endif()
 
