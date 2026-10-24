@@ -89,6 +89,9 @@ void MovementInfo::Read(ByteBuffer &data)
         data >> t_pos.z;
         data >> t_pos.o;
     }
+    else
+        ClearTransportData();
+
     if (HasMovementFlag(MOVEFLAG_SWIMMING))
         data >> s_pitch;
 

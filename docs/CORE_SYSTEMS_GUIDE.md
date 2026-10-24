@@ -950,3 +950,7 @@ runtime activation has been run for these drafts.
 
 `tests/session-followups` contains future regression source, not executed results.
 See `docs/playerbots/NEXT_BUILD_20261023.md` for pending work and validation.
+
+- Item-started bot quests: `UseAction::UseQuestGiverItem` passes the actual owned item to `Player::AddQuest`. Native acceptance retains required/source starters and consumes other starters while preserving item quest-accept hooks. Do not unconditionally destroy the starter afterward: An Unsent Letter (2874, quest 373) is also its delivery objective.
+
+- Transport follow: compare actual native passenger attachments before replacing ordinary follow. Different stored movement GUIDs alone do not constitute a transfer. Movement packets without ONTRANSPORT clear their omitted transport payload; native boarding/removal hooks remain in HandleMoverRelocation.

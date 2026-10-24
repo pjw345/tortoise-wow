@@ -2824,20 +2824,24 @@ float MovementAction::MoveDelay(float distance)
 
 bool MovementAction::FollowOnTransport(Unit* target)
 {
-    bool const onDifferentTransports = bot->m_movementInfo.t_guid != target->m_movementInfo.t_guid;
+    // Stored client transport IDs can outlive a local animated transport.
+    // Only a real native passenger transfer can replace ordinary following.
+    GenericTransport* myTransport = bot->GetTransport();
+    GenericTransport* hisTransport = target->GetTransport();
+    bool const onDifferentTransports = myTransport != hisTransport;
     if (onDifferentTransports && sServerFacade.IsDistanceLessOrEqualThan(sServerFacade.GetDistance2d(bot, target), sPlayerbotAIConfig.sightDistance))
     {
         ai->StopMoving();
         bool sendHeartbeat = false;
 
-        if (GenericTransport* pMyTransport = bot->GetTransport())
+        if (GenericTransport* pMyTransport = myTransport)
         {
             sendHeartbeat = true;
             pMyTransport->RemovePassenger(bot);
             bot->Relocate(target->GetPositionX(), target->GetPositionY(), target->GetPositionZ());
         }
 
-        if (GenericTransport* pHisTransport = target->GetTransport())
+        if (GenericTransport* pHisTransport = hisTransport)
         {
             sendHeartbeat = true;
             bot->Relocate(target->GetPositionX(), target->GetPositionY(), target->GetPositionZ());
