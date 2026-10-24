@@ -22,6 +22,7 @@
 
 #include "BattleLog.h"
 #include "Spell.h"
+#include "EnchantingRodRequirements.h"
 #include "Database/DatabaseEnv.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
@@ -7511,7 +7512,8 @@ SpellCastResult Spell::CheckItems()
         {
             if (i != 0)
             {
-                if (p_caster->HasItemCount(i, 1))
+                if (Enchanting::HasRequiredTool(i, [p_caster](uint32 itemId)
+                    { return p_caster->HasItemCount(itemId, 1); }))
                 {
                     totems -= 1;
                     continue;
