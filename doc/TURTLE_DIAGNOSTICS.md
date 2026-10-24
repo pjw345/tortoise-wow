@@ -1210,3 +1210,6 @@ Existing EquipAction events/chat now require a verified native equipment result.
 Existing opt-in roll feedback reports the final vote after player priority and
 loot policy. Existing debug equip output remains controlled by that strategy.
 Focused tests and deployment receipts are offline artifacts, not runtime telemetry.
+
+Classic group-roll equipment recovery reuses the existing equip/action logs and
+packet queue; no additional diagnostic output or runtime switches are added.

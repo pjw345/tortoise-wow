@@ -10,7 +10,7 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
-using uint8=uint8_t;using uint16=uint16_t;using uint32=uint32_t;using int32=int32_t;
+using uint64=uint64_t;using uint8=uint8_t;using uint16=uint16_t;using uint32=uint32_t;using int32=int32_t;
 constexpr uint8 NULL_SLOT=255,INVENTORY_SLOT_BAG_0=0,EQUIPMENT_SLOT_FINGER1=10,EQUIPMENT_SLOT_FINGER2=11,
  EQUIPMENT_SLOT_TRINKET1=12,EQUIPMENT_SLOT_TRINKET2=13,EQUIPMENT_SLOT_MAINHAND=15,EQUIPMENT_SLOT_OFFHAND=16,
  EQUIPMENT_SLOT_BODY=3,EQUIPMENT_SLOT_TABARD=18;
@@ -92,10 +92,19 @@ struct Config {int events=0;template<class...T>void logEvent(T...){++events;}boo
 struct RandomBots {bool IsRandomBot(Player*){return false;}}sRandomPlayerbotMgr;
 struct Logger {template<class...T>void outDetail(T...){}}sLog;
 constexpr int TRADE_STATUS_TRADE_ACCEPT=4;
-struct ObjectGuid {int n=0;bool operator!=(ObjectGuid b){return n!=b.n;}};
+struct ObjectGuid {uint64 n=0;bool operator!=(ObjectGuid b){return n!=b.n;}};
 enum class PlayerbotSecurityLevel {PLAYERBOT_SECURITY_ALLOW_ALL};
 #define BOT_TEXT2(n,args) (std::string("equipped"))
-struct WorldPacket {WorldPacket(){}WorldPacket(int,int){}template<class T>WorldPacket&operator<<(T){return *this;}WorldPacket(WorldPacket const&)=default;bool empty(){return true;}void rpos(int){}template<class T>WorldPacket&operator>>(T&){return *this;}};
+struct WorldPacket {
+ std::vector<uint8> bytes;size_t cursor=0;WorldPacket(){}WorldPacket(int,int){}
+ template<class T>WorldPacket&operator<<(T value){
+  if constexpr(std::is_same_v<T,ObjectGuid>)return *this<<value.n;
+  else {for(size_t i=0;i<sizeof(T);++i)bytes.push_back(uint8(uint64(value)>>(8*i)));return *this;}}
+ WorldPacket(WorldPacket const&)=default;bool empty(){return bytes.empty();}size_t size(){return bytes.size();}void rpos(size_t n){cursor=n;}
+ template<class T>WorldPacket&operator>>(T& value){
+  if constexpr(std::is_same_v<T,ObjectGuid>)return *this>>value.n;
+  else {uint64 n=0;for(size_t i=0;i<sizeof(T);++i)n|=uint64(bytes.at(cursor++))<<(8*i);value=T(n);return *this;}}
+};
 struct Event {std::string source;WorldPacket packet;std::string getSource(){return source;}WorldPacket&getPacket(){return packet;}};
 namespace ItemClass {constexpr int ITEM_CLASS_WEAPON=2,ITEM_CLASS_ARMOR=4,ITEM_CLASS_CONTAINER=1;}
 struct EquipUpgradesAction {PlayerbotAI*ai;Player*bot;AiObjectContext*context;ChatHelper*chat;int swaps=0;
@@ -107,7 +116,7 @@ struct EquipUpgradesAction {PlayerbotAI*ai;Player*bot;AiObjectContext*context;Ch
 // The GUID is irrelevant to the non-packet regression events but required by the production method.
 #define GetObjectGuid() GetGUIDLow()
 // Production packet comparison needs matching types only; no packet is synthesized here.
-bool operator!=(ObjectGuid,int){return false;}
+bool operator!=(ObjectGuid a,int b){return a.n!=uint64(b);}
 struct EquipAction {static uint8 GetSmallestBagSlot(Player*){return 19;}static bool EquipItem(PlayerbotAI*,Player*,Item*,bool,uint8);};
 uint32 urand(uint32,uint32){return 100;}
 #include "NativeGear.inc"
@@ -161,6 +170,13 @@ int main(){try{
  Bag smallBag,bigBag;smallBag.proto=bigBag.proto=&bagProto;smallBag.slot=19;bigBag.slot=24;p.gear[19]=&smallBag;p.bags={&bigBag};
  smallBag.empty=false;check(!EquipAction::EquipItem(&ai,nullptr,&bigBag,true,NULL_SLOT)&&p.gear[19]==&smallBag,"non-empty equipped bag is never displaced");
  smallBag.empty=true;check(EquipAction::EquipItem(&ai,nullptr,&bigBag,true,NULL_SLOT)&&p.gear[19]==&bigBag,"empty bag replacement survives no-free-slot preflight");
+ // Match the native Classic group-roll packet, including the winner GUID.
+ auto won=[](uint64 winner){Event e;e.source="loot roll won";e.packet<<ObjectGuid{0xf13000000000abcdULL}<<uint32(2)<<uint32(6565)<<uint32(0)<<uint32(1807)<<ObjectGuid{winner}<<uint8(93)<<uint8(1);return e;};
+ p.gear.clear();p.gear[4]=&old;p.bags={&best};old.slot=4;best.slot=23;a=proto(1,10);b=proto(2,20);
+ Event otherWin=won(2);check(!action.Execute(otherWin)&&p.gear[4]==&old,"another party member's win cannot trigger equipment changes");
+ Event shortWin=won(1);shortWin.packet.bytes.resize(31);check(!action.Execute(shortWin)&&p.gear[4]==&old,"truncated winner notification cannot be read or equip");
+ Event ownWin=won(1);check(action.Execute(ownWin)&&p.gear[4]==&best,"own group-roll notification scans real awarded bag gear without item-push packet");
+ check(!action.Execute(ownWin)&&p.gear[4]==&best,"repeated win notification cannot downgrade or report a second equip");
  RollAction roll(&ai);a=proto(1,10);b=proto(2,30);p.gear[4]=&old;p.bags={&best};q=ItemQualifier(&best);
  check(roll.CalculateRollVote(q)==ROLL_NEED,"fresh valid upgrade rolls Need");
  check(roll.CalculateRollVote(q,true)==ROLL_GREED&&ai.feedback.find("Rolling greed")==0,"human priority and final feedback agree");

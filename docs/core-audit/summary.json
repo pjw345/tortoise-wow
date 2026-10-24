@@ -1,6 +1,6 @@
 {
-  "source_commit": "f45f5ca5dcd1a9c14bf384e2c0131df9456b353e",
-  "generated_utc": "2026-10-20T15:16:31.2790842Z",
+  "source_commit": "e7aa6ff5195d7383d48e5e2b6366d22ee2226921",
+  "generated_utc": "2026-10-20T16:07:19.7154349Z",
   "maps": 70,
   "instance_maps": 44,
   "creature_templates": 14339,
@@ -14,5 +14,5 @@
   "missing_spawn_maps": 0,
   "no_runtime_validation": true,
   "scanner_limit": "Lexical dependencies and literal legacy registrations only; not proof of all dynamic summons, preprocessing, runtime registrations or encounter completeness.",
-  "source_state": "working tree: companion gear, consumables and melee-contact corrections"
+  "source_state": "working tree: Classic group-roll equipment notification"
 }

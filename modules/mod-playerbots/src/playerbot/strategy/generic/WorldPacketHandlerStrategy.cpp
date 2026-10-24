@@ -95,6 +95,14 @@ void WorldPacketHandlerStrategy::InitNonCombatTriggers(std::list<TriggerNode*> &
         "loot response",
         NextAction::array(0, new NextAction("store loot", relevance), NULL)));
 
+#ifdef MANGOSBOT_ZERO
+    // Turtle group-roll awards store the item without SMSG_ITEM_PUSH_RESULT.
+    // Queue the normal equipment scan; never mutate inventory in SendPacket.
+    triggers.push_back(new TriggerNode(
+        "loot roll won",
+        NextAction::array(0, new NextAction("equip upgrades", relevance), NULL)));
+#endif
+
     triggers.push_back(new TriggerNode(
         "item push result",
         NextAction::array(0, new NextAction("query item usage", relevance), new NextAction("equip upgrades", relevance), NULL)));

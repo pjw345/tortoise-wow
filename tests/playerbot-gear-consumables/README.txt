@@ -17,3 +17,6 @@ fallback, self-targeting, owned inventory, and legacy saved strategy activation 
 Limits: these tests do not run a complete server, load production SQL/DBC content,
 measure gameplay or prove every possible bag-weapon combination optimal. The full
 native image must compile and actual party behavior must be tested separately.
+
+Classic group-roll tests also deliver the native win packet without an item-push
+notification: own win, other winner, truncation and repeat are covered.
