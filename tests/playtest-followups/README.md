@@ -1,0 +1,3 @@
+These Linux/GCC fixtures extract the current production methods and native quest-starter retention fragment. Run `python3 tests/playtest-followups/quest-starter.py /tmp/quest-test` and `python3 tests/playtest-followups/transport.py /tmp/transport-test` from an isolated toolchain container. Each also requires the pre-fix variant to fail.
+
+Coverage: required/source/consumed quest starters, repeated acceptance, ownership and eligibility failures; actual transport attachments versus stale or equal stored GUIDs, same-transport follow, boarding/leaving/switching, sight range, and repeated movement packets with omitted transport, swim, jump and spline fields. Fakes represent native world/inventory services; these are not an in-game transport or quest-hook integration test.

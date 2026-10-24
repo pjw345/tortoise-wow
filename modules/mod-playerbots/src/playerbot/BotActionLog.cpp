@@ -400,7 +400,8 @@ void BotActionLog_LogSpeed(Unit* unit, const char* event, int moveType,
         "flags=0x%x state=0x%x mounted=%d death=%u "
         "slow=%d normal=%d increase=%d mounted_increase=%d "
         "stack=%.4f nonstack=%d mounted_stack=%.4f mounted_nonstack=%d "
-        "generators=[%s] spline_done=%d",
+        "generators=[%s] spline_done=%d map=%u instance=%u xyz=(%.3f,%.3f,%.3f) "
+        "transport=%llu attached=%d spline_id=%u elapsed=%d duration=%d destination=(%.3f,%.3f,%.3f)",
         reason ? reason : "unspecified", moveType, oldRate, requestedRate, int(forced), ratio,
         unit->GetSpeedRatePersistance(type),
         int(validType && unit->HasPendingMovementChange(MovementPacketSender::GetChangeTypeByMoveType(type))),
@@ -414,7 +415,11 @@ void BotActionLog_LogSpeed(Unit* unit, const char* event, int moveType,
         unit->GetMaxPositiveAuraModifier(SPELL_AURA_MOD_SPEED_NOT_STACK),
         unit->GetTotalAuraMultiplier(SPELL_AURA_MOD_MOUNTED_SPEED_ALWAYS),
         unit->GetMaxPositiveAuraModifier(SPELL_AURA_MOD_MOUNTED_SPEED_NOT_STACK),
-        generators.str().c_str(), int(unit->movespline->Finalized()));
+        generators.str().c_str(), int(unit->movespline->Finalized()),
+        unit->GetMapId(), unit->GetInstanceId(), unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ(),
+        static_cast<unsigned long long>(unit->m_movementInfo.t_guid.GetRawValue()), int(unit->GetTransport() != nullptr),
+        unit->movespline->GetId(), unit->movespline->timePassed(), unit->movespline->Duration(),
+        unit->movespline->FinalDestination().x, unit->movespline->FinalDestination().y, unit->movespline->FinalDestination().z);
 }
 
 void BotActionLog_LogSpeedAura(Unit* unit, uint32 spellId, uint32 auraType,

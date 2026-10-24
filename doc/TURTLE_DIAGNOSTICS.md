@@ -1260,3 +1260,14 @@ the matching ParseRequest correction. Server replies keep their original format.
 No log stream, packet polling change, chat filter, diagnostic flag or runtime
 validation bypass is added. Distinguish client error removal from successful
 server snapshot delivery; live acceptance needs the rebuilt server.
+
+## 2026-10-24 position and spline correlation
+
+Existing opt-in per-bot MOVEMENT_STATE samples (at most one per two seconds)
+now include map/instance, XYZ, stored transport GUID versus actual attachment,
+spline ID, elapsed/duration and final destination. Existing speed-event rows
+carry the same fields. This reuses EnableActionLog, per-bot file bounds and
+owner-thread reads; there are no floor/navmesh queries or new logging threads.
+Disable EnableActionLog after the Deadmines/follow investigation. Remove the
+additional fields once movement/height loss is correlated and accepted.
+Samples locate a stalled/falling bot but do not themselves prove map corruption.

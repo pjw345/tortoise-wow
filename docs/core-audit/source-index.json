@@ -5960,7 +5960,7 @@
       "summons",
       "death_reset"
     ],
-    "sha256": "623E0FD383056625C66AEA239004BCB64DFA16AB57F388FCADBA30EAE504B5BC"
+    "sha256": "0B7B716D3C317830E16626E0853F0B0422577A53008F1E77A39901CD63AA250F"
   },
   {
     "file": "src/game/Objects/Item.h",
@@ -16801,7 +16801,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "ED6AF0C29231A9D4B886278DCA1412F5BF9ED0CFCFF21BE13012CE796D376949"
+    "sha256": "4EC5184433DA84B463990A7582063055730C572DFBE8F18DC78D8BFF8250FD24"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ChatHelper.cpp",
@@ -23008,7 +23008,7 @@
       "death_reset",
       "threat"
     ],
-    "sha256": "2D0452E89C5AF3D6B58C80DBF866030A2E55679C23C175D89EE7BB42807F6AE7"
+    "sha256": "ECCAFB95AA4E3DDE49BB97D4E44CB91D8A3802D506A229F75A17A632D82CA4B8"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/GuildAcceptQuestOrderAction.h",
@@ -24260,7 +24260,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "9265E7A0FF070AE2FD9A034E78297CC6D31EBA2568DF487264156FE675A21431"
+    "sha256": "39B9CE3ED22ADF43C9143773EA6221C1E8B63D772C17A1E0CA60C8A53254F5A6"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/LeaveGroupAction.cpp",
