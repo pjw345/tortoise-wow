@@ -80,6 +80,19 @@ int main(int argc, char** argv)
         "Q|1|42|Mercy|0|94,94", "Q|1|42|Mercy|0|-1", "Q|1|42|Mercy|0|4294967296",
         "Q|1|42|Mercy|0|94|extra", "Q|1|42|Mercy|xyz|94"})
         Check(!ParseRequest(invalid, "Mercy", request), "malformed request accepted");
+    Check(ParseRequest("Q:1:42:Mercy:0:94,248", "Mercy", request), "Vanilla-safe request rejected");
+    Check(request.token == "42" && request.bot == "Mercy" && request.questIds == std::vector<uint32_t>({94,248}),
+        "Vanilla-safe fields changed");
+    Check(ParseRequest("Q:1:42:Mercy:0123456789abcdef:", "Mercy", request) && request.questIds.empty(),
+        "Vanilla-safe empty history/hash rejected");
+    for (auto const& invalid : {"Q:2:42:Mercy:0:94", "Q:1:0:Mercy:0:94", "Q:1:42:Alon:0:94",
+        "Q:1:42:Mercy:0:94,94", "Q:1:42:Mercy:0:-1", "Q:1:42:Mercy:0:4294967296",
+        "Q:1:42:Mercy:0:94:extra", "Q:1:42:Mercy:xyz:94", "Q:1|42:Mercy:0:94",
+        "Q|1:42|Mercy|0|94", "Q:1:42:Mercy:0:94|248", "Q||1||42||Mercy||0||94"})
+        Check(!ParseRequest(invalid, "Mercy", request), "malformed/mixed Vanilla-safe request accepted");
+    std::string colonTooMany = "Q:1:42:Mercy:0:";
+    for (int i = 1; i <= 26; ++i) colonTooMany += (i == 1 ? "" : ",") + std::to_string(i);
+    Check(!ParseRequest(colonTooMany, "Mercy", request), "Vanilla-safe history limit bypassed");
     Check(!ParseRequest(std::string(241, 'x'), "Mercy", request), "oversize request accepted");
     std::string tooMany = "Q|1|42|Mercy|0|";
     for (int i = 1; i <= 26; ++i) tooMany += (i == 1 ? "" : ",") + std::to_string(i);
@@ -106,12 +119,13 @@ int main(int argc, char** argv)
     sObjectMgr.players[7] = &master;
     PlayerbotAI ai; ai.bot = &bot; ai.master = &master;
     auto size = bot.states.size();
-    Check(SendQueuedSnapshot(&ai, "7:Q|1|42|Mercy|0|94,248"), "authorized owner request failed");
+    Check(SendQueuedSnapshot(&ai, "7:Q:1:42:Mercy:0:94,248"), "authorized owner request failed");
     auto body = Body(master.messages);
     if (argc > 1) { std::ofstream wire(argv[1]); for (auto const& packet : master.messages) wire << Hex(packet) << '\n'; }
     Check(body == "94|I|20|" + Hex("Shared | title") + "|I,1,60688,2,10\n248|R|20|" + Hex("History") + "|\n", "native quest counts / history wrong");
     Check(bot.states.size() == size, "snapshot mutated quest map");
-    Check(!SendQueuedSnapshot(&ai, "7:Q|1|43|Mercy|0|94"), "send cooldown bypassed");
+    Check(!SendQueuedSnapshot(&ai, "7:Q:1:43:Mercy:0:94"), "Vanilla-safe send cooldown bypassed");
+    Check(!SendQueuedSnapshot(&ai, "7:Q|1|43|Mercy|0|94"), "legacy send cooldown bypassed");
     master.group = &other; ai.questSyncLastSent = 0;
     Check(!SendQueuedSnapshot(&ai, "7:Q|1|43|Mercy|0|94"), "departed group requester accepted");
     master.group = &group; ai.master = nullptr;

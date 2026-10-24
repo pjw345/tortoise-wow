@@ -56,7 +56,11 @@ namespace ai { namespace questsync
     inline bool ParseRequest(std::string const& message, std::string const& bot, Request& result)
     {
         if (message.size() > MaxRequest) return false;
-        auto fields = Split(message, '|');
+        // 1.12 SendAddonMessage validates chat escapes and rejects bare '|'.
+        // New client requests use ':'; retain pipe requests for existing producers.
+        // Decode one complete envelope only, never normalize mixed delimiters.
+        char separator = message.compare(0, 2, "Q:") == 0 ? ':' : '|';
+        auto fields = Split(message, separator);
         uint32_t token;
         if (fields.size() != 6 || fields[0] != "Q" || fields[1] != "1" ||
             !Number(fields[2], token) || !token || fields[3] != bot || bot.empty() || bot.size() > 48)

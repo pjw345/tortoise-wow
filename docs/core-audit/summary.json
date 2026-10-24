@@ -1,11 +1,11 @@
 {
-  "source_commit": "591c68d49312c91fde933d38a0613db414471148",
-  "generated_utc": "2026-10-21T17:56:44.8175686Z",
+  "source_commit": "e12baaf45a28878989aa7f18dbf4dbc118c96fb3",
+  "generated_utc": "2026-10-22T18:18:16.4182390Z",
   "maps": 70,
   "instance_maps": 44,
   "creature_templates": 14339,
   "map_template_references": 11582,
-  "source_files": 2521,
+  "source_files": 2522,
   "dungeon_source_files": 280,
   "registrations": 1231,
   "encounter_map_template_rows": 1520,
@@ -13,6 +13,5 @@
   "missing_spawn_templates": 0,
   "missing_spawn_maps": 0,
   "no_runtime_validation": true,
-  "scanner_limit": "Lexical dependencies and literal legacy registrations only; not proof of all dynamic summons, preprocessing, runtime registrations or encounter completeness.",
-  "source_state": "working tree: collision-safe WMO extraction and Azora staged native-format repair; indexed core source unchanged"
+  "scanner_limit": "Lexical dependencies and literal legacy registrations only; not proof of all dynamic summons, preprocessing, runtime registrations or encounter completeness."
 }

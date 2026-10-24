@@ -1947,7 +1947,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "CFADF904D2C90D674D1DBEE31D6C483A60C8097FF07013E0A3B91F11A7BF70E9"
+    "sha256": "EE2D022078F6035B0C35BCA2C92E50676405B96158862D9C3AA9B9FD4DDD1141"
   },
   {
     "file": "src/game/vmap/DynamicTree.h",
@@ -24631,6 +24631,14 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "C2C4CD75D3E0A2840CFC05F914578E15131080D188EE452A2341D7D0B6807EF3"
+    "sha256": "C3ACD9A23F0CFDC1E8D03B983CB16B943F0687FDE75D2313D2A03FD3408E8526"
+  },
+  {
+    "file": "src/game/vmap/WmoTileCoverage.h",
+    "cmake_listed": false,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "EC72CB6A183517274F8D9C27CFFF9114FB4491AD9DBBFD484E555B244AC2D931"
   }
 ]

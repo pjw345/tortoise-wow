@@ -13,7 +13,10 @@ No AddOn source is vendored here; obtain it from the companion repository.
 
 - WoW 1.12.1 / Interface 11200 with pfQuest; tracker checks use pfQuest 8.0.1.
 - Optional pfQuest-turtle. Existing pfQuest files are not modified.
-- Companion version 1.0.0 uses PFQBOT protocol version 1.
+- Companion 1.0.1 uses colon-delimited PFQBOT version-1 requests and requires
+  this transport correction. Native response format remains version 1.
+- Companion 1.0.0's bare pipe sends fail the Vanilla chat escape validator;
+  the corrected client send test reproduces that failure before the fix.
 - Initial matching server implementation: 591c68d49312c91fde933d38a0613db414471148
   (PR #61). The running combined stack 2151c15b includes this implementation.
 - An unmodified server supplies no snapshots; unavailable data is not quest completion.
@@ -36,3 +39,8 @@ Live AddOn transport, graphics and quest-progress acceptance remain pending.
 Moving the AddOn to its own repository changes no server runtime source and
 requires no server rebuild or restart. Report UI issues in the companion
 repository and server snapshot issues in this repository.
+
+The parser now accepts `Q:1:token:bot:hash:questIds` and retains legacy pipe
+requests for other producers. Limits, ownership and response encoding remain
+unchanged. The deployed 2151c15b image needs a build/activation for this parser
+change; unlike the earlier repository-only move, this is a runtime source change.
