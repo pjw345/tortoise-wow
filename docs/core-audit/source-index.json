@@ -480,7 +480,7 @@
       "timers",
       "threat"
     ],
-    "sha256": "C4DE8FCF8ED983A7076A41438621460FCE28A08D0DBEFA875253CBFE22FCC66D"
+    "sha256": "2932C0C261EB80FD562AAF9FE685CAA4B781A2C95BFA20BBAAB64DC608FC9251"
   },
   {
     "file": "src/game/Spells/SpellMgr.cpp",
@@ -6089,7 +6089,7 @@
     "dependency_signals": [
       "doors"
     ],
-    "sha256": "F6102EF4D004A02CE37ECC9C55FC7ED1C660E0C6690247D0E15FFEB415B38BEE"
+    "sha256": "4BAED4AB033B057FF6E8BA309B487F288D7258AA8BBE9BA7E2F818E10F8D2FD2"
   },
   {
     "file": "src/game/ItemEnchantmentMgr.h",
@@ -23908,7 +23908,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "6229094E0B347FC9C5AB279B737B6B9B051B5294C51841AB481ED0B7F415A54A"
+    "sha256": "BD280CBE1123678BFE5FCB323CFD5D2AA94C297457660F0D9088D939E16A707F"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/TellMasterAction.h",
@@ -23934,7 +23934,7 @@
     "dependency_signals": [
       "death_reset"
     ],
-    "sha256": "8A810D39DE1EC13069620A1E1D964799E894E4435D2AA2BA5D49901CDFABC9C9"
+    "sha256": "1CA3D9F960D29453E39C413B0C0C4D95C778E742B371E1A4376C12FD9C1203C0"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/RpgAction.h",
@@ -24640,5 +24640,13 @@
     "loader_calls": [],
     "dependency_signals": [],
     "sha256": "EC72CB6A183517274F8D9C27CFFF9114FB4491AD9DBBFD484E555B244AC2D931"
+  },
+  {
+    "file": "src/game/Spells/EnchantingRodRequirements.h",
+    "cmake_listed": false,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "8D063D34C31E324D221EADFFCE627DC6456B2E1938D1147558A7E4E2419FC830"
   }
 ]
