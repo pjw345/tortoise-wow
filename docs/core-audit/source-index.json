@@ -1947,7 +1947,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "CFADF904D2C90D674D1DBEE31D6C483A60C8097FF07013E0A3B91F11A7BF70E9"
+    "sha256": "EE2D022078F6035B0C35BCA2C92E50676405B96158862D9C3AA9B9FD4DDD1141"
   },
   {
     "file": "src/game/vmap/DynamicTree.h",
@@ -16883,7 +16883,7 @@
       "spells",
       "death_reset"
     ],
-    "sha256": "64FB5B62AD7D8F42FD67570D47CB7D78C5C29107E815782EA1DBC86A8E407F6A"
+    "sha256": "F3C9EF77474B56A445816ED830D3E4F63232A0CD599510ABDC8234ED05A34013"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/TravelRoutePolicy.h",
@@ -24581,7 +24581,7 @@
       "death_reset",
       "async"
     ],
-    "sha256": "34B3DF9D878C3467CFF172A037A3EF1EAADC06AC6E453604268288137A88BC5C"
+    "sha256": "000F974BDC64FB88545A4D66536D6366003B817814665F1064133E84C9B00DD5"
   },
   {
     "file": "src/game/BattleLog.cpp",
@@ -24608,5 +24608,37 @@
       "death_reset"
     ],
     "sha256": "06493460387C0AFA78628A43F59C7CC6C6B138EAA5CD5E647E034866242263FD"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/QuestSync.cpp",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "5ABB59629B6FA9BC0AC1D410E7634896C0DE835083399F18FE5B07802153A032"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/QuestSync.h",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "060C9673228963211F51BC9728C40201DDAD7E9A9ACD4B10D78EB39EE7704388"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/QuestSyncProtocol.h",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "C3ACD9A23F0CFDC1E8D03B983CB16B943F0687FDE75D2313D2A03FD3408E8526"
+  },
+  {
+    "file": "src/game/vmap/WmoTileCoverage.h",
+    "cmake_listed": false,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "EC72CB6A183517274F8D9C27CFFF9114FB4491AD9DBBFD484E555B244AC2D931"
   }
 ]

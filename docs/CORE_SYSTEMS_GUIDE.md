@@ -855,3 +855,74 @@ hostile-unit query and creature aggro mechanics are unchanged. This destination
 check does not establish path-wide safety or repair missing collision geometry.
 Source-extracted loot-followups, gathering-safety and loot-safety regressions
 cover these contracts; full image compilation and live acceptance are separate.
+
+## Party-bot quest snapshots and pfQuest extension (2026-10-21)
+
+The exact LANG_ADDON `PFQBOT` prefix is a read-only request protocol, not ordinary
+bot chat. PlayerbotMgr's existing authenticated chat ingress reaches
+PlayerbotAI::HandleCommand; only the named bot's real-player master in the same
+group can enqueue a valid version-1 request. A five-second atomic admission gate
+and one-pending flag bound ingress. A private native ChatCommandHolder carries
+the requester's GUID rather than retaining its Player pointer. HandleCommands
+resolves that identity again on the bot's serialized AI owner and rechecks
+master/group authorization before reading quest slots/status/counters. A second
+send-rate gate bounds replies. Logout, master change and group departure cancel
+access. Capture does not invoke a gameplay action, interrupt casts, traverse a
+foreign player's quest map, query SQL or mutate quest state.
+
+QuestSync's adapter reads actual slots first, retaining active repeated quests
+even when earlier reward history exists. Requested IDs absent from the log use
+the native saved-in-memory reward flag for historical R versus absent N; absence
+alone is never a turn-in. Read-only map find operations avoid inserting status
+rows. Item and creature/GO/cast counters, exploration and required money preserve
+their native meanings; ready/failed remain native quest states.
+
+Player::SendAddonMessage provides the existing LANG_ADDON local-recipient GUILD
+packet shape; this does not broadcast to a guild or use human whispers. Replies
+contain version/token/bot/hash/part metadata with 128-byte payload chunks and a
+192-chunk maximum. Unchanged data sends one freshness packet. The client accepts
+only its own native sender identity, an outstanding token and a current roster
+member, validates the complete bounded data snapshot, then atomically replaces
+the last valid cache. Partial/malformed/timed-out responses retain stale data.
+The hash is an equality tag, not a security primitive.
+
+The separate [pfQuest-partybots repository](https://github.com/pjw345/pfQuest-partybots)
+contains the AddOn, client tests and release downloads. It wraps the installed pfQuest 8.0.1 ButtonEvent,
+ButtonEnter and DoLayout surface. Personal quest data, pfQuest database/maps,
+normal row interactions, Quest Log bindings and helper commands remain native.
+Bot-only rows use a companion footer/panel, never synthetic personal quest slots.
+Current roster names are derived from client unit APIs. The comparison includes
+stable quest IDs, while tracker rows show compact per-bot progress and hovers
+show objective counts. Freshness/offline/unknown states stay explicit.
+
+tests/playerbot-quest-sync compiles the production adapter/protocol with host API
+fakes and can emit actual native packets. The companion repository owns the Lua
+decoder tests and consumes those packets via --wire. Lua 5.0.3 and 5.1 tests can
+extract the installed pfQuest's unmodified row/layout functions. See
+`docs/playerbots/PFQUEST_PARTY_PROGRESS.md` for installation and cross-repository validation.
+These checks are separate from full native image compilation, socket/client
+AddOn delivery, actual graphics and live quest-progress acceptance.
+
+
+## Collision asset identity and Tower of Azora (2026-10-21)
+
+WMO extraction must retain complete source-path identity. Vanilla and custom Turtle assets can share a basename; flattening them can bind a map spawn to the wrong geometry. Root outputs and ADT, WDT/global and game-object references now share `WmoOutputName`. Existing model-name substring controls and the native Zeppelin adjustment are preserved; M2 naming and native collision/navigation formats are unchanged. See `docs/navigation/AZORA_WMO_COLLISION_REPAIR.md` for provenance, native reader/writer repair, the two Azora tile references and migration limits. A full fresh extraction must regenerate matching metadata/navigation together; never mix new names with legacy references. Offline connectivity success is not live movement acceptance.
+
+## Vanilla quest request transport correction (2026-10-22)
+
+Live testing found `Core.lua:126: Invalid escape code in chat message`: the
+1.12 client validates pipes in SendAddonMessage before transmitting. Requests
+now use `Q:1:token:bot:hash:questIds`. ParseRequest accepts that complete envelope
+and retains legacy `Q|1|...` input; mixed delimiters and doubled-pipe input are
+rejected. Snapshot/reply formats, queued GUID ownership, native capture, rate
+limits and size/row bounds are unchanged. This corrects the transport rather
+than bypassing the client's validation or parsing human chat.
+
+Companion 1.0.1 requires this parser; deployed image 2151c15b does not accept
+colon requests. Focused tests can run on the Windows workstation while playing;
+full server compilation/activation must wait until the game services are stopped.
+Live transport and UI acceptance remain pending.
+
+## Bounded WMO tile coverage and Stormwind (2026-10-22)
+
+Per-tile collision metadata must include every existing bounded, non-global WMO placement whose bounds overlap that tile, even when an ADT overlay omits a repeated placement record. `TileAssembler` now completes these references without changing native models, spatial-tree indices, transforms, M2/global handling or runtime collision/movement policy. See `docs/navigation/STORMWIND_WMO_TILE_COVERAGE.md` for the demonstrated missing Stormwind street surface, native-format scoped repair, matching navigation regeneration and live acceptance limits. Keep the deployed map parameters and earlier Azora repair; do not substitute teleporting or relaxed collision checks for missing geometry.

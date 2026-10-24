@@ -1227,3 +1227,36 @@ default exclusions. Existing always/skip loot lists retain their documented
 precedence. Floor-separated safety uses native LOS; current blocker logs still
 name rather than uniquely identify a hostile. Live tower geometry and approach
 safety must be checked in gameplay, not inferred from the test fixtures.
+
+## Party-bot quest snapshots (2026-10-21)
+
+QuestSync adds no log stream, background thread, database polling or diagnostic
+flag. The paced read-only request is the feature's data transport. There is at
+most one pending request per bot; queued and sent requests have independent
+five-second limits. Responses are bounded and unchanged snapshots receive one
+small freshness packet. The client normally polls each roster member every 15
+seconds, spaces requests by half a second and retains stale snapshots on error.
+Manual/player-quest refreshes retain a six-second client minimum per member.
+
+The AddOn exposes pending/offline/unavailable/stale state and last-response time
+in its tracker hover and comparison panel. Requests and replies use the exact
+PFQBOT AddOn prefix and never generate human-chat/conversation messages. Disable
+the companion AddOn to stop requests; no server configuration cleanup is needed.
+The AddOn and client tests are maintained at https://github.com/pjw345/pfQuest-partybots;
+server/native test instructions are in tests/playerbot-quest-sync/README.md.
+Native full build, actual AddOn delivery, client graphics and live quest state
+acceptance remain separate from the source-extracted and Lua API-fixture tests.
+
+
+## Offline WMO identity/navigation verification (2026-10-21)
+
+Extractor-only tools `vmap_model_tool` and `mmap_path_check` inspect native collision records and native Detour paths in staged files. They add no runtime hook, timer, log writer or production overhead. `vmap_model_tool` refuses existing outputs, mismatched/duplicate identities and malformed records; unaffected record bytes stay exact. `mmap_path_check` treats partial or exhausted paths as failure. Build with USE_EXTRACTORS; remove the optional targets/helpers and focused tests together if retired. See `docs/navigation/AZORA_WMO_COLLISION_REPAIR.md` for source provenance, rollback and live-test limits.
+
+### Vanilla request send failure (2026-10-22)
+
+`Core.lua:126: Invalid escape code in chat message` occurs before the request
+reaches the server. Companion 1.0.1 sends colon-delimited requests; it requires
+the matching ParseRequest correction. Server replies keep their original format.
+No log stream, packet polling change, chat filter, diagnostic flag or runtime
+validation bypass is added. Distinguish client error removal from successful
+server snapshot delivery; live acceptance needs the rebuilt server.

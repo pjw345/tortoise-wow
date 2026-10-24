@@ -2,6 +2,8 @@
 #include "PlayerbotMgr.h"
 #include "ahbot/AhBot.h"
 #include "playerbot/playerbot.h"
+#include "playerbot/QuestSync.h"
+#include "playerbot/QuestSyncProtocol.h"
 #include "playerbot/strategy/actions/RevealGatheringItemAction.h"
 #include "playerbot/AiContextAugment.h"
 #include "playerbot/PerformanceMonitor.h"
@@ -1600,7 +1602,12 @@ void PlayerbotAI::HandleCommands()
 
         std::string command = holder.GetCommand();
         Player* owner = holder.GetOwner();
-        if (!helper.ParseChatCommand(command, owner) && holder.GetType() == CHAT_MSG_WHISPER)
+        if (command.compare(0, 8, "PFQBOT\t:") == 0)
+        {
+            questSyncQueued.store(false);
+            ai::questsync::SendQueuedSnapshot(this, command.substr(8));
+        }
+        else if (!helper.ParseChatCommand(command, owner) && holder.GetType() == CHAT_MSG_WHISPER)
         {
             //ostringstream out; out << "Unknown command " << command;
             //TellPlayer(out);
@@ -1876,6 +1883,21 @@ bool PlayerbotAI::IsAllowedCommand(std::string text)
 
 void PlayerbotAI::HandleCommand(uint32 type, const std::string& text, Player& fromPlayer, const uint32 lang)
 {
+    // An exact data prefix cannot enter command splitting, response-channel
+    // overrides or conversation. Capture on the bot owner via the native queue.
+    if (lang == LANG_ADDON && text.compare(0, 7, "PFQBOT\t") == 0)
+    {
+        ai::questsync::Request request;
+        if ((type != CHAT_MSG_PARTY && type != CHAT_MSG_RAID) ||
+            !ai::questsync::Authorized(this, &fromPlayer) ||
+            !ai::questsync::ParseRequest(text.substr(7), bot->GetName(), request) ||
+            !ai::questsync::Admit(questSyncLastQueued, time(0)) || questSyncQueued.exchange(true))
+            return;
+        // Store identity, not a requester pointer that can outlive logout.
+        chatCommands.push(ChatCommandHolder("PFQBOT\t:" + std::to_string(fromPlayer.GetGUIDLow()) +
+            ":" + text.substr(7), nullptr, CHAT_MSG_WHISPER));
+        return;
+    }
     std::string filtered = text;
 
     if (!IsAllowedCommand(filtered) && !GetSecurity()->CheckLevelFor(PlayerbotSecurityLevel::PLAYERBOT_SECURITY_INVITE, type != CHAT_MSG_WHISPER, &fromPlayer))

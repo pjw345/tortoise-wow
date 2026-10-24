@@ -269,3 +269,49 @@ without changing shared hostile searches or native aggro. Engaged enemies stay
 blocking. A destination LOS check is not proof of route safety; absent VMAP
 collision cannot be repaired by this adapter. Existing geometric aggro and
 release semantics remain native. No DB writes or new asynchronous owner exist.
+
+### 2026-10-21 authorized party quest snapshots
+
+The older human quest queries are formatted chat and do not carry a reliable
+atomic snapshot or historical reward boundary. The user now explicitly requests
+both server support and integration with the installed pfQuest tracker. Reuse
+PlayerbotMgr's validated ingress, the native bot command queue/owner and
+Player::SendAddonMessage's local LANG_ADDON delivery rather than parsing human
+whispers, issuing gameplay commands or reading the database from an AddOn.
+
+The narrow exact-prefix protocol rechecks master and group ownership after a
+GUID-based queued request is resolved, with bounded admission/packet assembly,
+no retained requester pointer, and explicit current versus rewarded-history
+states. pfQuest's real public row/layout functions are wrapped in a separate
+extension; its source/database and normal Quest Log controls remain untouched.
+The extension and client tests are maintained separately at
+https://github.com/pjw345/pfQuest-partybots; this repository owns the server
+adapter/protocol and native tests.
+The production adapter/protocol and shipped Lua have focused regressions,
+including actual native packet consumption and optional installed pfQuest
+function extraction under Lua 5.0.3/5.1. Full native build and live graphics,
+transport and gameplay acceptance remain pending while the server is in use.
+
+
+## WMO basename aliasing discovered at Azora (2026-10-21)
+
+Different complete client WMO paths shared the output basename Magetower.wmo. The deployed model matched a custom variant; the original client's model restores native connectivity after scoped binding correction and regeneration. `WmoOutputName` is shared by extraction and all WMO reference writers (ADT, WDT/global, game objects). Native formats/ownership/lifecycle remain unchanged. Source and data validation, existing no-LOS substring controls, preserved custom variants and fresh-extraction migration constraints are documented in `docs/navigation/AZORA_WMO_COLLISION_REPAIR.md`. Full extraction and in-game stair clearance remain unverified.
+
+## Vanilla quest request transport correction (2026-10-22)
+
+Live testing found `Core.lua:126: Invalid escape code in chat message`: the
+1.12 client validates pipes in SendAddonMessage before transmitting. Requests
+now use `Q:1:token:bot:hash:questIds`. ParseRequest accepts that complete envelope
+and retains legacy `Q|1|...` input; mixed delimiters and doubled-pipe input are
+rejected. Snapshot/reply formats, queued GUID ownership, native capture, rate
+limits and size/row bounds are unchanged. This corrects the transport rather
+than bypassing the client's validation or parsing human chat.
+
+Companion 1.0.1 requires this parser; deployed image 2151c15b does not accept
+colon requests. Focused tests can run on the Windows workstation while playing;
+full server compilation/activation must wait until the game services are stopped.
+Live transport and UI acceptance remain pending.
+
+## Missing overlapping WMO references in Stormwind (2026-10-22)
+
+The native Stormwind placement overlaps 16 tiles but deployed metadata referenced it in only six. Tile 30,47 consequently had no city floor at the captured bot/master positions, and native navigation could not place either endpoint. Completing existing placement references and rebuilding with unchanged defaults restores native floors and a complete route. The assembler completes bounded non-global WMO coverage generically; native fixture tests preserve M2/global handling and deduplicate added references. See `docs/navigation/STORMWIND_WMO_TILE_COVERAGE.md`. This establishes an offline data defect and repair, not gameplay acceptance for all city movement or area-trigger transitions.

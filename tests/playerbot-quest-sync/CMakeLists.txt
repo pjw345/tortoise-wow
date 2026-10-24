@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.16)
+project(PlayerbotQuestSync LANGUAGES CXX)
+enable_testing()
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(source "${CMAKE_CURRENT_SOURCE_DIR}/../../modules/mod-playerbots/src/playerbot/QuestSync.cpp")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${source}")
+execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/extract.py"
+ "${source}" "${CMAKE_CURRENT_BINARY_DIR}/NativeQuestSync.inc" RESULT_VARIABLE result)
+if(NOT result EQUAL 0)
+ message(FATAL_ERROR "Native quest-sync extraction failed")
+endif()
+add_executable(QuestSyncTest QuestSyncTest.cpp)
+target_compile_features(QuestSyncTest PRIVATE cxx_std_17)
+target_include_directories(QuestSyncTest PRIVATE "${CMAKE_CURRENT_BINARY_DIR}"
+ "${CMAKE_CURRENT_SOURCE_DIR}/../../modules/mod-playerbots/src/playerbot")
+add_test(NAME native_quest_sync COMMAND QuestSyncTest)
