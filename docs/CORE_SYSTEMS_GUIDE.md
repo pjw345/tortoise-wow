@@ -922,3 +922,7 @@ Companion 1.0.1 requires this parser; deployed image 2151c15b does not accept
 colon requests. Focused tests can run on the Windows workstation while playing;
 full server compilation/activation must wait until the game services are stopped.
 Live transport and UI acceptance remain pending.
+
+## Bounded WMO tile coverage and Stormwind (2026-10-22)
+
+Per-tile collision metadata must include every existing bounded, non-global WMO placement whose bounds overlap that tile, even when an ADT overlay omits a repeated placement record. `TileAssembler` now completes these references without changing native models, spatial-tree indices, transforms, M2/global handling or runtime collision/movement policy. See `docs/navigation/STORMWIND_WMO_TILE_COVERAGE.md` for the demonstrated missing Stormwind street surface, native-format scoped repair, matching navigation regeneration and live acceptance limits. Keep the deployed map parameters and earlier Azora repair; do not substitute teleporting or relaxed collision checks for missing geometry.

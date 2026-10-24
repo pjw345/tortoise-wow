@@ -1,11 +1,11 @@
 {
-  "source_commit": "546868715b49bc47e94d0c77a2b27e6b5b51154b",
-  "generated_utc": "2026-10-22T16:01:44.9259447Z",
+  "source_commit": "e12baaf45a28878989aa7f18dbf4dbc118c96fb3",
+  "generated_utc": "2026-10-22T18:18:16.4182390Z",
   "maps": 70,
   "instance_maps": 44,
   "creature_templates": 14339,
   "map_template_references": 11582,
-  "source_files": 2521,
+  "source_files": 2522,
   "dungeon_source_files": 280,
   "registrations": 1231,
   "encounter_map_template_rows": 1520,
@@ -13,6 +13,5 @@
   "missing_spawn_templates": 0,
   "missing_spawn_maps": 0,
   "no_runtime_validation": true,
-  "scanner_limit": "Lexical dependencies and literal legacy registrations only; not proof of all dynamic summons, preprocessing, runtime registrations or encounter completeness.",
-  "source_worktree": "Base plus colon-delimited PFQBOT request transport correction; 2521 hashes verified from a local source mirror. Database snapshot not refreshed."
+  "scanner_limit": "Lexical dependencies and literal legacy registrations only; not proof of all dynamic summons, preprocessing, runtime registrations or encounter completeness."
 }
