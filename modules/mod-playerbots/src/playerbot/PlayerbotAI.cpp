@@ -224,6 +224,9 @@ PlayerbotAI::PlayerbotAI(Player* bot) :
     botOutgoingPacketHandlers.AddHandler(SMSG_TEXT_EMOTE, "receive text emote");
     botOutgoingPacketHandlers.AddHandler(SMSG_EMOTE, "receive emote");
     botOutgoingPacketHandlers.AddHandler(SMSG_LOOT_START_ROLL, "loot start roll", true);
+#ifdef MANGOSBOT_ZERO
+    botOutgoingPacketHandlers.AddHandler(SMSG_LOOT_ROLL_WON, "loot roll won", true);
+#endif
     botOutgoingPacketHandlers.AddHandler(SMSG_SUMMON_REQUEST, "summon request");
     botOutgoingPacketHandlers.AddHandler(MSG_RAID_READY_CHECK, "ready check");
     botOutgoingPacketHandlers.AddHandler(SMSG_QUEST_CONFIRM_ACCEPT, "confirm quest");
@@ -920,7 +923,8 @@ bool PlayerbotAI::CanPlayerMasterChase(Unit* target)
     // An attack toggle/selection is not combat contact. Let pulls come to the
     // human tank and keep companion pursuit within the existing follow range.
     // Stationary defense is decided separately from permission to move.
-    return target->IsInCombat() && target->IsWithinDistInMap(master, GetRange("follow"));
+    return target->IsInCombat() && (master->CanReachWithMeleeAttack(target) ||
+        target->IsWithinDistInMap(master, GetRange("follow")));
 }
 
 Unit* PlayerbotAI::GetPlayerMasterFleeingControlTarget(SpellEntry const* spell)
@@ -3262,6 +3266,12 @@ void PlayerbotAI::ResetStrategies(bool autoLoad)
     {
         reactionEngine->addStrategy("heal interrupt");
     }
+
+    // Restore automatic owned buff-item use after loading legacy saved strategies.
+    // The existing action retains native use, stacking and cooldown checks.
+    if (sPlayerbotAIConfig.autoBuffConsumables && HasActivePlayerMaster() &&
+        !IsRealPlayer() && !IsInPvp())
+        engines[(uint8)BotState::BOT_STATE_NON_COMBAT]->addStrategy("consumables");
 
     // A role handed out by the dungeon finder wins over both the talent spec
     // and the stored strategy set - hence applied last. addStrategy() drops the

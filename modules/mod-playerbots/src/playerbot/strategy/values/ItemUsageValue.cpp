@@ -8,6 +8,7 @@
 
 #include "playerbot/RandomItemMgr.h"
 #include "playerbot/ServerFacade.h"
+#include "playerbot/strategy/ItemVisitors.h"
 
 using namespace ai;
 
@@ -530,6 +531,85 @@ if ((proto->Class == ITEM_CLASS_PROJECTILE ||
     return ItemUsage::ITEM_USAGE_NONE;
 }
 
+namespace
+{
+bool IsBetterEquipment(uint32 score, uint32 oldScore, ItemPrototype const* proto, ItemPrototype const* old)
+{
+    if (score != oldScore) return score > oldScore;
+    // Statless usable armor/weapons still improve on weaker starter equipment.
+    if (!score)
+    {
+        if (proto->Class == ITEM_CLASS_ARMOR && old->Class == ITEM_CLASS_ARMOR && proto->Armor != old->Armor)
+            return proto->Armor > old->Armor;
+        if (proto->Class == ITEM_CLASS_WEAPON && old->Class == ITEM_CLASS_WEAPON)
+        {
+            auto dps = [](ItemPrototype const* item)
+            {
+                float damage = 0;
+                for (uint8 i = 0; i < MAX_ITEM_PROTO_DAMAGES; ++i)
+                    damage += item->Damage[i].DamageMin + item->Damage[i].DamageMax;
+                return item->Delay ? damage * 500.0f / item->Delay : 0.0f;
+            };
+            if (dps(proto) != dps(old)) return dps(proto) > dps(old);
+        }
+    }
+    if (proto->Quality != old->Quality) return proto->Quality > old->Quality;
+    return proto->ItemLevel > old->ItemLevel;
+}
+
+Item* FindQualifiedEquipment(Player* bot, ItemQualifier& qualifier)
+{
+    FindItemByIdVisitor visitor(qualifier.GetId());
+    GetBotAI(bot)->InventoryIterateItems(&visitor, IterateItemsMask(
+        uint8(IterateItemsMask::ITERATE_ITEMS_IN_BAGS) | uint8(IterateItemsMask::ITERATE_ITEMS_IN_EQUIP)));
+    for (Item* item : visitor.GetResult())
+        if (ItemQualifier(item) == qualifier)
+            return item;
+    return nullptr;
+}
+}
+
+InventoryResult ItemUsageValue::GetEquipDestination(ItemQualifier& qualifier, Player* bot, uint16& dest)
+{
+    ItemPrototype const* proto = qualifier.GetProto();
+    if (!proto) return EQUIP_ERR_ITEM_NOT_FOUND;
+    Item* item = FindQualifiedEquipment(bot, qualifier);
+    auto check = [&](uint8 slot, uint16& position)
+    {
+        return item ? bot->CanEquipItem(slot, position, item, true, false) :
+            RandomPlayerbotMgr::CanEquipUnseenItem(bot, slot, position, proto->ItemId);
+    };
+    InventoryResult result = check(NULL_SLOT, dest);
+
+    uint8 first = NULL_SLOT, second = NULL_SLOT;
+    if (proto->InventoryType == INVTYPE_FINGER)
+    { first = EQUIPMENT_SLOT_FINGER1; second = EQUIPMENT_SLOT_FINGER2; }
+    else if (proto->InventoryType == INVTYPE_TRINKET)
+    { first = EQUIPMENT_SLOT_TRINKET1; second = EQUIPMENT_SLOT_TRINKET2; }
+    else if (proto->InventoryType == INVTYPE_WEAPON && bot->CanDualWield())
+    { first = EQUIPMENT_SLOT_MAINHAND; second = EQUIPMENT_SLOT_OFFHAND; }
+    if (first == NULL_SLOT) return result;
+
+    // Native NULL_SLOT selection chooses the first legal slot, not the weaker item.
+    // Check each destination explicitly so uniqueness and dual-wield rules survive.
+    bool chosen = result == EQUIP_ERR_OK;
+    Item* weakest = chosen ? bot->GetItemByPos(dest) : nullptr;
+    for (uint8 slot : { first, second })
+    {
+        uint16 position;
+        if (check(slot, position) != EQUIP_ERR_OK) continue;
+        Item* equipped = bot->GetItemByPos(position);
+        if (!chosen) { dest = position; weakest = equipped; chosen = true; }
+        if (!equipped) { dest = position; return EQUIP_ERR_OK; }
+        if (!weakest) return EQUIP_ERR_OK;
+        uint32 score = sRandomItemMgr.ItemStatWeight(bot, equipped);
+        uint32 oldScore = sRandomItemMgr.ItemStatWeight(bot, weakest);
+        if (IsBetterEquipment(oldScore, score, weakest->GetProto(), equipped->GetProto()))
+        { dest = position; weakest = equipped; }
+    }
+    return chosen ? EQUIP_ERR_OK : result;
+}
+
 ItemUsage ItemUsageValue::QueryItemUsageForEquip(ItemQualifier& itemQualifier, Player* bot)
 {
     PlayerbotAI* ai = GetBotAI(bot);
@@ -545,16 +625,7 @@ ItemUsage ItemUsageValue::QueryItemUsageForEquip(ItemQualifier& itemQualifier, P
 
     uint16 dest;
 
-    std::list<Item*> items = AI_VALUE2(std::list<Item*>, "inventory items", chat->formatItem(itemQualifier));
-    InventoryResult result;
-    if (!items.empty())
-    {
-        result = bot->CanEquipItem(NULL_SLOT, dest, items.front(), true, false);
-    }
-    else
-    {
-        result = RandomPlayerbotMgr::CanEquipUnseenItem(bot, NULL_SLOT, dest, itemProto->ItemId);
-    }
+    InventoryResult result = GetEquipDestination(itemQualifier, bot, dest);
 
     if (result != EQUIP_ERR_OK)
         return ItemUsage::ITEM_USAGE_NONE;
@@ -634,8 +705,17 @@ ItemUsage ItemUsageValue::QueryItemUsageForEquip(ItemQualifier& itemQualifier, P
     if (itemProto->Class == ITEM_CLASS_ARMOR && !sRandomItemMgr.ShouldEquipArmorForSpec(bot->getClass(), specId, itemProto))
         shouldEquip = false;
 
+    bool const suitable = (itemProto->Class != ITEM_CLASS_WEAPON ||
+        sRandomItemMgr.ShouldEquipWeaponForSpec(bot->getClass(), specId, itemProto)) &&
+        (itemProto->Class != ITEM_CLASS_ARMOR ||
+        sRandomItemMgr.ShouldEquipArmorForSpec(bot->getClass(), specId, itemProto));
     Item* oldItem = bot->GetItemByPos(dest);
     uint8 slot = dest & 255;
+    // An offhand must not silently evict an equipped two-handed weapon.
+    Item* mainHand = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND);
+    if (slot == EQUIPMENT_SLOT_OFFHAND && mainHand &&
+        mainHand->GetProto()->InventoryType == INVTYPE_2HWEAPON)
+        return ItemUsage::ITEM_USAGE_NONE;
 
     ai->TellDebug(ai->GetMaster(), "Checking equip: " + chat->formatItem(itemProto) + " to " + chat->formatSlot(slot) + " vs " + (oldItem ? chat->formatItem(oldItem->GetProto()) : "empty"), "debug equip");
 
@@ -667,7 +747,7 @@ ItemUsage ItemUsageValue::QueryItemUsageForEquip(ItemQualifier& itemQualifier, P
     //No item equiped
     if (!oldItem)
     {
-        if (shouldEquip)
+        if (suitable && (shouldEquip || itemProto->Armor || itemProto->Damage[0].DamageMax > 0))
             return ItemUsage::ITEM_USAGE_EQUIP;
         else
             return ItemUsage::ITEM_USAGE_BAD_EQUIP;
@@ -705,14 +785,11 @@ ItemUsage ItemUsageValue::QueryItemUsageForEquip(ItemQualifier& itemQualifier, P
     }
 
     uint32 oldStatWeight = sRandomItemMgr.ItemStatWeight(bot, oldItem);
-    if (statWeight && oldStatWeight)
-    {
-        shouldEquip = statWeight >= oldStatWeight;
-    }
-    else
-    {
-        shouldEquip = itemProto->Quality >= oldItemProto->Quality && itemProto->ItemLevel > oldItemProto->ItemLevel;
-    }
+    // A two-hander replaces both hands, so it must beat their combined value.
+    if (itemProto->InventoryType == INVTYPE_2HWEAPON)
+        if (Item* offhand = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND))
+            oldStatWeight += sRandomItemMgr.ItemStatWeight(bot, offhand);
+    shouldEquip = suitable && IsBetterEquipment(statWeight, oldStatWeight, itemProto, oldItemProto);
 
     if (AI_VALUE2_EXISTS(ForceItemUsage, "force item usage", itemProto->ItemId, ForceItemUsage::FORCE_USAGE_NONE) == ForceItemUsage::FORCE_USAGE_EQUIP) //New item is forced. Always equip it.
         return ItemUsage::ITEM_USAGE_EQUIP;
@@ -723,24 +800,18 @@ ItemUsage ItemUsageValue::QueryItemUsageForEquip(ItemQualifier& itemQualifier, P
     if (oldItemProto->Class == ITEM_CLASS_ARMOR && !oldStatWeight)
         existingShouldEquip = false;
 
-    //Compare items based on item level, quality.
-    bool isBetter = false;
-    if (statWeight > oldStatWeight)
-        isBetter = true;
-    else if (statWeight == oldStatWeight && itemProto->Quality > oldItemProto->Quality)
-        isBetter = true;
-    else if (statWeight == oldStatWeight && itemProto->Quality == oldItemProto->Quality && itemProto->ItemLevel > oldItemProto->ItemLevel)
-        isBetter = true;
+    bool const isBetter = IsBetterEquipment(statWeight, oldStatWeight, itemProto, oldItemProto);
 
-    Item* item = CurrentItem(itemProto, bot);
+    Item* item = FindQualifiedEquipment(bot, itemQualifier);
     bool itemIsBroken = item && item->GetUInt32Value(ITEM_FIELD_DURABILITY) == 0 && item->GetUInt32Value(ITEM_FIELD_MAXDURABILITY) > 0;
     bool oldItemIsBroken = oldItem->GetUInt32Value(ITEM_FIELD_DURABILITY) == 0 && oldItem->GetUInt32Value(ITEM_FIELD_MAXDURABILITY) > 0;
-    if (itemProto->ItemId != oldItemProto->ItemId && (shouldEquip || !existingShouldEquip) && isBetter)
+    shouldEquip = shouldEquip && suitable;
+    if ((shouldEquip || !existingShouldEquip) && isBetter && suitable)
     {
         switch (itemProto->Class)
         {
         case ITEM_CLASS_ARMOR:
-            if (oldItemProto->SubClass <= itemProto->SubClass) {
+            { // Native CanUseItem/CanEquipItem already establish armor legality.
                 if (itemIsBroken && !oldItemIsBroken)
                     return ItemUsage::ITEM_USAGE_BROKEN_EQUIP;
                 else

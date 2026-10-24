@@ -68,11 +68,18 @@ int main(){try{
  master.selection=primary.guid;master.victim=&primary;primary.combat=false;
  check(!ai.GetPlayerMasterAttackTarget()&&!ai.CanPlayerMasterChase(&primary),"selected attack intent cannot pull an unengaged enemy");
  ai.storage.attackers.value={primary.guid};check(!ai.GetPlayerMasterAttackTarget(),"stale attacker cache cannot reopen unengaged pull");ai.storage.attackers.value.clear();
- primary.combat=true;primary.nearMaster=false;
+ primary.combat=true;primary.nearMaster=false;master.meleeReach=false;
  check(ai.GetPlayerMasterAttackTarget()==&primary&&!ai.CanPlayerMasterChase(&primary),"distant engaged target may be attacked from position but not pursued ahead of tank");
  ai.storage.units["current target"].value=&primary;bot.victim=&primary;bot.chase=&primary;
  int leashStops=ai.movementStops;ai.UpdatePlayerMasterAssist();
  check(ai.movementStops==leashStops+1&&!bot.chase&&bot.victim==&primary,"active chase stops at leash while stationary defense survives");
+ // Regression: a target in the master's native melee reach can be outside the
+ // much smaller follow offset while the bot is still catching up from behind.
+ master.meleeReach=true;
+ check(ai.CanPlayerMasterChase(&primary),"native tank melee contact permits catch-up outside follow offset");
+ primary.combat=false;check(!ai.CanPlayerMasterChase(&primary),"melee geometry alone never opens a pull");primary.combat=true;
+ primary.fleeing=true;check(!ai.CanPlayerMasterChase(&primary),"native melee contact never permits runner pursuit");primary.fleeing=false;
+ master.meleeReach=false;
  primary.nearMaster=true;check(ai.CanPlayerMasterChase(&primary),"engaged enemy near tank permits ordinary melee positioning");
  // Stun is not permission to break Polymorph/fear/roots or start a pull.
  ai.ranged=true;primary.fleeing=true;primary.stunned=true;

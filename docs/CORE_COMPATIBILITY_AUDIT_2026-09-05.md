@@ -184,3 +184,48 @@ current/required values). Both return before selecting or opening loot. Native
 LootObject lock requirements and GetSkillValue remain authoritative; automatic
 scan admission, tools and open-error handling are unchanged. The existing
 source-extracted profession-command fixture covers these boundaries.
+
+### 2026-10-20 equipment, buff-item and melee-contact follow-up
+
+Reviewed the native item-push packet, CanEquipItem/FindEquipSlot, SwapItem and
+auto-equip handler contracts, native group voting, spell aura/rank/stack-group
+checks and legacy strategy restoration before changing their Playerbot adapters.
+NULL_SLOT indicates a legal destination, not the least valuable equipped item.
+Automatic scans previously unequipped hand items and reused cached upgrade results;
+same-template variants and generic-subclass buff consumables were also misclassified.
+
+The adapters now compare fresh equipment/variants and legal paired destinations,
+verify completed native mutations, preserve player Need priority, and enable owned
+non-combat buff preparation after saved strategies load. Native melee reach corrects
+the demonstrated catch-up failure without authorizing unengaged or fleeing pursuit.
+Turtle spell-group/rank checks protect existing consumable effects. Native content,
+spell casts, equipment mutations and loot resolution are reused; stat-weight SQL and
+character inventories are not rewritten. Current upstream/main has no corresponding
+Playerbot module implementation to transplant; variant config templates retain the
+existing shared adapter while Turtle-specific spell-group calls are MANGOS-gated.
+
+Focused fixtures exercise production methods under Windows and Linux toolchains.
+Full image compilation and gameplay acceptance must be recorded separately in the
+release receipt. A successful fixture/build does not prove live equipment, consumable
+use, movement or combat acceptance. Deadmines floor/path behavior remains parked.
+
+## Classic group-roll equipment notification (2026-10-20)
+
+Flore won Shimmering Gloves (6565) at 16:01:08 UTC on e7aa6ff5, but no
+equip-upgrades action followed. Native Group::CountTheRoll stores Need/Greed
+awards and calls OnReceivedItem without SendNewItem; OnReceivedItem only handles
+save/log policy. The bot previously listened for SMSG_ITEM_PUSH_RESULT only.
+
+The Classic bot adapter now queues SMSG_LOOT_ROLL_WON through its existing
+packet/trigger engine and invokes the existing gear scan only for the winning
+bot. The native award, roll votes and item-store contracts are unchanged. The
+notification is not permission to equip the rolled template: the scan evaluates
+real carried instances and still uses native equipment restrictions. Duplicate
+events are harmless, other winners and truncated packets are rejected. Combat
+item restrictions remain authoritative. This packet layout is Classic-only;
+TBC/WotLK registration is unchanged. No new timers, logs, SQL writes or synchronous
+inventory changes inside the packet-send hook are introduced.
+
+The regression constructs the native 34-byte Classic wire layout, delivers only
+the win notification (no item-push), and checks actual scan execution, foreign
+winners, short packets and repeats. Full server build and gameplay remain pending.

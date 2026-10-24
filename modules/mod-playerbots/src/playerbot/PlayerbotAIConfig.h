@@ -377,6 +377,7 @@ public:
 
     std::string autoPickReward;
     bool autoEquipUpgradeLoot;
+    bool autoBuffConsumables;
     bool syncQuestWithPlayer;
     bool syncQuestForPlayer;
     std::string autoTrainSpells;

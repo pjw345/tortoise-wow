@@ -189,8 +189,9 @@ ItemQualifier RollAction::GetRollItem(ObjectGuid lootGuid, uint32 slot)
     return ItemQualifier();
 }
 
-RollVote RollAction::CalculateRollVote(ItemQualifier& itemQualifier)
+RollVote RollAction::CalculateRollVote(ItemQualifier& itemQualifier, bool humanNeeds)
 {
+    RESET_AI_VALUE2(ItemUsage, "item usage", itemQualifier.GetQualifier());
     ItemUsage usage = AI_VALUE2(ItemUsage, "item usage", itemQualifier.GetQualifier());
 
     RollVote needVote = ROLL_PASS;
@@ -228,7 +229,9 @@ RollVote RollAction::CalculateRollVote(ItemQualifier& itemQualifier)
             needVote = ROLL_GREED;
     }
 
+    if (humanNeeds && needVote == ROLL_NEED) needVote = ROLL_GREED;
     bool canLoot = StoreLootAction::IsLootAllowed(itemQualifier, GetBotAI(bot));
+    if (!canLoot) needVote = ROLL_PASS;
 
     if (AI_VALUE2(bool, "manual bool", "roll feedback"))
     {
@@ -325,11 +328,8 @@ bool RollAction::RollWithEtiquette(ObjectGuid lootGuid, uint32 slot)
     if (!itemQualifier.GetId())
         return false;
 
-    RollVote vote = CalculateRollVote(itemQualifier);
-
-    // A player asked for it. Never roll need against them.
-    if (humanNeeds && vote == ROLL_NEED)
-        vote = ROLL_GREED;
+    // A player asked for it. Preserve player priority and describe the final vote.
+    RollVote vote = CalculateRollVote(itemQualifier, humanNeeds);
 
     return RollOnItemInSlot(vote, lootGuid, slot);
 }
