@@ -990,12 +990,12 @@ bool UseAction::UseQuestGiverItem(Player* requester, Item* item)
     if (!bot->CanAddQuest(quest, true))
         return false;
 
-    bot->AddQuest(quest, nullptr);
+    // Native acceptance preserves starter items needed for objectives or source
+    // items, consumes other starters, and runs item quest-accept hooks.
+    bot->AddQuest(quest, item);
 
     if (bot->CanCompleteQuest(quest->GetQuestId()))
         bot->CompleteQuest(quest->GetQuestId());
-
-    bot->DestroyItemCount(proto->ItemId, 1, true);
 
     if (verbose)
     {
