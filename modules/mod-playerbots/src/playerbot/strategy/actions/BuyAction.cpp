@@ -387,12 +387,25 @@ bool BuyBackAction::Execute(Event& event)
         if (bot->GetMoney() < price)
             continue;
 
+        // Capture identity/quantity before native storage moves or merges the stack.
+        uint32 const itemId = item->GetEntry();
+        uint32 const quantity = item->GetCount();
+        uint32 const countBefore = bot->GetItemCount(itemId);
+        std::string const itemLink = chat->formatItem(item);
+
         WorldPacket p1(CMSG_BUYBACK_ITEM);
         p1 << vendorguid;
         p1 << slot;
         bot->GetSession()->HandleBuybackItem(p1);
-        if (bot->GetItemFromBuyBackSlot(slot) == nullptr)
+        if (bot->GetItemFromBuyBackSlot(slot) == nullptr &&
+            bot->GetItemCount(itemId) >= countBefore + quantity)
+        {
             result = true;
+            std::ostringstream out;
+            out << "Bought back " << quantity << "x " << itemLink << ".";
+            ai->TellPlayerNoFacing(requester, out.str(),
+                PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
+        }
     }
 
     return result;

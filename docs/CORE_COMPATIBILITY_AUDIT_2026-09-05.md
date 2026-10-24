@@ -315,3 +315,27 @@ Live transport and UI acceptance remain pending.
 ## Missing overlapping WMO references in Stormwind (2026-10-22)
 
 The native Stormwind placement overlaps 16 tiles but deployed metadata referenced it in only six. Tile 30,47 consequently had no city floor at the captured bot/master positions, and native navigation could not place either endpoint. Completing existing placement references and rebuilding with unchanged defaults restores native floors and a complete route. The assembler completes bounded non-global WMO coverage generically; native fixture tests preserve M2/global handling and deduplicate added references. See `docs/navigation/STORMWIND_WMO_TILE_COVERAGE.md`. This establishes an offline data defect and repair, not gameplay acceptance for all city movement or area-trigger transitions.
+
+## Prepared session fixes (23 October 2026; not compiled)
+
+Branch `codex/session-followup-fixes` contains source drafts for #58, #66 and #67.
+No configuration, CMake generation, compiler, test executable, image build or
+runtime activation has been run for these drafts.
+
+- Classic gathering admission reuses `GameObjectInfo::IsRepeatableGatheringChest`,
+  the same predicate now called from the existing native opening-spell LOS
+  exemption. Non-Classic bot variants retain their previous LOS check. Ordinary
+  chest LOS, approach safety, skill/tools, range, bags and native depletion are
+  unchanged. Live evidence showed manual mining succeeds where admission rejected
+  the same node after loot release. Full build and repeat-mining acceptance remain.
+- Buyback captures item identity/count before native storage, then confirms an
+  emptied buyback slot and increased carried item count before telling the requester
+  the actual recovered quantity. Failed storage/money/vendor cases cannot emit a
+  success confirmation. Native handler/prices remain authoritative (#66).
+- Enchanting tool checks accept higher-tier runed rods from the five verified
+  Classic/Turtle item definitions. Exact other-tool checks and consumed-reagent
+  checks remain native; bank-only rods are not added to the carried predicate.
+  Client initiation/UI and trade enchanting still need verification (#67).
+
+`tests/session-followups` contains future regression source, not executed results.
+See `docs/playerbots/NEXT_BUILD_20261023.md` for pending work and validation.
