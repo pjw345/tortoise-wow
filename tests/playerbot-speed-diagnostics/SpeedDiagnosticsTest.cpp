@@ -36,7 +36,8 @@ struct Player;
 class Unit;
 struct PlayerbotAI {};
 struct MovementGenerator { int type; int GetMovementGeneratorType() const { return type; } };
-struct Spline { bool Finalized() const { return false; } };
+struct Point {float x=1,y=2,z=3;};
+struct Spline {unsigned GetId(){return 123;}int timePassed(){return 100;}int Duration(){return 200;}Point FinalDestination(){return {};} bool Finalized() const { return false; } };
 struct Creature;
 class Unit
 {
@@ -67,6 +68,10 @@ public:
     int propagations=0, packets=0, broadcasts=0, aiLookups=0, reads=0;
     MovementGenerator idle{0}, follow{14};
     std::vector<MovementGenerator*> motion{&idle,&follow};
+    struct {struct {unsigned long long GetRawValue(){return 99;}}t_guid;}m_movementInfo;
+    unsigned GetMapId(){return 36;}unsigned GetInstanceId(){return 1;}
+    float GetPositionX(){return 4;}float GetPositionY(){return 5;}float GetPositionZ(){return 6;}
+    void* GetTransport(){return nullptr;}
     Spline spline;
     Spline* movespline=&spline;
     bool IsPlayer() const { return true; }
