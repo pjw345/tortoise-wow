@@ -14,3 +14,7 @@ already vendored header byte for byte. Upstream licensing notices are retained.
 Runtime remains off unless SOAP.Enabled=1. The requested VM setup binds to
 127.0.0.1 inside the game container and publishes no administrator port.
 Administrator authentication and world-thread command dispatch are unchanged.
+
+Core DEBUG flags enable gSOAP wire logging. The listener explicitly disables
+receive, send and diagnostic log files before accepting connections, so Basic
+authentication headers and administrator commands are not written to them.
