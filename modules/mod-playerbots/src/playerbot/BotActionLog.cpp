@@ -418,7 +418,8 @@ void BotActionLog_LogSpeed(Unit* unit, const char* event, int moveType,
         generators.str().c_str(), int(unit->movespline->Finalized()),
         unit->GetMapId(), unit->GetInstanceId(), unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ(),
         static_cast<unsigned long long>(unit->m_movementInfo.t_guid.GetRawValue()), int(unit->GetTransport() != nullptr),
-        unit->movespline->GetId(), unit->movespline->timePassed(), unit->movespline->Duration(),
+        unit->movespline->GetId(), unit->movespline->timePassed(),
+        unit->movespline->Initialized() ? unit->movespline->Duration() : 0,
         unit->movespline->FinalDestination().x, unit->movespline->FinalDestination().y, unit->movespline->FinalDestination().z);
 }
 

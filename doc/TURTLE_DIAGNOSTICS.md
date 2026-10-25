@@ -1271,3 +1271,13 @@ owner-thread reads; there are no floor/navmesh queries or new logging threads.
 Disable EnableActionLog after the Deadmines/follow investigation. Remove the
 additional fields once movement/height loss is correlated and accepted.
 Samples locate a stalled/falling bot but do not themselves prove map corruption.
+
+### Empty-spline startup guard (2026-10-25)
+
+MoveSpline::Duration delegates to spline.length(), which indexes native length
+storage and requires an initialized spline. Freshly logged-in bots can have no
+spline yet. Diagnostic duration reads must check Initialized and emit zero for
+that state. FinalDestination already has its native empty-spline guard; no
+movement or spline initialization is forced just to produce telemetry. The
+speed fixture now rejects uninitialized duration access and tests empty and
+ordinary initialized samples. Disable logging is not the production workaround.
