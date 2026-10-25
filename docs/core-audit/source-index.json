@@ -1717,7 +1717,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "4904793C98F4EEF7E172C5571D39C8878FF6F303FF7C6C3E7889DADDEB368DDD"
+    "sha256": "B44C8B5553DA8D5141D408156985DAC4E1369E28ECF427E8F1B53E3E5232C865"
   },
   {
     "file": "src/game/ObjectGuid.h",
@@ -3571,7 +3571,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "B4506654CC21466014096EA96BA5C7AD6AFA03986D17EB575E6AAD5C2A3E236E"
+    "sha256": "0F39BF08F11768016D1CB6D73823EE85C7FBFBCCFD21555D47B7FB597BA921D7"
   },
   {
     "file": "src/shared/HttpApi/Authorizers/ApiKeyAuthorizer.hpp",
@@ -16940,7 +16940,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "A569FB4534F1E711BAA1D3FAEBCFC531633111789040541FC2838B05D521273D"
+    "sha256": "B45AFA432BB79A6CAC7C7CAAE01C95F68ACF01890272335D04FDD23000F20DCC"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/FleeManager.h",
@@ -20158,7 +20158,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "C5F6F30438198B32351CC68994E3ECFC1F347108A36FDFE0BA6C5DFD6DEE680C"
+    "sha256": "A5A38048298568D496B48C90E4D0AB80FAFF81FC3B79EB5894ACDBA38E0C2CA2"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ChatFilter.h",
