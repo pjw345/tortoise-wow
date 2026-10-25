@@ -13,16 +13,18 @@ bool ai::CanOpenActivatedQuestChest(Player* bot, GameObject* go)
     return bot && go && go->GetGoType() == GAMEOBJECT_TYPE_CHEST &&
         go->getLootState() == GO_ACTIVATED &&
         sObjectMgr.IsGameObjectForQuests(go->GetEntry()) &&
-        go->ActivateToQuest(bot);
+        go->ActivateToQuest(bot) &&
+        go->loot.HasQuestLootForPlayer(bot);
 }
 
 namespace
 {
-    // Personal quest loot is created per player, but the underlying chest is
-    // still one shared game object. Choose one nearby eligible bot using the
-    // group's stable member order so several bots do not cast OPEN_LOCK on the
-    // same chest simultaneously. After the chosen bot stores its quest item,
-    // ActivateToQuest becomes false for it and the next eligible bot advances.
+    // Quest views are created per player, but ordinary non-FFA quest items
+    // are shared: an incomplete quest does not imply remaining loot. The
+    // underlying chest is still one shared game object. Choose one nearby
+    // eligible bot using stable group order to avoid simultaneous OPEN_LOCK.
+    // A shared take advances the turn even when another bot's quest remains
+    // incomplete but that spawn no longer contains its objective item.
     Player* GetPersonalQuestChestTurn(Player* bot, GameObject* go)
     {
         if (!bot || !go || go->GetGoType() != GAMEOBJECT_TYPE_CHEST ||
@@ -46,7 +48,8 @@ namespace
             if (!groupMember || !GetBotAI(groupMember) || !groupMember->IsAlive() ||
                 groupMember->GetMapId() != go->GetMapId() ||
                 sServerFacade.GetDistance2d(groupMember, go) > maxDistance ||
-                !go->ActivateToQuest(groupMember))
+                !go->ActivateToQuest(groupMember) ||
+                (go->getLootState() == GO_ACTIVATED && !go->loot.HasQuestLootForPlayer(groupMember)))
                 continue;
 
             return groupMember;
@@ -344,9 +347,9 @@ bool LootObject::IsLootPossible(Player* bot, bool* suppressRediscovery)
 
     // An activated personal quest chest does not expose this bot's quest-item
     // slots until the bot opens it and Player::SendLoot calls
-    // FillNotNormalLootFor(bot). Do not ask "should loot object" first: that
-    // value can only see the still-empty per-player view and would reject the
-    // chest before the core has a chance to populate it.
+    // FillNotNormalLootFor(bot). The native read-only query checks the actual
+    // remaining quest items before bypassing the unpopulated per-player view.
+    // Template eligibility alone can repeatedly admit an empty shared chest.
     GameObject* questChest = guid.IsGameObject() ? ai->GetGameObject(guid) : nullptr;
     bool canOpenPersonalQuestLoot = CanOpenActivatedQuestChest(bot, questChest);
 

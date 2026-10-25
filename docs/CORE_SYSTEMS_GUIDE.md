@@ -954,3 +954,19 @@ See `docs/playerbots/NEXT_BUILD_20261023.md` for pending work and validation.
 - Item-started bot quests: `UseAction::UseQuestGiverItem` passes the actual owned item to `Player::AddQuest`. Native acceptance retains required/source starters and consumes other starters while preserving item quest-accept hooks. Do not unconditionally destroy the starter afterward: An Unsent Letter (2874, quest 373) is also its delivery objective.
 
 - Transport follow: compare actual native passenger attachments before replacing ordinary follow. Different stored movement GUIDs alone do not constitute a transfer. Movement packets without ONTRANSPORT clear their omitted transport payload; native boarding/removal hooks remain in HandleMoverRelocation.
+
+## Activated quest-chest availability (2026-10-25)
+
+Loot::HasQuestLootForPlayer is a read-only counterpart to FillQuestLoot and the
+quest branch of LootItemInSlot. Existing per-player slots retain their taken
+state and current AllowedForPlayer conditions; a missing view checks remaining
+shared quest items and the native slot-capacity limit without populating slots,
+adding allowed looters or changing unlootedCount. Bot activated-chest reopening
+and serialized turn selection use this query. READY chests still use template
+eligibility and native generation. Shared non-FFA quest loot is not duplicated.
+
+Native release remains responsible for global exhaustion and deactivation.
+A crate with another player's counted item remains ACTIVATED; taking the final
+item makes isLooted true, then release deactivates and normal update schedules
+the configured respawn/restock. Do not erase other players' loot or force
+respawn merely because one player's window is empty. No new timer is added.

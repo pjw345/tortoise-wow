@@ -396,6 +396,8 @@ foreach(required
     "go->ActivateToQuest(bot)"
     "if (!canOpenPersonalQuestLoot &&"
     "CanOpenActivatedQuestChest(bot, go)"
+    "go->loot.HasQuestLootForPlayer(bot)"
+    "!go->loot.HasQuestLootForPlayer(groupMember)"
     "Group::MemberSlotList const& groupSlots"
     "GetBotAI(groupMember)"
     "return groupMember"

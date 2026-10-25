@@ -1085,6 +1085,36 @@ bool Loot::hasOverThresholdItem() const
 }
 
 // return true if there is any FFA, quest or conditional item for the player.
+bool Loot::HasQuestLootForPlayer(Player const* player) const
+{
+    if (!player || !player->IsInWorld())
+        return false;
+
+    auto const itr = m_playerQuestItems.find(player->GetGUIDLow());
+    if (itr != m_playerQuestItems.end())
+    {
+        // An existing view is authoritative, including per-player FFA takes.
+        // Do not expose newly eligible slots that FillNotNormalLootFor would
+        // not add to that already-created view.
+        for (QuestItem const& slot : *itr->second)
+        {
+            LootItem const& item = m_questItems[slot.index];
+            if (!slot.is_looted && !item.is_looted && item.AllowedForPlayer(player, GetLootTarget()))
+                return true;
+        }
+        return false;
+    }
+
+    // Match FillQuestLoot's capacity and native eligibility for a later opener.
+    // This query must not add allowed looters, increment counts or reserve slots.
+    if (items.size() == MAX_NR_LOOT_ITEMS)
+        return false;
+    for (LootItem const& item : m_questItems)
+        if (!item.is_looted && item.AllowedForPlayer(player, GetLootTarget()))
+            return true;
+    return false;
+}
+
 bool Loot::hasItemFor(Player* player) const
 {
     QuestItemMap const& lootPlayerQuestItems = GetPlayerQuestItems();
