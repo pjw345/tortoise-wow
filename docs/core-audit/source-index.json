@@ -1820,7 +1820,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "24AEBD23CB38AC6958D404DBCEB0E7FF2E4AA9FA28A396DAB9F4A44591DDF61F"
+    "sha256": "783B5DDC52C0532A2EA95C8CF8C65E64C5686A2D08AA18E1E87FCF9BC0AD59D1"
   },
   {
     "file": "src/game/vmap/IVMapManager.h",
@@ -1947,7 +1947,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "EE2D022078F6035B0C35BCA2C92E50676405B96158862D9C3AA9B9FD4DDD1141"
+    "sha256": "EC3557F6B2BE9F3FC07D244BEC5D6872F0A15F64234BC114427672D256599041"
   },
   {
     "file": "src/game/vmap/DynamicTree.h",
