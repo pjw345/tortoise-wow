@@ -13,9 +13,9 @@ struct Event {};
 struct WorldObject{float visibility=60;float GetVisibilityDistance(){return visibility;}float boundingRadius=0;bool los=true;};
 struct Creature;struct Player;
 struct Unit:WorldObject{
- bool combat=false;unsigned level=27;float distance=0,zDistance=0;int detectedMod=0;Player* owner=nullptr;
+ int losQueries=0;bool combat=false;unsigned level=27;float distance=0,zDistance=0;int detectedMod=0;Player* owner=nullptr;
  virtual ~Unit()=default;virtual Creature*ToCreature(){return nullptr;}virtual bool IsPet()const{return false;}
- bool IsInCombat(){return combat;}bool IsWithinLOSInMap(WorldObject*,bool){return los;}
+ bool IsInCombat(){return combat;}bool IsWithinLOSInMap(WorldObject*,bool){++losQueries;return los;}
  bool IsWithinDistInMap(WorldObject* o,float radius,bool=true,SizeFactor factor=SizeFactor::BoundingRadius){float allowance=factor==SizeFactor::BoundingRadius?boundingRadius+o->boundingRadius:0;return std::hypot(distance,zDistance)<radius+allowance;}
  unsigned GetLevel()const{return level;}unsigned GetLevelForTarget(Unit const*)const{return level;}
  Player*GetCharmerOrOwnerPlayer()const{return owner;}int GetTotalAuraModifier(int)const{return detectedMod;}
@@ -84,8 +84,9 @@ int main() {try{
     bot.grouped=true;ai.leader=true;
     check(loot.IsApproachSafe(&bot)&&ai.scans==scans,"leader policy unchanged");
     ai.leader=false;sPlayerbotAIConfig.lootHostileDistance=15;
-    bot.level=27;hostile.level=13;hostile.distance=12;
+    bot.level=27;hostile.level=13;hostile.distance=12;hostile.losQueries=0;
     check(hostile.GetAttackDistance(&bot)==5&&loot.IsApproachSafe(&bot),"level 27 can approach loot twelve yards from level 13 mob");
+    check(hostile.losQueries==0,"expanded discovery does not cast LOS rays for out-of-aggro candidates");
     hostile.distance=9.9f;check(!loot.IsApproachSafe(&bot),"native minimum aggro plus interaction area remains protected");
     bot.level=10;hostile.level=20;hostile.distance=25;
     check(hostile.GetAttackDistance(&bot)==28&&!loot.IsApproachSafe(&bot)&&ai.lastRadius==60,"higher-level threat beyond old fifteen-yard scan is found");

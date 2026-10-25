@@ -333,8 +333,6 @@ bool LootObject::IsApproachSafe(Player* bot, Unit** blocker)
         {
             // Preserve native wall/floor separation for idle enemies. Use the
             // gathering bot's level/auras, not its human master's level.
-            if (!hostile->IsWithinLOSInMap(object, true))
-                continue;
             Creature* creature = hostile->ToCreature();
             if (!creature || !creature->CanInitiateAttack())
                 continue;
@@ -360,6 +358,9 @@ bool LootObject::IsApproachSafe(Player* bot, Unit** blocker)
         // Engaged enemies retain size-aware combat exclusion as a minimum.
         if (!hostile->IsWithinDistInMap(object, safetyRadius, true,
             engaged ? SizeFactor::BoundingRadius : SizeFactor::None))
+            continue;
+        // Native AI also rejects cheap range checks before casting LOS rays.
+        if (!engaged && !hostile->IsWithinLOSInMap(object, true))
             continue;
         if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
             sLog.outLoot("bot=%s event=loot-threat hostile=\"%s\" bot-level=%u hostile-level=%u aggro-radius=%.1f safety-radius=%.1f engaged=%d",

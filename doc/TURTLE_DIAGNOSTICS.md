@@ -1290,3 +1290,6 @@ It uses the existing bounded loot log, no extra query or thread. Disable the
 per-bot debug loot strategy after capture. Candidate scans expand from the old
 combat radius to the native visibility range, including area overrides; only follower loot checks use
 that scope. This does not establish route-wide or scripted-encounter safety.
+
+Level-aware candidate filtering applies native range before LOS, matching native
+AI ordering, so the wider scan does not cast rays for out-of-range candidates.
