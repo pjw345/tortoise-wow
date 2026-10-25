@@ -59,12 +59,14 @@ struct Unit
     bool player;
     Unit* victim = nullptr;
     float radius = 0.5f;
+    float orientation = 0.0f, positionalAngle = 1.5f;
     MotionMaster mm{this};
     explicit Unit(bool isPlayer) : player(isPlayer) {}
     bool IsPlayer() const { return player; }
     bool IsCreature() const { return !player; }
     Unit* GetVictim() const { return victim; }
     float GetObjectBoundingRadius() const { return radius; }
+    float GetOrientation() const { return orientation; }
     MotionMaster* GetMotionMaster() { return &mm; }
 };
 struct Player : Unit { Player() : Unit(true) {} };
@@ -83,6 +85,28 @@ struct ServerFacade
     bool IsFollowing(Unit*, Unit*, float, float);
 } sServerFacade;
 #include "NativeMovementInspection.inc"
+// Deterministic position/AI services for the actual FarFormation class.
+struct PlayerbotAI { Unit* owner; float range=2.0f; float GetRange(char const*) { return range; } };
+struct FollowFormation
+{
+    Unit* bot;
+    PlayerbotAI* ai;
+    FollowFormation(PlayerbotAI* value, char const*) : bot(value->owner), ai(value) {}
+    virtual ~FollowFormation()=default;
+    virtual std::string GetTargetName() { return "master"; }
+    virtual float GetAngle()=0;
+    virtual float GetOffset()=0;
+};
+Unit* formationTarget=nullptr;
+struct WorldPosition
+{
+    explicit WorldPosition(Unit*) {}
+    float getAngleTo(Unit* owner) { return owner->positionalAngle; }
+};
+#define AI_VALUE(type,name) formationTarget
+#include "NativeFarFormation.inc"
+#undef AI_VALUE
+
 struct Config { bool boostFollow = false; } sPlayerbotAIConfig;
 bool RequestFollow(Unit* bot, Unit* target, float formationDistance, float angle)
 {
@@ -132,12 +156,41 @@ void CheckOwner(Unit& owner)
     Check(sServerFacade.GetChaseOffset(&owner) == 3.0f && sServerFacade.GetChaseAngle(&owner) == 0.25f, "chase geometry preserved");
     Check(!sServerFacade.IsFollowing(&owner, &enemy, 3.5f, 0.25f), "chase is not follow even with matching geometry");
 }
+void CheckFarFormation()
+{
+    Player owner, master;
+    PlayerbotAI ai{&owner};
+    FarFormation formation(&ai);
+    formationTarget=&master;
+    Check(formation.GetTargetName()=="master target", "far target selection preserved");
+    Check(formation.GetOffset()==2.0f, "saved follow range preserved");
+    // A side/front starting position used to alternate requests on every tick.
+    // Exercise the real getter, facade comparison and native dispatch together.
+    for (float start : {0.0f, 1.5f, 4.5f, 6.2f})
+    {
+        owner.mm.launches=0;
+        owner.positionalAngle=start;
+        owner.mm.current=std::make_unique<FollowMovementGenerator<Player>>(master,1.5f,start);
+        for (int tick=0; tick<100; ++tick)
+        {
+            master.orientation=static_cast<float>(tick)*0.04f;
+            float angle=formation.GetAngle();
+            Check(std::fabs(std::remainder(angle-M_PI_F,2*M_PI_F))<0.001f, "far requests rear geometry");
+            RequestFollow(&owner,&master,formation.GetOffset(),angle);
+        }
+        Check(owner.mm.launches==1,"far must launch once then retain route through turns");
+    }
+    ai.range=3.0f;
+    Check(RequestFollow(&owner,&master,formation.GetOffset(),formation.GetAngle()),"changed saved range still updates controller");
+    Check(sServerFacade.GetChaseOffset(&owner)==2.5f,"far range still excludes target radius");
+}
 int main()
 {
     try
     {
         Player player; Creature creature;
         CheckOwner(player); CheckOwner(creature);
+        CheckFarFormation();
         Check(sServerFacade.GetChaseTarget(nullptr) == nullptr, "null unit target");
         Check(sServerFacade.GetChaseAngle(nullptr) == 0 && sServerFacade.GetChaseOffset(nullptr) == 0, "null unit geometry");
         Check(!sServerFacade.IsFollowing(nullptr, &player, 1, 1), "null follower");

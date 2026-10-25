@@ -350,3 +350,13 @@ Production fixtures pass in both input orders and the old assembler fails both
 negative controls. Same-type duplicate behavior is preserved. See
 `docs/navigation/DUN_MOROGH_TUNNEL_REPAIR.md`; staged collision recovery is
 separate from navigation and live party-following acceptance.
+
+## Far-formation follow update (2026-10-25)
+
+A reproduced feedback loop in FarFormation::GetAngle alternated requested
+geometry despite unchanged positional input. The getter now requests the native
+rear offset; the native follow controller owns movement updates. Shared matching
+tolerances, target selection, saved distance, collision and speed bonuses remain
+authoritative. Production-class/dispatch fixtures pass and the old class fails
+the negative control. Full image and gameplay checks remain pending; see
+`docs/playerbots/STABLE_REAR_FOLLOW.md`.

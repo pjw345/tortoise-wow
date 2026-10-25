@@ -1076,3 +1076,13 @@ distant Westfallshed M2. Serialized IDs/formats and runtime ownership remain
 unchanged. Same-type duplicate IDs keep first-record semantics. See
 `docs/navigation/DUN_MOROGH_TUNNEL_REPAIR.md` for reproduction, migration
 constraints, focused staging and offline/live verification boundaries.
+
+## Far-formation rear geometry (2026-10-25)
+
+FarFormation::GetAngle requests a stable pi-radian rear offset. Getters must
+not interpolate using the active follow generator's last requested angle: this
+created alternating requests and repeatedly replaced the native controller.
+Native target selection, saved distance/radius conversion, prediction, pathfinding
+and speed/talent handling remain unchanged. See
+`docs/playerbots/STABLE_REAR_FOLLOW.md` for the production getter reproduction,
+source-extracted follow/dispatch regression, and pending full build/live checks.

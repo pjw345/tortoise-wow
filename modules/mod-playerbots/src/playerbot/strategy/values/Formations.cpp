@@ -384,34 +384,11 @@ namespace ai
     public:
         FarFormation(PlayerbotAI* ai) : FollowFormation(ai, "far") {}
         virtual std::string GetTargetName() override { return "master target"; }
-        virtual float GetAngle() override 
-        {             
-            Unit* followTarget = AI_VALUE(Unit*, "follow target");
-
-            float currentAngle = WorldPosition(followTarget).getAngleTo(bot) - followTarget->GetOrientation();
-            float followAngle = currentAngle;
-            
-            if(bot->GetMotionMaster()->GetCurrentMovementGeneratorType() == FOLLOW_MOTION_TYPE)
-                followAngle = sServerFacade.GetChaseAngle(bot);
-
-            float delta = (currentAngle - followAngle);
-
-            if (delta > M_PI_F)
-                delta -= M_PI_F * 2.0f;
-            
-            if (fabs(delta) > 0.2)
-                return followAngle + delta;
-
-            if (followAngle < 0)
-                followAngle += M_PI_F * 2.0f;
-
-            delta = (M_PI_F - followAngle) * 0.5;
-            
-            if (fabs(delta) < 0.01)
-                delta = 0;
-
-            return followAngle + delta;
-        }
+        // A formation getter describes the requested geometry. Interpolating
+        // from the active generator's angle here feeds its own last request
+        // back into admission and repeatedly replaces an otherwise valid route.
+        // Native follow rotates this rear offset with the target's orientation.
+        virtual float GetAngle() override { return M_PI_F; }
         virtual float GetOffset() override { return ai->GetRange("follow"); }
     };
 
