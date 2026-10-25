@@ -14,7 +14,7 @@ enum class BotState {BOT_STATE_NON_COMBAT};constexpr int SKILL_NONE=0;
 struct ObjectGuid{uint64_t value=1;uint64_t GetRawValue(){return value;}};
 struct WorldObject{float GetVisibilityDistance(){return 60;}bool los=true;std::string name="Copper Vein";char const* GetName(){return name.c_str();}};
 struct Unit:WorldObject{virtual ~Unit()=default;virtual Creature*ToCreature(){return nullptr;}bool IsWithinDistInMap(WorldObject*,float r,bool=true,SizeFactor=SizeFactor::BoundingRadius){return distance<=r;}bool combat=false,hostileLos=true;bool IsInCombat(){return combat;}bool IsWithinLOSInMap(WorldObject*,bool){return hostileLos;}uint32 level=25;float distance=0;uint32 GetLevel(){return level;}};
-struct Creature:Unit{Creature*ToCreature()override{return this;}bool CanInitiateAttack(){return true;}float GetAttackDistance(Unit const*){return 18;}};
+struct Creature:Unit{Creature*ToCreature()override{return this;}bool CanInitiateAttack(){return true;}float GetAttackDistance(Unit const*){return 20;}};
 struct Map{float GetVisibilityDistance(){return 60;}bool IsDungeon(){return false;}};
 struct Group{};
 struct Player:Unit{Group* group=nullptr;Map map;Group* GetGroup(){return group;}Map* GetMap(){return &map;}};
@@ -39,7 +39,7 @@ namespace PlayerbotSecurityLevel{constexpr int PLAYERBOT_SECURITY_ALLOW_ALL=0;}
 void check(bool result,char const* message){if(!result)throw std::runtime_error(message);}
 int main(){try{
  Player bot,master;Group group;bot.group=&group;AI ai;currentAI=&ai;AddGatheringLootAction action;action.ai=&ai;action.bot=&bot;ObjectGuid guid;
- Creature distant,near;distant.distance=25;near.distance=10;ai.hostiles={&distant};
+ Creature distant,near;distant.distance=27;near.distance=10;ai.hostiles={&distant};
  check(action.AddLoot(&master,guid),"follower gathers when only hostile is beyond configured safety radius");
  check(ai.scans.size()==1&&ai.scans[0]==60&&action.parentCalls==1,"follower delegates to existing configured admission safety once");
  distant.combat=true;sPlayerbotAIConfig.lootHostileDistance=30;check(!action.AddLoot(&master,guid),"larger configured safety radius still blocks that hostile");sPlayerbotAIConfig.lootHostileDistance=20;distant.combat=false;

@@ -18,3 +18,6 @@ the interaction-area allowance, larger candidate scans, engaged combat minima,
 wall/floor LOS and three-dimensional separation. Discovery/geometry and world
 services remain fakes; this does not certify route-wide safety or every custom
 scripted encounter. The candidate window uses native visibility/area overrides.
+
+The default detection fixture is 20 yards, matching Creature construction in
+this fork; the older native formula comment saying roughly 18 is not its value.
