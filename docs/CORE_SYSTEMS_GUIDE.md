@@ -195,6 +195,15 @@ must not turn an informational chat command into a world-server crash.
 | Gameobjects and interaction | [GameObject.cpp](../src/game/Objects/GameObject.cpp) `Use:1477`; ScriptMgr gossip/GO hooks | GO type determines native behavior. Check door/button state, spell activation, use conditions, area triggers, event callbacks and cooldowns before attaching a new script. |
 | PvP/group systems | [Battleground sources](../src/game/Battlegrounds), [OutdoorPvP sources](../src/game/OutdoorPvP), [Group.cpp](../src/game/Group/Group.cpp), [ThreatManager.cpp](../src/game/Threat/ThreatManager.cpp) | Team/faction and controlled-unit rules, match lifecycle, objective scripts, group state and threat ownership. PvP is not certified by a PvE test. |
 
+### Script-generated NPC gossip
+
+Explicit playerbot `talk` must reach native HandleGossipHelloOpcode before
+deciding whether choices exist: scripts/modules/Lua can create them without
+gossip_menu_option rows. Keep database-menu admission for idle RPG gossip to
+avoid expanding autonomous quest interactions. User-selected replies reuse the
+native menu and selection handler; empty menus and another NPC's current session
+menu must not be indexed. [Native regression and scope](playerbots/SCRIPTED_GOSSIP.md).
+
 ### Trainer lesson to retain
 
 Knowing that a service touches `SPELL_EFFECT_LEARN_SPELL` is only the start. The sibling `SPELL_EFFECT_LEARN_PET_SPELL` uses different state and side effects. The original direct player-learning approach did not cover it. At this baseline the handler reuses the native pet spell path, and a handler regression test covers success/failure/repeat variants. The test uses mocks and does not prove the entire live spell engine. Future changes must inspect sibling effect types and other callers before narrowing a generic service.
