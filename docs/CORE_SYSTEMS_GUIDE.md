@@ -1052,3 +1052,13 @@ The client keys self snapshots by its own name, separately validates grouped bot
 names, merges string GUIDs, and clears stale or departed contributors normally.
 Only Mining/Herbalism game-object resources are supported; skins/corpses are not
 introduced as minimap resources. Native tracking auras and professions are untouched.
+
+## Far-formation rear geometry (2026-10-25)
+
+FarFormation::GetAngle requests a stable pi-radian rear offset. Getters must
+not interpolate using the active follow generator's last requested angle: this
+created alternating requests and repeatedly replaced the native controller.
+Native target selection, saved distance/radius conversion, prediction, pathfinding
+and speed/talent handling remain unchanged. See
+`docs/playerbots/STABLE_REAR_FOLLOW.md` for the production getter reproduction,
+source-extracted follow/dispatch regression, and pending full build/live checks.

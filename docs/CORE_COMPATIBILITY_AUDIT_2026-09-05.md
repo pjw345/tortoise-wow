@@ -339,3 +339,13 @@ runtime activation has been run for these drafts.
 
 `tests/session-followups` contains future regression source, not executed results.
 See `docs/playerbots/NEXT_BUILD_20261023.md` for pending work and validation.
+
+## Far-formation follow update (2026-10-25)
+
+A reproduced feedback loop in FarFormation::GetAngle alternated requested
+geometry despite unchanged positional input. The getter now requests the native
+rear offset; the native follow controller owns movement updates. Shared matching
+tolerances, target selection, saved distance, collision and speed bonuses remain
+authoritative. Production-class/dispatch fixtures pass and the old class fails
+the negative control. Full image and gameplay checks remain pending; see
+`docs/playerbots/STABLE_REAR_FOLLOW.md`.
