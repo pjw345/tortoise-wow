@@ -319,15 +319,52 @@ bool LootObject::IsApproachSafe(Player* bot, Unit** blocker)
     WorldObject* object = GetWorldObject(bot);
     if (!object)
         return false;
-    std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(object, sPlayerbotAIConfig.lootHostileDistance);
+    // Search the native visible area, not just the configured combat radius:
+    // higher-level creatures can initiate aggro from beyond that old cutoff.
+    float const searchRadius = std::max(sPlayerbotAIConfig.lootHostileDistance,
+        std::max(bot->GetVisibilityDistance(), object->GetVisibilityDistance()));
+    std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(object, searchRadius);
     for (Unit* hostile : hostiles)
     {
-        // Native creature aggro requires LOS. A wall or tower floor can
-        // separate an idle hostile from this destination despite a short 3D
-        // distance. Keep engaged enemies conservative; do not alter the shared
-        // hostile query or invent a vertical-distance threshold.
-        if (!hostile->IsInCombat() && !hostile->IsWithinLOSInMap(object, true))
+        bool const engaged = hostile->IsInCombat();
+        float safetyRadius = sPlayerbotAIConfig.lootHostileDistance;
+        float aggroRadius = 0.0f;
+        if (!engaged)
+        {
+            // Preserve native wall/floor separation for idle enemies. Use the
+            // gathering bot's level/auras, not its human master's level.
+            if (!hostile->IsWithinLOSInMap(object, true))
+                continue;
+            Creature* creature = hostile->ToCreature();
+            if (!creature || !creature->CanInitiateAttack())
+                continue;
+            aggroRadius = creature->GetAttackDistance(bot);
+            if (aggroRadius <= 0.0f)
+                continue;
+
+            // The bot can stand up to INTERACTION_DISTANCE from the object.
+            // Protect that interaction area, not just the object's centre.
+            safetyRadius = aggroRadius + INTERACTION_DISTANCE;
+        }
+
+        else if (Creature* creature = hostile->ToCreature())
+        {
+            // Fighting enemies remain conservative: never shrink the old
+            // combat boundary, and still account for a larger native reach.
+            aggroRadius = creature->GetAttackDistance(bot);
+            if (aggroRadius > 0.0f)
+                safetyRadius = std::max(safetyRadius, aggroRadius + INTERACTION_DISTANCE);
+        }
+
+        // Idle aggro uses the same centre-distance convention as native AI.
+        // Engaged enemies retain size-aware combat exclusion as a minimum.
+        if (!hostile->IsWithinDistInMap(object, safetyRadius, true,
+            engaged ? SizeFactor::BoundingRadius : SizeFactor::None))
             continue;
+        if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+            sLog.outLoot("bot=%s event=loot-threat hostile=\"%s\" bot-level=%u hostile-level=%u aggro-radius=%.1f safety-radius=%.1f engaged=%d",
+                bot->GetName(), hostile->GetName(), bot->GetLevel(), hostile->GetLevel(),
+                aggroRadius, safetyRadius, engaged ? 1 : 0);
         if (blocker)
             *blocker = hostile;
         return false;

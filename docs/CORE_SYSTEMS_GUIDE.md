@@ -980,3 +980,23 @@ lootTargetRetryDelay remains for actual opening/storage failures. Preserve
 native casts, depletion, master/range/safety/tool/bag admission and cancellation.
 Do not shorten the global reaction/GCD or force gathering through follow/recovery
 conditions merely to make node collection quicker.
+
+## Level-aware loot safety (2026-10-25)
+
+Follower loot admission, queued selection and approach rechecks share
+LootObject::IsApproachSafe. Idle hostile creatures use native
+Creature::GetAttackDistance(bot), retaining level scaling, native detection and
+detected-range auras, server aggro rate, custom detection ranges and native caps.
+The target is the bot that approaches, not its master. Non-initiating creatures
+and zero native aggro do not block merely by proximity. Idle LOS/floor separation
+remains; engaged enemies retain the configured combat exclusion radius as a minimum
+while also respecting a larger native aggro/interaction radius.
+
+Candidate discovery covers the native visible area, including area overrides (or a larger configured
+combat radius), so normal higher-level aggro is not truncated at the old 15-yard
+scan. Idle threat distance adds the existing INTERACTION_DISTANCE to protect
+possible interaction positions around a node and uses native centre distance.
+This is conservative destination-area safety, not proof that every path segment
+or scripted encounter is safe; native pathing, cast and combat checks remain.
+No new global hostile query behavior, level table or timer is introduced.
+Debug loot logs the bot/hostile levels and effective aggro/safety radii.

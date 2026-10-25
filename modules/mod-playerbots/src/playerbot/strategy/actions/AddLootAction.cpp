@@ -215,7 +215,7 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid, bool explicit
             out << blocker->GetName() << " is blocking " << wo->GetName() << ", need to kill it or I will not loot";
             ai->TellError(requester, out.str());
             if (debugLoot)
-                sLog.outLoot("bot=%s event=reject guid=%lu reason=hostile blocker=\"%s\" radius=%.0f",
+                sLog.outLoot("bot=%s event=reject guid=%lu reason=hostile blocker=\"%s\" configured-radius=%.0f",
                     bot->GetName(), guid.GetRawValue(), blocker->GetName(), sPlayerbotAIConfig.lootHostileDistance);
         }
         return false;

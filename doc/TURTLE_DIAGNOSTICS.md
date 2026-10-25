@@ -1281,3 +1281,12 @@ that state. FinalDestination already has its native empty-spline guard; no
 movement or spline initialization is forced just to produce telemetry. The
 speed fixture now rejects uninitialized duration access and tests empty and
 ordinary initialized samples. Disable logging is not the production workaround.
+
+### Level-aware loot blocker details (2026-10-25)
+
+Existing opt-in debug loot emits loot-threat with bot/hostile levels, native
+aggro radius, interaction-area safety radius and engagement state on rejection.
+It uses the existing bounded loot log, no extra query or thread. Disable the
+per-bot debug loot strategy after capture. Candidate scans expand from the old
+combat radius to the native visibility range, including area overrides; only follower loot checks use
+that scope. This does not establish route-wide or scripted-encounter safety.
