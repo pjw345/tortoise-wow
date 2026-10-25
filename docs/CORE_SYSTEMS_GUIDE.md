@@ -1036,3 +1036,19 @@ not per-AI-tick loops; sparse high IDs increase scan work. The current read-only
 snapshot has 21196 templates, maximum 7000035, of which 12091 are above the old
 bound. Source-extracted tests cover the catalogue pipeline. Full image build,
 startup cost and gameplay acceptance remain pending, with no live mutation.
+
+### Player and bot resource union
+
+The helper has one On/Off control; On always requests both supported resource
+types and merges the human player's own snapshot with controlled bots' snapshots.
+RESSELF requests use native guild addon transport, intercepted/consumed by the
+module before guild membership/broadcast handling (including solo/unguilded users).
+The session chat hook only deposits a bounded request in the current human's
+manager mailbox. Native player map updates consume it and scan only that player's
+skills/world. No grid traversal occurs on the session handler. The mutex mailbox
+admits one pending request at most per five seconds; logout destroys its owner.
+The self feed does not require a group. Bot feed authorization remains unchanged.
+The client keys self snapshots by its own name, separately validates grouped bot
+names, merges string GUIDs, and clears stale or departed contributors normally.
+Only Mining/Herbalism game-object resources are supported; skins/corpses are not
+introduced as minimap resources. Native tracking auras and professions are untouched.

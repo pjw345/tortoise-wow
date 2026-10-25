@@ -30,15 +30,15 @@ struct GameObject {
  uint32 GetEntry(){return entry;}ObjectGuid GetObjectGuid(){return ObjectGuid(guid);}
 };
 struct Player {
- uint32 id=1,zone=38,map=0; Group* group=nullptr; bool world=true,alive=true,teleport=false,real=true;
+ std::string name="Alon";uint32 id=1,zone=38,map=0; Group* group=nullptr; bool world=true,alive=true,teleport=false,real=true;
  float x=50,y=50; std::map<uint32,uint32> skills{{SKILL_MINING,100}}; std::vector<std::string> packets;
  bool IsInWorld(){return world;}bool IsAlive(){return alive;}bool IsBeingTeleported(){return teleport;}
  bool IsInMap(Player* p){return map==p->map;}uint32 GetZoneId(){return zone;}
  float GetPositionX(){return x;}float GetPositionY(){return y;}
  float GetDistance(GameObject* go){return std::hypot(go->x-x,go->y-y);}
  bool IsWithinDistInMap(GameObject* go,float r){return GetDistance(go)<=r;}
- uint32 GetSkillValue(uint32 skill){return skills[skill];}Group* GetGroup(){return group;}
- const char* GetName(){return "Alon";}void SendAddonMessage(std::string prefix,std::string message){if(prefix!="RESBOT")throw std::runtime_error("prefix");packets.push_back(message);}
+ bool HasSkill(uint32 skill){return skills[skill]>0;}uint32 GetSkillValue(uint32 skill){return skills[skill];}Group* GetGroup(){return group;}
+ const char* GetName(){return name.c_str();}void SendAddonMessage(std::string prefix,std::string message){if(prefix!="RESBOT")throw std::runtime_error("prefix");packets.push_back(message);}
 };
 bool IsRealPlayer(Player* p){return p->real;}
 struct PlayerbotAI {
@@ -57,9 +57,16 @@ namespace MaNGOS {
  template<class Check>struct GameObjectListSearcher {std::list<GameObject*>& out;Check& check;GameObjectListSearcher(std::list<GameObject*>&o,Check&c):out(o),check(c){}};
 }
 namespace Cell {template<class Search>void VisitAllObjects(Player*,Search&s,float){++scans;for(auto go:nodes)if(s.check(go))s.out.push_back(go);}}
+constexpr uint32 CHAT_MSG_GUILD=4,CHAT_MSG_PARTY=2,LANG_ADDON=0xffffffff;
+struct GateBase {virtual bool CanUseGroupChat(Player*,uint32,uint32,std::string&){return true;}};
 #include "native-resource.inc"
 void check(bool condition,const char* msg){if(!condition)throw std::runtime_error(msg);}
 int main(){
+ ChatGate gate;std::string self="RESSELF\tR:1:1:both",normal="ordinary guild chat";
+ check(!gate.CanUseGroupChat(nullptr,CHAT_MSG_GUILD,LANG_ADDON,self),"self request never reaches guild broadcast");
+ check(gate.CanUseGroupChat(nullptr,CHAT_MSG_PARTY,LANG_ADDON,self),"other channel remains native");
+ check(gate.CanUseGroupChat(nullptr,CHAT_MSG_GUILD,0,self),"ordinary chat language remains native");
+ check(gate.CanUseGroupChat(nullptr,CHAT_MSG_GUILD,LANG_ADDON,normal),"other addon messages remain native");
  Group group,other;Player bot,master;bot.real=false;bot.id=2;bot.group=master.group=&group;
  PlayerbotAI ai{&bot,&master};sObjectMgr.online=&master;GameObject node;nodes={&node};
  auto send=[&]{master.packets.clear();return ai::resources::SendQueuedSnapshot(&ai,"1:R:1:1:both");};
@@ -81,12 +88,19 @@ int main(){
  zoneWorks=false;empty("unsupported zone");zoneWorks=true;
  lock.Index[0]=SKILL_HERBALISM;bot.skills[SKILL_HERBALISM]=10;
  check(send()&&master.packets[0].find(",1731,H,")!=std::string::npos,"herbs supported");
- check(ai::resources::ResourceKind(&ai,&node,"ore")==0,"ore filter");lock.Index[0]=SKILL_MINING;
+ check(ai::resources::ResourceKind(&bot,&node,"ore")==0,"ore filter");lock.Index[0]=SKILL_MINING;
  int oldScans=scans;master.group=&other;check(!send()&&scans==oldScans,"queued group revalidation");master.group=&group;
  sObjectMgr.online=nullptr;check(!send()&&scans==oldScans,"logged out requester");sObjectMgr.online=&master;
  GameObject many[40];nodes.clear();for(int i=0;i<40;++i){many[i].x=50+i;many[i].guid=node.guid+i;nodes.push_back(&many[i]);}
  check(send()&&master.packets.size()==16,"nearest 32 nodes bounded");
  check(master.packets.back().find(std::to_string(node.guid+31))!=std::string::npos,"nearest nodes retained");
  check(master.packets.back().find(std::to_string(node.guid+32))==std::string::npos,"excess node omitted");
+ // The human's snapshot is independent of bot professions and group state.
+ nodes={&node};master.name="Alin";master.group=nullptr;master.packets.clear();
+ bot.skills.clear();master.skills={{SKILL_HERBALISM,10}};lock.Index[0]=SKILL_HERBALISM;
+ check(ai::resources::SendPlayerSnapshot(&master,"R:1:7:both") && master.packets[0].find("S:1:7:Alin:38:")==0 && master.packets[0].find(",1731,H,")!=std::string::npos,"solo human herbalism");
+ master.packets.clear();master.skills.clear();
+ check(ai::resources::SendPlayerSnapshot(&master,"R:1:8:both") && master.packets[0]=="S:1:8:Alin:38:1:1:","human without profession reports no resource");
+ check(!ai::resources::SendPlayerSnapshot(&bot,"R:1:9:both"),"machine cannot claim human feed");
  std::cout<<"PASS: source-extracted owner authorization, native skill/availability/visibility/range, lifecycle and bounded selection\n";
 }

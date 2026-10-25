@@ -1304,3 +1304,8 @@ Client redraw is throttled to 10 Hz, snapshots expire after twelve seconds, and
 `/botresources off` stops polling and hides icons. An addon lease suppresses only
 gathering reveal chat/pings, not combat alerts or manual group pings. Server image
 build, installation and live acceptance are separate from source validation.
+
+RESSELF adds one opt-in owner-scoped request per five seconds and at most one
+32-node self scan/snapshot per request, even without bots or a guild. Session
+handling does no world work; the player's manager update consumes the mailbox.
+No diagnostics are enabled. The On/Off control stops both human and bot requests.

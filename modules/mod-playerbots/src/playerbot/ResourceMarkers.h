@@ -1,6 +1,8 @@
 #pragma once
 #include "QuestSyncProtocol.h"
+#include <mutex>
 class PlayerbotAI;
+class Player;
 namespace ai { namespace resources
 {
     constexpr size_t MaxNodes = 32;
@@ -32,5 +34,29 @@ namespace ai { namespace resources
         }
         return result;
     }
+    // Session chat only deposits bounded text. The player's own map update
+    // consumes it before reading skills, visibility or the world grid.
+    class RequestMailbox
+    {
+    public:
+        bool Queue(std::string const& text, time_t now)
+        {
+            Request request;
+            if (!ParseRequest(text, request)) return false;
+            std::lock_guard<std::mutex> guard(mutex);
+            if (!pending.empty() || !questsync::Admit(lastQueued, now)) return false;
+            pending = text; return true;
+        }
+        std::string Take()
+        {
+            std::lock_guard<std::mutex> guard(mutex);
+            std::string result; result.swap(pending); return result;
+        }
+    private:
+        std::mutex mutex;
+        std::atomic<time_t> lastQueued{0};
+        std::string pending;
+    };
+    bool SendPlayerSnapshot(Player* player, std::string const& message);
     bool SendQueuedSnapshot(PlayerbotAI* ai, std::string const& message);
 }}

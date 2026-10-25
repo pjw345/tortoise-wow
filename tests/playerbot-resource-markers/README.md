@@ -9,3 +9,8 @@ and nearest-node bounds. It cannot certify actual DBC/map data, native visibilit
 implementation or multithreaded live execution. The changed translation units
 also require syntax/full-build checks with real core headers. Run the companion
 MangosBot Lua 5.0 tests and perform live acceptance separately.
+
+Player/self coverage also checks native player-only eligibility without a group,
+machine rejection, empty self snapshots, concurrent/single-pending request mailbox,
+five-second admission and source-extracted native chat relay suppression. Requests
+are queued on the session handler and consumed by the player-owned manager update.

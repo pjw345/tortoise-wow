@@ -3,6 +3,7 @@
 
 #include "Common.h"
 #include "PlayerbotAIBase.h"
+#include "ResourceMarkers.h"
 #include "ObjectGuid.h"
 #include "Database/DatabaseEnv.h"
 #include "SharedDefines.h"
@@ -181,6 +182,7 @@ protected:
 
 private:
     Player* const master;
+    ai::resources::RequestMailbox resourceMarkerRequests;
     PlayerBotErrorMap errors;
     time_t lastErrorTell;
 };

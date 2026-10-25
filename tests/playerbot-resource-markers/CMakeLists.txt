@@ -12,3 +12,6 @@ add_executable(resource-world world.cpp)
 target_compile_features(resource-world PRIVATE cxx_std_17)
 target_include_directories(resource-world PRIVATE ../../modules/mod-playerbots/src/playerbot "${CMAKE_CURRENT_BINARY_DIR}")
 add_test(NAME source_extracted_resource_world COMMAND resource-world)
+
+find_package(Threads REQUIRED)
+target_link_libraries(resource-markers PRIVATE Threads::Threads)
