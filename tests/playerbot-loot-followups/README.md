@@ -12,3 +12,8 @@ The existing gathering-safety fixture executes the actual admission method for
 range, LOS, safety, bags and eligibility. Native release probability/depletion,
 map geometry and the full asynchronous session lifecycle still require full
 build and gameplay validation; fake state transitions do not establish those.
+
+Successful mining repeats use the existing lootDelay (milliseconds) rounded up
+to the queue's whole-second precision, with a one-second minimum. Tests cover
+zero, subsecond, exact/fractional seconds and the uint32 boundary; failure
+backoff stays separate. Native release, admission and depletion cases remain.

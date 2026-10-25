@@ -702,7 +702,12 @@ bool StoreLootAction::QueueNextMiningAttempt(Player* requester, ObjectGuid guid)
     if (!gathering.AddLoot(requester, guid))
         return false;
 
-    AI_VALUE(LootObjectStack*, "available loot")->Defer(guid, sPlayerbotAIConfig.lootTargetRetryDelay);
+    // This follows a successful native take/release, not a failed attempt.
+    // Reuse the configured ordinary loot pacing; keep failure backoff separate.
+    // Defer stores whole seconds: round milliseconds up and retain a minimum.
+    uint32 const repeatDelaySeconds = sPlayerbotAIConfig.lootDelay / IN_MILLISECONDS +
+        (sPlayerbotAIConfig.lootDelay % IN_MILLISECONDS != 0);
+    AI_VALUE(LootObjectStack*, "available loot")->Defer(guid, std::max<uint32>(1, repeatDelaySeconds));
     return true;
 }
 

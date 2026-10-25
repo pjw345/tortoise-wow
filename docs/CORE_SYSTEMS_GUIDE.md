@@ -970,3 +970,13 @@ A crate with another player's counted item remains ACTIVATED; taking the final
 item makes isLooted true, then release deactivates and normal update schedules
 the configured respawn/restock. Do not erase other players' loot or force
 respawn merely because one player's window is empty. No new timer is added.
+
+## Successful mining repeat pacing (2026-10-25)
+
+QueueNextMiningAttempt runs only after a verified item transfer and native
+loot release. Successful continuation uses the existing lootDelay, rounded up
+from milliseconds to whole seconds for Defer, with a one-second minimum.
+lootTargetRetryDelay remains for actual opening/storage failures. Preserve
+native casts, depletion, master/range/safety/tool/bag admission and cancellation.
+Do not shorten the global reaction/GCD or force gathering through follow/recovery
+conditions merely to make node collection quicker.
