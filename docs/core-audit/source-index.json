@@ -16753,7 +16753,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "3F4D4BB5236DE8EBCB08AFC83E0F01EBA6671FC3710535E0A2342F7C6092EDA9"
+    "sha256": "8774E00B2F9CB9BACEE70DB9859F06C995D8902E5B166D9045B5458CC0A6E2B9"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/Talentspec.cpp",
@@ -20240,7 +20240,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "D6E732739110DD21F456DCE805DAF7845F9CFAFE664012EEB17F8BC250C52C59"
+    "sha256": "C73BEAD0F9EA90FF01EB6ADC603EAD2E744DDAF0B27D8C6CC9701EA01904758B"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ChatHelper.h",
@@ -20327,7 +20327,7 @@
     "dependency_signals": [
       "ai_update"
     ],
-    "sha256": "341C7CC1108E867D9A74F5FCF58FB743CD556814CACBCA6B58D8309D4A523527"
+    "sha256": "F910FEE1F5FAF3426875176889EA43BD4C4064DCAB4D99F738955029F3A25BAC"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ServerFacade.cpp",
@@ -24655,7 +24655,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "382E75FC4EC3BA9786ADD24EDB14526DBB23EC7FAE5B3A03A6D210272EADA213"
+    "sha256": "2399754B3AD53C54C594C3EC31166E5411B3E3F5817BA9E1A79F763395C2B2AB"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ResourceMarkers.h",
@@ -24663,6 +24663,6 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "D1736BA9F36A9091EE7D903924E07D24DA23351FF828B370D9FB91C6F1BB07E0"
+    "sha256": "4681D4C3B4C919B194139EBA57B658505C46C3724D87E87B06CC1BB987631F51"
   }
 ]
