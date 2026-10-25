@@ -1052,3 +1052,13 @@ The client keys self snapshots by its own name, separately validates grouped bot
 names, merges string GUIDs, and clears stale or departed contributors normally.
 Only Mining/Herbalism game-object resources are supported; skins/corpses are not
 introduced as minimap resources. Native tracking auras and professions are untouched.
+
+## Collision placement identity (2026-10-25)
+
+The native assembler distinguishes MDDF/M2 from MODF/WMO when deduplicating
+placement IDs and assigning tile/tree references. Custom ADTs can reuse an ID
+across these types; the Dun Morogh tunnel UID 5525455 previously aliased a
+distant Westfallshed M2. Serialized IDs/formats and runtime ownership remain
+unchanged. Same-type duplicate IDs keep first-record semantics. See
+`docs/navigation/DUN_MOROGH_TUNNEL_REPAIR.md` for reproduction, migration
+constraints, focused staging and offline/live verification boundaries.

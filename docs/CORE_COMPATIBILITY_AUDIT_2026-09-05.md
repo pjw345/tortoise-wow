@@ -339,3 +339,14 @@ runtime activation has been run for these drafts.
 
 `tests/session-followups` contains future regression source, not executed results.
 See `docs/playerbots/NEXT_BUILD_20261023.md` for pending work and validation.
+
+## M2/WMO placement identity follow-up (2026-10-25)
+
+Native assembly previously merged MDDF and MODF placements sharing a numeric
+ID. A custom Dun Morogh tunnel was replaced by a distant shed's placement and
+tree index. Assembly keys now retain the ID plus placement type throughout
+deduplication, coverage and index lookup; runtime formats/IDs are unchanged.
+Production fixtures pass in both input orders and the old assembler fails both
+negative controls. Same-type duplicate behavior is preserved. See
+`docs/navigation/DUN_MOROGH_TUNNEL_REPAIR.md`; staged collision recovery is
+separate from navigation and live party-following acceptance.
