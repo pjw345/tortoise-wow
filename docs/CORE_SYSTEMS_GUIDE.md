@@ -1066,3 +1066,13 @@ casts/sitting/death and delegates ready food/drink checks to the existing native
 triggers/actions/inventory values; no consumable thresholds are duplicated. The
 successful-repeat pacing accepted by the user is unchanged. Existing action waits,
 native cast time and other activity can still contribute to response time.
+
+## Collision placement identity (2026-10-25)
+
+The native assembler distinguishes MDDF/M2 from MODF/WMO when deduplicating
+placement IDs and assigning tile/tree references. Custom ADTs can reuse an ID
+across these types; the Dun Morogh tunnel UID 5525455 previously aliased a
+distant Westfallshed M2. Serialized IDs/formats and runtime ownership remain
+unchanged. Same-type duplicate IDs keep first-record semantics. See
+`docs/navigation/DUN_MOROGH_TUNNEL_REPAIR.md` for reproduction, migration
+constraints, focused staging and offline/live verification boundaries.

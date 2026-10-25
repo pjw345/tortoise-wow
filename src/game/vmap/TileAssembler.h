@@ -51,8 +51,15 @@ namespace VMAP
             void moveToBasePos(const G3D::Vector3& pBasePos) { iPos -= pBasePos; }
     };
 
-    typedef std::map<uint32, ModelSpawn> UniqueEntryMap;
-    typedef std::multimap<uint32, uint32> TileMap;
+    // Custom ADTs can reuse an ID between MDDF (M2) and MODF (WMO).
+    // Keep their assembly identities separate while retaining native spawn IDs.
+    typedef std::pair<uint32, bool> SpawnKey;
+    inline SpawnKey GetSpawnKey(ModelSpawn const& spawn)
+    {
+        return SpawnKey(spawn.ID, (spawn.flags & MOD_M2) != 0);
+    }
+    typedef std::map<SpawnKey, ModelSpawn> UniqueEntryMap;
+    typedef std::multimap<uint32, SpawnKey> TileMap;
 
     struct MapSpawns
     {
