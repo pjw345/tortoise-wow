@@ -21,3 +21,8 @@ scripted encounter. The candidate window uses native visibility/area overrides.
 
 The default detection fixture is 20 yards, matching Creature construction in
 this fork; the older native formula comment saying roughly 18 is not its value.
+
+Building-floor cases distinguish an idle mob directly overhead behind a solid
+floor from an open vertical connection or nearby stairs/ramp, with identical
+experience levels. LOS is supplied by a geometry fake: this checks policy, not
+the installed VMAP collision data. Engaged mobs remain conservatively protected.

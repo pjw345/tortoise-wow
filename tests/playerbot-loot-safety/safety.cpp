@@ -121,6 +121,14 @@ int main() {try{
     strong.detection=80;strong.distance=70;bot.visibility=120;ai.hostiles={&strong};
     check(!loot.IsApproachSafe(&bot)&&ai.lastRadius==120,"native visibility overrides expand candidate search too");
     bot.visibility=60;ai.hostiles={&hostile};
+    bot.level=27;hostile.level=13;hostile.combat=false;hostile.distance=0;hostile.zDistance=4;hostile.los=false;
+    check(loot.IsApproachSafe(&bot),"idle mob directly overhead behind a solid floor does not block lower-floor loot");
+    hostile.los=true;check(!loot.IsApproachSafe(&bot),"open vertical connection inside native threat range remains unsafe");
+    hostile.distance=4;hostile.zDistance=3;check(!loot.IsApproachSafe(&bot),"stairs or ramp at a different height are not blanket-excluded");
+    hostile.distance=0;hostile.zDistance=30;check(loot.IsApproachSafe(&bot),"distant upper floor outside native three-dimensional threat range is safe");
+    hostile.zDistance=4;hostile.los=false;hostile.combat=true;
+    check(!loot.IsApproachSafe(&bot),"already-engaged enemies retain conservative protection across floors");
+    hostile.combat=false;hostile.los=true;hostile.zDistance=0;
     ai.leader=false;loot.object=nullptr;
     check(!loot.IsApproachSafe(&bot),"missing target cannot approach");
     std::cout<<"Native safety and queued movement regression cases passed\n";
