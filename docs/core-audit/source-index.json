@@ -16484,7 +16484,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "8C9AC720ECD212914A5B24ABBCACD664B62D75DCE384954D6D152AA7BF48F307"
+    "sha256": "A11298D338172B8D52FF9920FDCBAD0B2FE9BA943C4415BC9C36A0E08780FA26"
   },
   {
     "file": "modules/mod-playerbots/botpch.h",

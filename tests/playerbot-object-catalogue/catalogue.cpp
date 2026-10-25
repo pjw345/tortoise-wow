@@ -32,9 +32,7 @@ struct EntryLootListValue {std::string qualifier;std::string getQualifier(){retu
 #include "native-catalogue.inc"
 void check(bool condition,const char*msg){if(!condition)throw std::runtime_error(msg);}
 int main(){
- check(sGOStorage.GetMaxEntry()==0,"empty native store");
  sObjectMgr.m_GameObjectInfoMap={{42,{}},{300203,{}},{1000380,{}}};
- check(sGOStorage.GetMaxEntry()==1000381,"exclusive native maximum includes custom templates");
  check(sGOStorage.LookupEntry<>(300203)&&!sGOStorage.LookupEntry<>(300204),"sparse lookup preserved");
  DropMapValue builder;builder.templates[42].Entries={{1205}};
  builder.templates[300203].Entries={{20516}};builder.templates[1000380].Entries={{51751}};
@@ -43,7 +41,9 @@ int main(){
  value.qualifier="-1000380";check(value.Calculate()==std::list<uint32>{51751},"highest template reaches source catalogue");
  value.qualifier="-42";check(value.Calculate()==std::list<uint32>{1205},"ordinary low entry preserved");
  value.qualifier="-300204";check(value.Calculate().empty(),"unknown sparse source stays unknown");
+ check(sGOStorage.GetMaxEntry()==1000381,"exclusive native maximum includes custom templates");
  delete catalogue;
  sObjectMgr.m_GameObjectInfoMap[7000035]={};check(sGOStorage.GetMaxEntry()==7000036,"actual high custom range has no fixed cap");
+ sObjectMgr.m_GameObjectInfoMap.clear();check(sGOStorage.GetMaxEntry()==0,"empty native store");
  std::cout<<"PASS: native maximum, sparse/custom entries, DropMap and EntryLootList pipeline\n";
 }
