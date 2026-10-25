@@ -1,0 +1,7 @@
+## Interface: 11200
+## Title: Warband Enchanting Rods
+## Notes: Higher-tier rod requirements for the matching private-server client patch.
+## Version: 1.0.0
+## DefaultState: Enabled
+Recipes.lua
+WarbandEnchantingRods.lua
