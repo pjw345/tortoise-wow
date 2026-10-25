@@ -16883,7 +16883,7 @@
       "spells",
       "death_reset"
     ],
-    "sha256": "F3C9EF77474B56A445816ED830D3E4F63232A0CD599510ABDC8234ED05A34013"
+    "sha256": "C78BE2F99F3A11D651B668A0FEE912967E8977CF0F752F6C3EF0800FFAB61407"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/TravelRoutePolicy.h",
@@ -24336,7 +24336,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "3723DD0BBB19076C930023491349DF85FA5CFEE9CB81747E65FC0E5379A10995"
+    "sha256": "704B95C002F87CA7479884FC3C6D8BE0A8F95E1D92F0549CDD50D7EE40FA22FE"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/TellItemCountAction.cpp",
@@ -24581,7 +24581,7 @@
       "death_reset",
       "async"
     ],
-    "sha256": "000F974BDC64FB88545A4D66536D6366003B817814665F1064133E84C9B00DD5"
+    "sha256": "1BD33E9AB4A4AE8F26DF03B65228E8E30A802E8EE25D42EFF0E8F04BF5C51C2B"
   },
   {
     "file": "src/game/BattleLog.cpp",
@@ -24648,5 +24648,21 @@
     "loader_calls": [],
     "dependency_signals": [],
     "sha256": "8D063D34C31E324D221EADFFCE627DC6456B2E1938D1147558A7E4E2419FC830"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/ResourceMarkers.cpp",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "382E75FC4EC3BA9786ADD24EDB14526DBB23EC7FAE5B3A03A6D210272EADA213"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/ResourceMarkers.h",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "D1736BA9F36A9091EE7D903924E07D24DA23351FF828B370D9FB91C6F1BB07E0"
   }
 ]
