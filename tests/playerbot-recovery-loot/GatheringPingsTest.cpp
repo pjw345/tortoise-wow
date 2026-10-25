@@ -48,6 +48,8 @@ struct PlayerbotAI {
  Player* GetBot() { return bot; }
  bool HasSkill(SkillType) { return hasSkill; }
  bool HasStrategy(const char*,BotState) { return reveal; }
+ bool markers = false;
+ bool HasResourceMarkers() const { return markers; }
  bool HasPendingGatheringPings() const { return gatheringPing.remaining!=0; }
  GameObject* GetGameObject(ObjectGuid guid) { return nodeAvailable&&guid==42?&node:nullptr; }
  void Ping(float x,float) { ++pings; lastX=x; }
@@ -57,6 +59,11 @@ struct PlayerbotAI {
 void require(bool b,const char* name) { if(!b) { std::cerr<<name<<'\n'; std::exit(1); } }
 void reset() { node={}; group={}; sLockStore.present=true; lockEntry={}; }
 int main() {
+ { reset(); Player p; PlayerbotAI a(&p); a.markers=true; a.StartGatheringPings(&node);
+   require(a.pings==0,"active icons suppress starting resource pings");
+   a.markers=false; a.StartGatheringPings(&node); a.markers=true; a.UpdateGatheringPings(3000);
+   require(a.pings==1 && !a.HasPendingGatheringPings(),"icon lease cancels pending repeats"); }
+
  reset(); Player p; PlayerbotAI a(&p); a.StartGatheringPings(&node);
  require(a.pings==1 && a.gatheringPing.remaining==3,"first ping immediate");
  a.UpdateGatheringPings(2999); require(a.pings==1,"pause between pings");

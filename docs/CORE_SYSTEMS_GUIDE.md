@@ -1000,3 +1000,23 @@ This is conservative destination-area safety, not proof that every path segment
 or scripted encounter is safe; native pathing, cast and combat checks remain.
 No new global hostile query behavior, level table or timer is introduced.
 Debug loot logs the bot/hostile levels and effective aggro/safety radii.
+
+### Group resource minimap feed
+
+RESBOT version 1 is a silent opt-in, read-only gathering feed. Incoming party/raid
+requests pass the same controlled-master/group authorization as quest sync and a
+separate five-second admission gate. GUID-only requests are processed through the
+existing bot command queue; current requester/group/world state is revalidated on
+the serialized bot owner. No object pointer or world scan is retained on the chat
+handler. Native lock requirements, current Mining/Herbalism skills, spawn/loot
+state, both players' native visibility, bounded discovery range and native
+Map2ZoneCoordinates control eligibility. Nearest 32 eligible nodes are returned
+as at most 16 packets, each at most 240 bytes. Empty snapshots clear old state.
+No loot target, movement, cast, strategy, player tracking field or skill is changed.
+An active client request grants a twelve-second lease suppressing legacy resource
+reveal speech/pings; other uses of Ping are unchanged. Without a compatible client,
+the legacy reveal behavior remains available. The client uses pfQuest's installed
+minimap dimensions/zoom support for separate, non-clickable ore/herb textures,
+deduplicates GUIDs as strings, expires data and clears on roster/zoning events.
+Unsupported instance coordinates fail closed. These markers express profession
+eligibility, not a promise that a path is safe or a node immediately gatherable.

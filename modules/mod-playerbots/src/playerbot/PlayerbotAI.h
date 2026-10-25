@@ -483,6 +483,10 @@ public:
     void Ping(float x, float y);
     void BeginConsumableRecovery(bool food, bool drink);
     void UpdateConsumableRecovery();
+    bool HasResourceMarkers() const { return resourceMarkersUntil > time(0); }
+    std::atomic<time_t> resourceMarkersLastQueued{0};
+    std::atomic<bool> resourceMarkersQueued{false};
+    time_t resourceMarkersUntil = 0; // Accessed only on the bot's serialized owner.
     bool HasPendingGatheringPings() const { return gatheringPing.remaining != 0; }
     void StartGatheringPings(GameObject* go);
     void UpdateGatheringPings(uint32 elapsed);

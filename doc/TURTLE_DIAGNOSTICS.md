@@ -1293,3 +1293,14 @@ that scope. This does not establish route-wide or scripted-encounter safety.
 
 Level-aware candidate filtering applies native range before LOS, matching native
 AI ordering, so the wider scan does not cast rays for out-of-range candidates.
+
+### Resource markers (RESBOT)
+
+No diagnostic logging is enabled. The optional client polls once per 5.5 seconds
+for the group; each authorized bot admits at most one request per five seconds,
+scans existing cells within min(grindDistance, reactDistance), and sends at most
+32 nodes / 16 bounded packets. No polling or scan is added without addon requests.
+Client redraw is throttled to 10 Hz, snapshots expire after twelve seconds, and
+`/botresources off` stops polling and hides icons. An addon lease suppresses only
+gathering reveal chat/pings, not combat alerts or manual group pings. Server image
+build, installation and live acceptance are separate from source validation.

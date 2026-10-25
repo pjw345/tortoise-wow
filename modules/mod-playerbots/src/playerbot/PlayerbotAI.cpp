@@ -3,6 +3,7 @@
 #include "ahbot/AhBot.h"
 #include "playerbot/playerbot.h"
 #include "playerbot/QuestSync.h"
+#include "playerbot/ResourceMarkers.h"
 #include "playerbot/QuestSyncProtocol.h"
 #include "playerbot/strategy/actions/RevealGatheringItemAction.h"
 #include "playerbot/AiContextAugment.h"
@@ -1602,7 +1603,12 @@ void PlayerbotAI::HandleCommands()
 
         std::string command = holder.GetCommand();
         Player* owner = holder.GetOwner();
-        if (command.compare(0, 8, "PFQBOT\t:") == 0)
+        if (command.compare(0, 8, "RESBOT\t:") == 0)
+        {
+            resourceMarkersQueued.store(false);
+            ai::resources::SendQueuedSnapshot(this, command.substr(8));
+        }
+        else if (command.compare(0, 8, "PFQBOT\t:") == 0)
         {
             questSyncQueued.store(false);
             ai::questsync::SendQueuedSnapshot(this, command.substr(8));
@@ -1895,6 +1901,18 @@ void PlayerbotAI::HandleCommand(uint32 type, const std::string& text, Player& fr
             return;
         // Store identity, not a requester pointer that can outlive logout.
         chatCommands.push(ChatCommandHolder("PFQBOT\t:" + std::to_string(fromPlayer.GetGUIDLow()) +
+            ":" + text.substr(7), nullptr, CHAT_MSG_WHISPER));
+        return;
+    }
+    if (lang == LANG_ADDON && text.compare(0, 7, "RESBOT\t") == 0)
+    {
+        ai::resources::Request request;
+        if ((type != CHAT_MSG_PARTY && type != CHAT_MSG_RAID) ||
+            !ai::questsync::Authorized(this, &fromPlayer) ||
+            !ai::resources::ParseRequest(text.substr(7), request) ||
+            !ai::questsync::Admit(resourceMarkersLastQueued, time(0)) || resourceMarkersQueued.exchange(true))
+            return;
+        chatCommands.push(ChatCommandHolder("RESBOT\t:" + std::to_string(fromPlayer.GetGUIDLow()) +
             ":" + text.substr(7), nullptr, CHAT_MSG_WHISPER));
         return;
     }
@@ -8960,7 +8978,7 @@ void PlayerbotAI::UpdateConsumableRecovery()
 
 void PlayerbotAI::StartGatheringPings(GameObject* go)
 {
-    if (HasPendingGatheringPings() || !bot->GetGroup() || !ai::CanRevealGatheringItem(this, go))
+    if (HasResourceMarkers() || HasPendingGatheringPings() || !bot->GetGroup() || !ai::CanRevealGatheringItem(this, go))
         return;
     gatheringPing.guid = go->GetObjectGuid();
     gatheringPing.map = bot->GetMapId();
@@ -8973,6 +8991,7 @@ void PlayerbotAI::StartGatheringPings(GameObject* go)
 
 void PlayerbotAI::UpdateGatheringPings(uint32 elapsed)
 {
+    if (HasResourceMarkers()) { gatheringPing = {}; return; }
     if (!gatheringPing.remaining)
         return;
     if (!bot->IsInWorld() || bot->IsBeingTeleported() || !bot->IsAlive() ||
