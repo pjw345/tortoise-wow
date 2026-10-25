@@ -63,6 +63,16 @@ function M.Install()
   GetCraftSpellFocus = function(index)
     local required, focus = Requirements(index)
     if not required then return nativeFocus(index) end
+    -- Native APIs may return one nil value instead of zero values when no
+    -- focus remains. Keep complete name/ownership pairs before adding ours.
+    local native = focus
+    focus = { n = 0 }
+    for i = 1, native.n, 2 do
+      if native[i] and native[i] ~= "" then
+        focus.n = focus.n + 2
+        focus[focus.n-1], focus[focus.n] = native[i], native[i+1]
+      end
+    end
     for _, tier in ipairs(required) do
       focus.n = focus.n + 2
       focus[focus.n-1] = RodName(tier).." (or higher)"

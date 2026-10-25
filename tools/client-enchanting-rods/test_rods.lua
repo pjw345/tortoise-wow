@@ -3,6 +3,7 @@ local root=arg[1] or "."
 local rods={6218,6339,11130,11145,16207}
 local names={"Runed Copper Rod","Runed Silver Rod","Runed Golden Rod","Runed Truesilver Rod","Runed Arcanite Rod"}
 local bagItem,bankItem,selection,originalFocus,focusHasTool
+local nilFocus
 local calls,errors,lastIndex,lastCount=0,0
 WarbandEnchantingRodsData={version=1,rods=rods,rodNames=names,recipes={},byName={}}
 for i=1,5 do
@@ -19,6 +20,7 @@ GetContainerItemLink=function(bag,slot)
   return item and "|Hitem:"..item..":0:0:0|h[Rod]|h"
 end
 GetCraftSpellFocus=function(index)
+  if nilFocus then return nil end
   if originalFocus then return originalFocus,focusHasTool end
   return
 end
@@ -41,6 +43,9 @@ bagItem=nil;bankItem=16207;local before=calls;DoCraft(1);check(calls==before,"ba
 bankItem=nil;bagItem=2901;DoCraft(1);check(calls==before,"unrelated tool")
 bagItem=6339;local name,has=GetCraftSpellFocus(1);check(name==names[1].." (or higher)" and has==1,"higher rod display")
 bagItem=nil;name,has=GetCraftSpellFocus(1);check(name==names[1].." (or higher)" and has==nil,"missing rod display")
+nilFocus=true;bagItem=6339
+name,has=GetCraftSpellFocus(1);check(name==names[1].." (or higher)" and has==1,"one nil focus return")
+nilFocus=false
 originalFocus="Anvil";focusHasTool=1;bagItem=6339
 local anvil,owned,rod,present=GetCraftSpellFocus(1)
 check(anvil=="Anvil" and owned==1 and rod==names[1].." (or higher)" and present==1,"retain other tool requirements")
