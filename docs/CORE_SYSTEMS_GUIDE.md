@@ -1020,3 +1020,19 @@ minimap dimensions/zoom support for separate, non-clickable ore/herb textures,
 deduplicates GUIDs as strings, expires data and clears on roster/zoning events.
 Unsupported instance coordinates fail closed. These markers express profession
 eligibility, not a promise that a path is safe or a node immediately gatherable.
+
+### Custom game-object catalogue and novelty source exclusion
+
+The CMaNGOS sGOStorage compatibility proxy now reports an exclusive upper bound
+from Turtle's native ObjectMgr catalogue instead of the old 200000 stub. Apple
+Bob 300203 and Bone Chew Toy 1000380 were omitted by DropMapValue's source scan,
+leaving the earlier excluded-only source check with an unknown/empty item list.
+Actual item storage still rejected apples, explaining travel without pickup.
+Native maximum + one includes the highest template. Existing sparse lookups and
+all source-policy overrides stay intact; no object ID/name blacklist was added.
+Other catalogue consumers (travel purposes, random-item source data, transport
+generation) now see custom templates too. These are startup/lazy catalogue scans,
+not per-AI-tick loops; sparse high IDs increase scan work. The current read-only DB
+snapshot has 21196 templates, maximum 7000035, of which 12091 are above the old
+bound. Source-extracted tests cover the catalogue pipeline. Full image build,
+startup cost and gameplay acceptance remain pending, with no live mutation.
