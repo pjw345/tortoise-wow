@@ -73,9 +73,19 @@ This diagnostic staging workflow is not a general-purpose migration utility.
 - Existing native bounded-coverage fixture and 12 model-tool regressions pass.
 - Native baseline tree reproduction is byte-identical; client model geometry
   and restored captured collision height are checked separately from navigation.
-- Record generation results and native forward/reverse route checks in issue
-  #78 before considering installation. Successful tool output is not live
-  party-following acceptance.
+- Both regenerated navigation tiles load through native Detour with the
+  deployed map parameters. All 46 route checks complete: eight captured-party
+  forward/reverse routes and 38 routes to/from 19 tunnel centerline stations.
+- All 19 station floor queries succeed with staged collision data (maximum
+  measured difference below 0.001 yard), compared with zero supported stations
+  in the installed data. The installed data hashes remain unchanged.
+- MoveMapGen reports its existing exit status 1 after writing each tile; both
+  logs end with normal single-tile completion. Native loading and route queries,
+  rather than exit status alone, validate the generated output.
+- Five candidate files, original/candidate hashes and offline validation are
+  packaged in `dun-morogh-tunnel-candidate-20261025.tar.gz` under the evidence
+  directory. Preserve its README installation/rollback requirements.
+  Successful offline queries are not live party-following acceptance.
 
 No live map files or services have been changed by this work. Install only a
 validated, hash-manifested bundle with a stopped world server, a backup and a
