@@ -1052,3 +1052,17 @@ The client keys self snapshots by its own name, separately validates grouped bot
 names, merges string GUIDs, and clears stale or departed contributors normally.
 Only Mining/Herbalism game-object resources are supported; skins/corpses are not
 introduced as minimap resources. Native tracking auras and professions are untouched.
+
+### Prompt first gathering discovery
+
+Live Alon action logs on 18d7060b showed follow(priority20) repeatedly winning
+while add-gathering-loot(priority2) waited; follow decisions were about2.9 seconds
+apart. Once the scan ran at14:18:27.870, native loot selection/opening followed
+within100ms. Discovery now has priority ACTION_HIGH+1, below existing loot/move/
+open and higher emergency actions. Native timer cadence remains once per second;
+range, profession/tool, bag, LOS, safety and leash admission are unchanged. An
+ineligible scan still fails and lets follow proceed normally. isUseful preserves
+casts/sitting/death and delegates ready food/drink checks to the existing native
+triggers/actions/inventory values; no consumable thresholds are duplicated. The
+successful-repeat pacing accepted by the user is unchanged. Existing action waits,
+native cast time and other activity can still contribute to response time.

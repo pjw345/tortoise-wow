@@ -263,6 +263,29 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid, bool explicit
     return added;
 }
 
+bool AddGatheringLootAction::isUseful()
+{
+    // Earlier discovery must not interrupt a cast or active food/drink rest.
+    if (!bot->IsAlive() || bot->IsSitState() || bot->IsNonMeleeSpellCasted(true))
+        return false;
+
+    // Preserve the existing food strategy's readiness rather than hard-coding
+    // new health/mana thresholds. Without supplies, let its normal failure
+    // fallback continue to permit eligible gathering.
+    if (ai->HasStrategy("food", BotState::BOT_STATE_NON_COMBAT))
+    {
+        for (auto const& recovery : {std::make_pair("low health", "food"), std::make_pair("high mana", "drink")})
+        {
+            Trigger* trigger = context->GetTrigger(recovery.first);
+            Action* action = context->GetAction(recovery.second);
+            if (trigger && trigger->IsActive() && action && action->isUseful() && action->isPossible() &&
+                (ai->HasCheat(BotCheatMask::item) || !AI_VALUE2(std::list<Item*>, "inventory items", recovery.second).empty()))
+                return false;
+        }
+    }
+    return AddAllLootAction::isUseful();
+}
+
 bool AddGatheringLootAction::AddLoot(Player* requester, ObjectGuid guid, bool explicitTarget)
 {
     LootObject loot(bot, guid);

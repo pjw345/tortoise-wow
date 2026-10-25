@@ -51,6 +51,7 @@ namespace ai
     {
     public:
         AddGatheringLootAction(PlayerbotAI* ai) : AddAllLootAction(ai, "add gathering loot") {}
+        bool isUseful() override;
         // Reuse normal gathering admission after a native vein release.
         bool AddLoot(Player* requester, ObjectGuid guid, bool explicitTarget = false) override;
 
