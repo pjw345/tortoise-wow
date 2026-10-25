@@ -20855,7 +20855,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "7021EEEA17C2A9F915FE5B9D61ED1C9A76633D7CB1162B189F9614DD84F5C637"
+    "sha256": "C3C0FF6A06475FB7AD984595B5904D2E45AEFB25520B538233F729DA04530610"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/generic/GuardStrategy.cpp",
@@ -23570,7 +23570,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "283AAABE67FC921A980B8F46F44AD8FFCFFB05BE40AA81B75A468CD2D036155C"
+    "sha256": "81F14502B3FEA0DDF010608536BFB606546C85C998A547FD1D8C8556FCAEA359"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/SecurityCheckAction.cpp",
@@ -23908,7 +23908,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "3AAE89EF666FEBA8965A5A2DD26FBA9C184939E6077E0530220347D9FCA10D75"
+    "sha256": "F010DC71B931FA0B4F02912BD7BD47F5E28BD006314384C3038ECC72785F6701"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/TellMasterAction.h",
