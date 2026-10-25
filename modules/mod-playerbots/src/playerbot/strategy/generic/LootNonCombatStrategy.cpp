@@ -25,9 +25,12 @@ void LootNonCombatStrategy::InitNonCombatTriggers(std::list<TriggerNode*> &trigg
 
 void GatherStrategy::InitNonCombatTriggers(std::list<TriggerNode*> &triggers)
 {
+    // Read-only admission must run before follow can keep winning every tick.
+    // A successful admission enables native loot/move/open priorities; the
+    // existing gathering checks still decide whether a node is eligible.
     triggers.push_back(new TriggerNode(
         "timer",
-        NextAction::array(0, new NextAction("add gathering loot", 2.0f), NULL)));
+        NextAction::array(0, new NextAction("add gathering loot", ACTION_HIGH + 1.0f), NULL)));
 }
 
 void RevealStrategy::InitNonCombatTriggers(std::list<TriggerNode*> &triggers)

@@ -1309,3 +1309,7 @@ RESSELF adds one opt-in owner-scoped request per five seconds and at most one
 32-node self scan/snapshot per request, even without bots or a guild. Session
 handling does no world work; the player's manager update consumes the mailbox.
 No diagnostics are enabled. The On/Off control stops both human and bot requests.
+
+First-gather scheduling changes priority, not timer frequency. No new diagnostics
+or background scan is enabled. The existing strategy's once-per-second discovery
+can run while follow would otherwise win; retain normal per-bot debug-loot controls.
