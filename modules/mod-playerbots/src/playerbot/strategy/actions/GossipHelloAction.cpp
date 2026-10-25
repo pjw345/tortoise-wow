@@ -35,13 +35,19 @@ bool GossipHelloAction::Execute(Event& event)
 		return false;
 	}
 
-	GossipMenuItemsMapBounds pMenuItemBounds = sObjectMgr.GetGossipMenuItemsMapBounds(pCreature->GetCreatureInfo()->GossipMenuId);
-	if (pMenuItemBounds.first == pMenuItemBounds.second)
-		return false;
+    bool const autonomous = event.getSource().find("rpg action") == 0;
+    if (autonomous)
+    {
+        // Preserve idle RPG admission. An explicit Talk must let the native
+        // hello handler ask script/module/Lua hooks to build their own menus.
+        GossipMenuItemsMapBounds bounds = sObjectMgr.GetGossipMenuItemsMapBounds(pCreature->GetCreatureInfo()->GossipMenuId);
+        if (bounds.first == bounds.second)
+            return false;
+    }
 
     std::string text = event.getParam();
 	int menuToSelect = -1;
-    if (event.getSource().find("rpg action") == 0)
+    if (autonomous)
     {
         Creature* pCreature = bot->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
 
@@ -53,7 +59,8 @@ bool GossipHelloAction::Execute(Event& event)
             }
         }
 
-        ProcessGossip(requester, guid, -1);
+        if (!ProcessGossip(requester, guid, -1))
+            return false;
     }
 	else if (text.empty())
 	{
@@ -76,7 +83,17 @@ bool GossipHelloAction::Execute(Event& event)
 	{
 	    menuToSelect = atoi(text.c_str());
 	    if (menuToSelect > 0) menuToSelect--;
-        ProcessGossip(requester, guid, menuToSelect);
+#ifdef MANGOSBOT_ZERO
+        // The native hello records this identity. A menu from another NPC
+        // must not provide sender/action values for the selected creature.
+        if (bot->GetSession()->GetCurrentGossipGUID() != guid)
+        {
+            ai->TellPlayerNoFacing(requester, "I need to talk first");
+            return false;
+        }
+#endif
+        if (!ProcessGossip(requester, guid, menuToSelect))
+            return false;
 	}
 
 	bot->TalkedToCreature(pCreature->GetEntry(), pCreature->GetObjectGuid());
@@ -130,6 +147,14 @@ void GossipHelloAction::TellGossipMenus(Player* requester)
 bool GossipHelloAction::ProcessGossip(Player* requester, ObjectGuid creatureGuid, int menuToSelect)
 {
     GossipMenu& menu = bot->GetPlayerMenu()->GetGossipMenu();
+    // Scripted greetings can legitimately contain no choices, including after
+    // their last step. Do not underflow the random bound or index an empty menu.
+    if (!menu.MenuItemCount())
+    {
+        if (menuToSelect != -1)
+            ai->TellError(requester, "No gossip options available");
+        return false;
+    }
 
     bool noFeedback = (menuToSelect == -1);
 
@@ -140,7 +165,7 @@ bool GossipHelloAction::ProcessGossip(Player* requester, ObjectGuid creatureGuid
         actualMenuToSelect = urand(0, menu.MenuItemCount() - 1);
     }
 
-    if (actualMenuToSelect >= 0 && (unsigned int)actualMenuToSelect >= menu.MenuItemCount())
+    if (actualMenuToSelect < 0 || (unsigned int)actualMenuToSelect >= menu.MenuItemCount())
     {
         ai->TellError(requester, "Unknown gossip option");
         return false;
