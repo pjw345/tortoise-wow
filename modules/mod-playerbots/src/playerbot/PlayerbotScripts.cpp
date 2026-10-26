@@ -156,8 +156,7 @@ class PlayerbotPlayerScript : public PlayerScript
                 return;
 
             std::ostringstream text;
-            text << player->GetName() << ": "
-                 << ai->GetChatHelper()->formatSkill(skillId, nullptr)
+            text << ai->GetChatHelper()->formatSkill(skillId, nullptr)
                  << " increased to " << newValue << "/" << maxValue << ".";
             // One event per committed gain, with the normal private/silent policy.
             ai->TellPlayerNoFacing(master, text.str(),

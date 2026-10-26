@@ -20327,7 +20327,7 @@
     "dependency_signals": [
       "ai_update"
     ],
-    "sha256": "4972F3B5A86B79E2B04CC3974D4A9110CF2A174EC8DF635D662110D015F7E062"
+    "sha256": "634055C3EBF878A3C9A705486519E77A0B575705F8C749DC239271AEBD938785"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ServerFacade.cpp",
