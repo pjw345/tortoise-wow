@@ -1104,3 +1104,16 @@ to legacy generator state and is not an equivalent translation predicate.
 Otherwise the existing cast preparation can skip StopMoving and native spell
 movement interruption can cancel gathering. Keep native cast/stop/recovery and
 other expansion predicates authoritative. See playerbots/NATIVE_MOVEMENT_STATE.md.
+
+
+### Selected corpse loot recovery (26 October 2026)
+
+The loot movement trigger now uses the same configured master-to-corpse range
+as LootAction selection, retaining native 3D interaction reach. The former
+follow-distance gate could strand a selected corpse and block an eligible herb.
+LootAvailableTrigger permits native reselection when the selected target is no
+longer eligible or its corpse is beyond that range; combat/mount admission,
+candidate safety, existing corpse-first ordering and native release remain.
+tests/playerbot-loot-target-recovery extracts the actual triggers and selector
+with controlled services and old-code negative controls. This is a source fix;
+image build/deployment and live corpse/herb/follow acceptance remain pending.
