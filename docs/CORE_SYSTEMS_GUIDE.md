@@ -1095,3 +1095,12 @@ Native target selection, saved distance/radius conversion, prediction, pathfindi
 and speed/talent handling remain unchanged. See
 `docs/playerbots/STABLE_REAR_FOLLOW.md` for the production getter reproduction,
 source-extracted follow/dispatch regression, and pending full build/live checks.
+
+### Native player movement state for casting and interaction
+
+On this Turtle bridge, player splines can move with UNIT_STAT_MOVING unset.
+Use native WorldObject::IsMoving at the ZERO facade boundary; IsStopped refers
+to legacy generator state and is not an equivalent translation predicate.
+Otherwise the existing cast preparation can skip StopMoving and native spell
+movement interruption can cancel gathering. Keep native cast/stop/recovery and
+other expansion predicates authoritative. See playerbots/NATIVE_MOVEMENT_STATE.md.

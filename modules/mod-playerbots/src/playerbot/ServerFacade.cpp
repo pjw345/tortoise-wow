@@ -220,7 +220,12 @@ bool ServerFacade::isMoving(Unit *unit)
     return unit->m_movementInfo.HasMovementFlag(movementFlagsMask);
 #endif
 #ifdef CMANGOS
-#ifdef MANGOSBOT_ONE
+#ifdef MANGOSBOT_ZERO
+    // Turtle's direct player splines can move with UNIT_STAT_MOVING unset.
+    // Match the native movement flags used by spell validation, not the legacy
+    // movement-generator state queried by IsStopped(). Keep falling explicit.
+    return unit->IsMoving() || unit->IsFalling();
+#elif defined(MANGOSBOT_ONE)
     return !unit->IsStopped() || unit->IsFalling() || unit->IsJumping();
 #else
     return !unit->IsStopped() || unit->IsFalling();
