@@ -1176,3 +1176,16 @@ their existing behavior. The live party was configured to circle/follow 2 yards;
 rear-only circle geometry requires the next image build and live acceptance.
 tests/playerbot-rear-circle extracts the actual circle class and native roster
 angle calculation with controlled unit/map services and an old-code control.
+
+### Grey party-kill loot admission (26 October 2026)
+
+Turtle group kills emit SMSG_PARTYKILLLOG (killer GUID then victim GUID) even
+when they grant no XP. The existing bot outgoing-packet queue delays repeat
+events until their trigger can consume them. ZERO now maps that native event
+to normal AddAllLootAction admission for living loot-enabled companions with an
+active human master in the same group. Existing ownership, distance, safety,
+bags and profession opt-in still decide admission; selection/combat checks,
+movement, native opening/casts and corpse lifecycle remain unchanged.
+A successful new admission invalidates only the cached has-available-loot value.
+The five-second scan and XP path remain fallbacks; no global timer is reduced.
+Other bot variants retain their existing registrations. Source-only until build.
