@@ -17,6 +17,42 @@ using namespace MaNGOS;
 
 using namespace ai;
 
+#ifdef MANGOSBOT_ZERO
+bool PartyKillLootAction::Execute(Event& event)
+{
+    if (!bot->IsAlive() || !ai->HasActivePlayerMaster() ||
+        !ai->HasStrategy("loot", BotState::BOT_STATE_NON_COMBAT))
+        return false;
+
+    Player* master = ai->GetMaster();
+    if (!master || !master->IsInWorld() || !bot->GetGroup() ||
+        bot->GetGroup() != master->GetGroup())
+        return false;
+
+    WorldPacket packet(event.getPacket());
+    if (packet.GetOpcode() != SMSG_PARTYKILLLOG || packet.size() < 2 * sizeof(uint64))
+        return false;
+
+    packet.rpos(0);
+    ObjectGuid killer, victim;
+    packet >> killer >> victim;
+    if (!killer.IsPlayer() || !victim.IsCreature())
+        return false;
+
+    LootObject loot(bot, victim);
+    if (loot.skillId != SKILL_NONE &&
+        !ai->HasStrategy("gather", BotState::BOT_STATE_NON_COMBAT))
+        return false;
+
+    // Admission only: native ownership, range, safety and bag policy still
+    // run here; selection/movement/opening remain with the normal loot engine.
+    bool added = AddLoot(master, victim);
+    if (added)
+        RESET_AI_VALUE(bool, "has available loot");
+    return added;
+}
+#endif
+
 bool AddLootAction::Execute(Event& event)
 {
     ObjectGuid guid = event.getObject();

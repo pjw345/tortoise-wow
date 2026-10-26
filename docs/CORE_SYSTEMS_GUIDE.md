@@ -1136,3 +1136,16 @@ by 18:42:30 and body opening at 18:43:30, matching the remaining ignore period.
 The queue fixture validates native-predicate-controlled recovery and inspection,
 failure, replacement and clear controls. The extension is source-only until the
 next build; the running 4e848db2 skin transition has successful live casts.
+
+### Grey party-kill loot admission (26 October 2026)
+
+Turtle group kills emit SMSG_PARTYKILLLOG (killer GUID then victim GUID) even
+when they grant no XP. The existing bot outgoing-packet queue delays repeat
+events until their trigger can consume them. ZERO now maps that native event
+to normal AddAllLootAction admission for living loot-enabled companions with an
+active human master in the same group. Existing ownership, distance, safety,
+bags and profession opt-in still decide admission; selection/combat checks,
+movement, native opening/casts and corpse lifecycle remain unchanged.
+A successful new admission invalidates only the cached has-available-loot value.
+The five-second scan and XP path remain fallbacks; no global timer is reduced.
+Other bot variants retain their existing registrations. Source-only until build.

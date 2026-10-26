@@ -17746,7 +17746,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "4B5B35D2E5FAA8D71E2DD46F40539B54E75C54E114EAB6DB13B4D6D5770E0D3E"
+    "sha256": "824DAB994379D29B4F542E8E82A657F47B5B466B067202812ED1AC12E8B9A30B"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/triggers/RpgTriggers.h",
@@ -20599,7 +20599,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "9B55D3A5E1344636244134642415DDC63E24F8EC3C379B032451771B241AB33C"
+    "sha256": "E493EFC1D03247F8E946FFF0A374DBB4695DA0DC0E210790BC810C10F3119CB9"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/warrior/ProtectionWarriorStrategy.cpp",
@@ -23480,7 +23480,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "985E464F97076111AEE6317DB54D9242D30C859EF80877E1D30351C3C21FD46D"
+    "sha256": "DA8E3D32D87FD707DDF60311FAA13EB63D345FB523D900B4098A9BC10FF2647E"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/TellLosAction.cpp",
@@ -23570,7 +23570,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "81F14502B3FEA0DDF010608536BFB606546C85C998A547FD1D8C8556FCAEA359"
+    "sha256": "A5DDFB226B05829F8EC6B658C7D60140D2F88BB0915BDA3EF9A38E59F19B04C7"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/SecurityCheckAction.cpp",
@@ -23908,7 +23908,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "300F00B75154C30925BFCBB706DA848FE055EA6C44C6B4C0479D538AE5990CC5"
+    "sha256": "8F324C1898AF5F6C07F522600545DA4738A3E61788D250832DB5D200DFD76A70"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/TellMasterAction.h",
@@ -24581,7 +24581,7 @@
       "death_reset",
       "async"
     ],
-    "sha256": "1BD33E9AB4A4AE8F26DF03B65228E8E30A802E8EE25D42EFF0E8F04BF5C51C2B"
+    "sha256": "562F47D5AF50693646FCE40B0E08D19DEB87895D080DCA1DB402836AD3FB77CE"
   },
   {
     "file": "src/game/BattleLog.cpp",

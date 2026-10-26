@@ -34,6 +34,9 @@ namespace ai
             creators["activate taxi"] = [](PlayerbotAI* ai) { return new WorldPacketTrigger(ai, "activate taxi"); };
             creators["trade status"] = [](PlayerbotAI* ai) { return new WorldPacketTrigger(ai, "trade status"); };
             creators["loot response"] = [](PlayerbotAI* ai) { return new WorldPacketTrigger(ai, "loot response"); };
+#ifdef MANGOSBOT_ZERO
+            creators["party kill"] = [](PlayerbotAI* ai) { return new WorldPacketTrigger(ai, "party kill"); };
+#endif
             creators["quest update add kill"] = [](PlayerbotAI* ai) { return new WorldPacketTrigger(ai, "quest update add kill"); };
             creators["quest update add item"] = [](PlayerbotAI* ai) { return new WorldPacketTrigger(ai, "quest update add item"); };
             creators["quest update failed"] = [](PlayerbotAI* ai) { return new WorldPacketTrigger(ai, "quest update failed"); };
