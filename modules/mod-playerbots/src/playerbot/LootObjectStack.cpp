@@ -534,7 +534,27 @@ bool LootObjectStack::Add(ObjectGuid guid)
 
     std::map<ObjectGuid, time_t>::const_iterator ignored = ignoredLoot.find(guid);
     if (ignored != ignoredLoot.end())
+    {
+#ifdef MANGOSBOT_ZERO
+        // Ordinary body ownership/inspection does not mean the later skinning
+        // phase is exhausted. Genuine failures retain their existing retry.
+        if (!ignoredBodyLoot.count(guid) ||
+            !GetBotAI(bot)->HasStrategy("gather", BotState::BOT_STATE_NON_COMBAT))
+            return false;
+        LootObject skin(bot, guid);
+        Creature* corpse = GetBotAI(bot)->GetCreature(guid);
+        if (skin.skillId != SKILL_SKINNING || !corpse ||
+            !corpse->IsSkinnableBy(bot) || corpse->lootForSkin ||
+            !corpse->loot.isLooted() || !skin.IsLootPossible(bot))
+            return false;
+        ignoredLoot.erase(guid);
+        ignoredBodyLoot.erase(guid);
+        if (GetBotAI(bot)->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+            sLog.outLoot("bot=%s event=body-to-skin-ready guid=%lu", bot->GetName(), guid.GetRawValue());
+#else
         return false;
+#endif
+    }
 
     LootTargetList::iterator existing = availableLoot.find(guid);
     if (existing != availableLoot.end())
@@ -585,10 +605,13 @@ void LootObjectStack::Defer(ObjectGuid guid, uint32 seconds)
     deferredLoot[guid] = time(0) + std::max<uint32>(1, seconds);
 }
 
-void LootObjectStack::Ignore(ObjectGuid guid, uint32 seconds)
+void LootObjectStack::Ignore(ObjectGuid guid, uint32 seconds, bool bodyLoot)
 {
     Remove(guid);
     ignoredLoot[guid] = time(0) + std::max<uint32>(1, seconds);
+    ignoredBodyLoot.erase(guid);
+    if (bodyLoot && guid.IsCreature())
+        ignoredBodyLoot.insert(guid);
 }
 
 void LootObjectStack::PruneIgnored()
@@ -597,7 +620,10 @@ void LootObjectStack::PruneIgnored()
     for (std::map<ObjectGuid, time_t>::iterator i = ignoredLoot.begin(); i != ignoredLoot.end();)
     {
         if (i->second <= now)
+        {
+            ignoredBodyLoot.erase(i->first);
             ignoredLoot.erase(i++);
+        }
         else
             ++i;
     }
@@ -620,6 +646,7 @@ void LootObjectStack::Clear()
     availableLoot.clear();
     deferredLoot.clear();
     ignoredLoot.clear();
+    ignoredBodyLoot.clear();
 }
 
 bool LootObjectStack::CanLoot(float maxDistance)
@@ -661,7 +688,7 @@ std::vector<LootObject> LootObjectStack::OrderByDistance(float maxDistance)
         if (!lootObject.IsLootPossible(bot, &suppressRediscovery))
         {
             if (guid.IsCreature() && suppressRediscovery)
-                Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay);
+                Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay, lootObject.skillId == SKILL_NONE);
             else
                 Remove(guid);
             continue;

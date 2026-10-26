@@ -1104,3 +1104,15 @@ to legacy generator state and is not an equivalent translation predicate.
 Otherwise the existing cast preparation can skip StopMoving and native spell
 movement interruption can cancel gathering. Keep native cast/stop/recovery and
 other expansion predicates authoritative. See playerbots/NATIVE_MOVEMENT_STATE.md.
+
+
+### Body-loot to skinning transition (26 October 2026)
+
+The existing per-bot ignore cache distinguishes ordinary body inspection/rights
+suppression from real failures and completed skinning. A marked body suppression
+may end early only when native skinning ownership and full-body-loot readiness,
+unused skin loot and existing skill/tool eligibility all permit the next phase.
+Unchanged bodies, other objects and real failed-skinning retry periods retain
+their timers. No native ownership/outsider timer or loot generation is changed.
+The dedicated queue fixture and actual native headers validate this source fix;
+full image deployment and prompt live skinning acceptance remain pending.
