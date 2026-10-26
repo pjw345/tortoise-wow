@@ -1313,3 +1313,13 @@ No diagnostics are enabled. The On/Off control stops both human and bot requests
 First-gather scheduling changes priority, not timer frequency. No new diagnostics
 or background scan is enabled. The existing strategy's once-per-second discovery
 can run while follow would otherwise win; retain normal per-bot debug-loot controls.
+
+### Corpse eligibility recovery (26 October 2026)
+
+The existing opt-in per-bot debug loot trace emits body-loot-ready when a
+previously rejected ordinary body passes native eligibility before its old
+ignore expires, and body-to-skin-ready for a permitted skinning transition.
+Each record contains bot and GUID only, on actual queue recovery; no new scan,
+thread, database query or always-on logging. Remove the per-bot debug loot
+strategy after capture. These records establish queue recovery, not successful
+native loot transfer or completed Skinning; use the normal action/cast records.

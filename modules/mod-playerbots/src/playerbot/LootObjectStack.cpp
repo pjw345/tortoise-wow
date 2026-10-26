@@ -543,21 +543,29 @@ bool LootObjectStack::Add(ObjectGuid guid)
     if (ignored != ignoredLoot.end())
     {
 #ifdef MANGOSBOT_ZERO
-        // Ordinary body ownership/inspection does not mean the later skinning
-        // phase is exhausted. Genuine failures retain their existing retry.
-        if (!ignoredBodyLoot.count(guid) ||
-            !GetBotAI(bot)->HasStrategy("gather", BotState::BOT_STATE_NON_COMBAT))
+        // Recheck a rejected body when native ownership/item eligibility
+        // changes. Successful inspections and real failures retain their
+        // own suppression; gathering also admits the later skinning phase.
+        if (!ignoredBodyLoot.count(guid))
             return false;
-        LootObject skin(bot, guid);
+        LootObject current(bot, guid);
         Creature* corpse = GetBotAI(bot)->GetCreature(guid);
-        if (skin.skillId != SKILL_SKINNING || !corpse ||
-            !corpse->IsSkinnableBy(bot) || corpse->lootForSkin ||
-            !corpse->loot.isLooted() || !skin.IsLootPossible(bot))
+        bool bodyReady = unavailableBodyLoot.count(guid) &&
+            current.skillId == SKILL_NONE && corpse &&
+            !corpse->loot.isLooted() && current.IsLootPossible(bot);
+        bool skinReady = !bodyReady &&
+            GetBotAI(bot)->HasStrategy("gather", BotState::BOT_STATE_NON_COMBAT) &&
+            current.skillId == SKILL_SKINNING && corpse &&
+            corpse->IsSkinnableBy(bot) && !corpse->lootForSkin &&
+            corpse->loot.isLooted() && current.IsLootPossible(bot);
+        if (!bodyReady && !skinReady)
             return false;
         ignoredLoot.erase(guid);
         ignoredBodyLoot.erase(guid);
+        unavailableBodyLoot.erase(guid);
         if (GetBotAI(bot)->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
-            sLog.outLoot("bot=%s event=body-to-skin-ready guid=%lu", bot->GetName(), guid.GetRawValue());
+            sLog.outLoot("bot=%s event=%s guid=%lu", bot->GetName(),
+                bodyReady ? "body-loot-ready" : "body-to-skin-ready", guid.GetRawValue());
 #else
         return false;
 #endif
@@ -612,13 +620,18 @@ void LootObjectStack::Defer(ObjectGuid guid, uint32 seconds)
     deferredLoot[guid] = time(0) + std::max<uint32>(1, seconds);
 }
 
-void LootObjectStack::Ignore(ObjectGuid guid, uint32 seconds, bool bodyLoot)
+void LootObjectStack::Ignore(ObjectGuid guid, uint32 seconds, bool bodyLoot, bool unavailableBody)
 {
     Remove(guid);
     ignoredLoot[guid] = time(0) + std::max<uint32>(1, seconds);
     ignoredBodyLoot.erase(guid);
+    unavailableBodyLoot.erase(guid);
     if (bodyLoot && guid.IsCreature())
+    {
         ignoredBodyLoot.insert(guid);
+        if (unavailableBody)
+            unavailableBodyLoot.insert(guid);
+    }
 }
 
 void LootObjectStack::PruneIgnored()
@@ -629,6 +642,7 @@ void LootObjectStack::PruneIgnored()
         if (i->second <= now)
         {
             ignoredBodyLoot.erase(i->first);
+            unavailableBodyLoot.erase(i->first);
             ignoredLoot.erase(i++);
         }
         else
@@ -654,6 +668,7 @@ void LootObjectStack::Clear()
     deferredLoot.clear();
     ignoredLoot.clear();
     ignoredBodyLoot.clear();
+    unavailableBodyLoot.clear();
 }
 
 bool LootObjectStack::CanLoot(float maxDistance)
@@ -695,7 +710,7 @@ std::vector<LootObject> LootObjectStack::OrderByDistance(float maxDistance)
         if (!lootObject.IsLootPossible(bot, &suppressRediscovery))
         {
             if (guid.IsCreature() && suppressRediscovery)
-                Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay, lootObject.skillId == SKILL_NONE);
+                Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay, lootObject.skillId == SKILL_NONE, lootObject.skillId == SKILL_NONE);
             else
                 Remove(guid);
             continue;

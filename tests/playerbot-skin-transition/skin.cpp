@@ -52,6 +52,21 @@ void transition(){
  Fixture own;own.ready();own.queue.Ignore(own.guid,120,true);++clockNow;
  check(own.queue.Add(own.guid),"own successful body storage may proceed to skinning");
 }
+void bodyRecovery(){
+ Fixture f;f.suppressBody();clockNow=101;
+ check(!f.queue.Add(f.guid),"native body rights still denied");
+ f.corpse.bodyRights=true;f.ai.gather=false;
+ check(f.queue.Add(f.guid),"rejected body becomes available before 120 seconds even without gather");
+ check(f.queue.GetLoot().skillId==SKILL_NONE,"recovery selects normal body loot");
+ Fixture inspected;inspected.corpse.bodyRights=true;inspected.queue.Ignore(inspected.guid,120,true);
+ clockNow=101;check(!inspected.queue.Add(inspected.guid),"successful body inspection must not become an immediate repeat");
+ Fixture failure;failure.corpse.bodyRights=true;failure.queue.Ignore(failure.guid,10);
+ clockNow=101;check(!failure.queue.Add(failure.guid),"real opening/transfer failure must retain retry");
+ Fixture clear;clear.suppressBody();clear.queue.Clear();clear.corpse.bodyRights=true;clear.queue.Ignore(clear.guid,120,true);
+ clockNow=101;check(!clear.queue.Add(clear.guid),"clear removes stale unavailable-body marker");
+ Fixture replace;replace.suppressBody();replace.corpse.bodyRights=true;replace.queue.Ignore(replace.guid,120,true);
+ clockNow=101;check(!replace.queue.Add(replace.guid),"inspection overwrites a prior rejection marker");
+}
 void controls(){
  Fixture f;f.suppressBody();clockNow=110;check(!f.queue.Add(f.guid),"unchanged body remains ignored");
  f.ready();f.ai.gather=false;check(!f.queue.Add(f.guid),"gather disabled retains suppression");f.ai.gather=true;f.player.knife=false;check(!f.queue.Add(f.guid),"missing tool cannot break suppression");f.player.knife=true;
@@ -69,4 +84,4 @@ void controls(){
  Fixture objects;ObjectGuid go{2,false};objects.queue.Ignore(go,120,true);clockNow=101;check(!objects.queue.Add(go),"GO ignores never recover as corpses");
 }
 void legacy(){Fixture f;f.suppressBody();f.ready();clockNow=101;check(!f.queue.Add(f.guid),"non-ZERO keeps original ignore behavior");clockNow=220;check(f.queue.Add(f.guid),"non-ZERO timeout unchanged");}
-int main(int argc,char**argv){try{std::string mode=argc>1?argv[1]:"";if(mode=="transition")transition();else if(mode=="controls")controls();else legacy();std::cout<<"PASS "<<mode<<'\n';}catch(std::exception const&e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(int argc,char**argv){try{std::string mode=argc>1?argv[1]:"";if(mode=="transition")transition();else if(mode=="controls")controls();else if(mode=="body")bodyRecovery();else legacy();std::cout<<"PASS "<<mode<<'\n';}catch(std::exception const&e){std::cerr<<e.what()<<'\n';return 1;}}

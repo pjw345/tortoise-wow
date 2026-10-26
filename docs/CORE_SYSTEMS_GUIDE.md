@@ -1125,3 +1125,14 @@ and other variants unchanged. Source-extracted real corpse classification and
 queue fixtures cover these complementary paths. The classifier extension still
 requires a full image build and live acceptance; the exact live corpse's native
 loot contents/dynamic flags were not captured before it despawned.
+
+Ordinary body rejection also uses an availability marker separate from successful
+body inspection. ZERO may release only that rejection marker when the native body
+still contains loot and current ownership/item-policy checks now permit it. This
+recovery does not require the profession gather strategy. Successful inspection,
+actual failure/retry, unchanged native denial and other variants keep their
+timers. Live evidence shows Mercy's last rejection at 18:41:30, eligible discovery
+by 18:42:30 and body opening at 18:43:30, matching the remaining ignore period.
+The queue fixture validates native-predicate-controlled recovery and inspection,
+failure, replacement and clear controls. The extension is source-only until the
+next build; the running 4e848db2 skin transition has successful live casts.

@@ -3338,7 +3338,7 @@ bool MoveToLootAction::Execute(Event& event)
                 bot->GetName(), lootGuid.GetRawValue(), suppressRediscovery ? 1 : 0);
 
         if (suppressRediscovery && lootGuid.IsCreature())
-            lootStack->Ignore(lootGuid, sPlayerbotAIConfig.lootTargetInspectDelay, loot.skillId == SKILL_NONE);
+            lootStack->Ignore(lootGuid, sPlayerbotAIConfig.lootTargetInspectDelay, loot.skillId == SKILL_NONE, loot.skillId == SKILL_NONE);
         else
             lootStack->Remove(lootGuid);
         RESET_AI_VALUE(LootObject, "loot target");

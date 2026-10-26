@@ -15,3 +15,10 @@ Other variants retain flag-only classification. OLD_REFRESH_SOURCE replaces
 only that classification; the old ZERO case must fail. The live failed boar's
 actual loot contents were not captured, so this is a demonstrated source gap,
 not proof that its body roll was empty.
+
+The body-recovery case uses the extracted actual queue and controlled native
+eligibility predicate to re-admit only an unavailable body after eligibility
+changes, including gather disabled. Successful inspection, failed transfer/open,
+replacement and clear retain their proper suppression. It does not reproduce
+the native world's exact rights-change cause. Negative controls override the
+previous queue Add and must fail rejected_body_becomes_available.

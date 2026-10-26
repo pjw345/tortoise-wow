@@ -144,7 +144,7 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid, bool explicit
     if (!loot.IsLootPossible(bot, &suppressRediscovery))
     {
         if (suppressRediscovery && guid.IsCreature())
-            AI_VALUE(LootObjectStack*, "available loot")->Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay, loot.skillId == SKILL_NONE);
+            AI_VALUE(LootObjectStack*, "available loot")->Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay, loot.skillId == SKILL_NONE, loot.skillId == SKILL_NONE);
         if (debugLoot && traceTarget)
             sLog.outLoot("bot=%s event=reject guid=%lu reason=loot-policy suppress=%d",
                 bot->GetName(), guid.GetRawValue(), suppressRediscovery ? 1 : 0);

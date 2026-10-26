@@ -48,7 +48,7 @@ struct LootObject {
     bool IsLootPossible(Player*, bool* suppress) {*suppress=false;return true;}
     bool IsApproachSafe(Player*,Unit** blocker=nullptr);
 };
-struct LootObjectStack {int defers=0, removes=0; void Ignore(ObjectGuid,unsigned,bool=false){} void Remove(ObjectGuid){++removes;} void Defer(ObjectGuid,unsigned){++defers;}} stack;
+struct LootObjectStack {int defers=0, removes=0; void Ignore(ObjectGuid,unsigned,bool=false,bool=false){} void Remove(ObjectGuid){++removes;} void Defer(ObjectGuid,unsigned){++defers;}} stack;
 LootObject current; int nativeMoves=0;
 template<class T> T value(const char*);
 template<> LootObject value<LootObject>(const char*) {return current;}
