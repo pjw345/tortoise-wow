@@ -1114,5 +1114,14 @@ may end early only when native skinning ownership and full-body-loot readiness,
 unused skin loot and existing skill/tool eligibility all permit the next phase.
 Unchanged bodies, other objects and real failed-skinning retry periods retain
 their timers. No native ownership/outsider timer or loot generation is changed.
-The dedicated queue fixture and actual native headers validate this source fix;
-full image deployment and prompt live skinning acceptance remain pending.
+The first queue-only fix was built/deployed as 4e848db2, but the first live
+boar still produced no body loot or skinning before despawn. Native loot-rights
+rejections alone do not identify an owner: IsAllowedToLoot also rejects an
+already-empty body. Turtle Unit::Kill sets LOOTABLE from template presence,
+including empty rolls. ZERO corpse classification must therefore inspect native
+loot.isLooted() before giving that flag priority over SKINNABLE. Keep non-empty
+body loot first, native skinning ownership/readiness/tool/skill gates intact,
+and other variants unchanged. Source-extracted real corpse classification and
+queue fixtures cover these complementary paths. The classifier extension still
+requires a full image build and live acceptance; the exact live corpse's native
+loot contents/dynamic flags were not captured before it despawned.

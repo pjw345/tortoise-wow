@@ -112,7 +112,14 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
     Creature* creature = ai->GetCreature(guid);
     if (creature && sServerFacade.GetDeathState(creature) == CORPSE)
     {
-        if (creature->HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE))
+        // Turtle sets LOOTABLE from the template even when the body roll is
+        // empty. Native IsAllowedToLoot then correctly refuses body looting,
+        // but the remaining skinning phase must still be classified below.
+        bool hasBodyLoot = creature->HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+#ifdef MANGOSBOT_ZERO
+        hasBodyLoot = hasBodyLoot && !creature->loot.isLooted();
+#endif
+        if (hasBodyLoot)
         {
             // The lootable flag is set group-wide on a tapped corpse, so it alone does not mean
             // this bot may loot it. Require tap rights, otherwise the bot walks to and kneels on
