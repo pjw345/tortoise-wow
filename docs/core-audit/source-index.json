@@ -480,7 +480,7 @@
       "timers",
       "threat"
     ],
-    "sha256": "C4DE8FCF8ED983A7076A41438621460FCE28A08D0DBEFA875253CBFE22FCC66D"
+    "sha256": "2932C0C261EB80FD562AAF9FE685CAA4B781A2C95BFA20BBAAB64DC608FC9251"
   },
   {
     "file": "src/game/Spells/SpellMgr.cpp",
@@ -1717,7 +1717,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "4904793C98F4EEF7E172C5571D39C8878FF6F303FF7C6C3E7889DADDEB368DDD"
+    "sha256": "B44C8B5553DA8D5141D408156985DAC4E1369E28ECF427E8F1B53E3E5232C865"
   },
   {
     "file": "src/game/ObjectGuid.h",
@@ -1820,7 +1820,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "24AEBD23CB38AC6958D404DBCEB0E7FF2E4AA9FA28A396DAB9F4A44591DDF61F"
+    "sha256": "783B5DDC52C0532A2EA95C8CF8C65E64C5686A2D08AA18E1E87FCF9BC0AD59D1"
   },
   {
     "file": "src/game/vmap/IVMapManager.h",
@@ -1947,7 +1947,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "CFADF904D2C90D674D1DBEE31D6C483A60C8097FF07013E0A3B91F11A7BF70E9"
+    "sha256": "EC3557F6B2BE9F3FC07D244BEC5D6872F0A15F64234BC114427672D256599041"
   },
   {
     "file": "src/game/vmap/DynamicTree.h",
@@ -3571,7 +3571,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "B4506654CC21466014096EA96BA5C7AD6AFA03986D17EB575E6AAD5C2A3E236E"
+    "sha256": "0F39BF08F11768016D1CB6D73823EE85C7FBFBCCFD21555D47B7FB597BA921D7"
   },
   {
     "file": "src/shared/HttpApi/Authorizers/ApiKeyAuthorizer.hpp",
@@ -5960,7 +5960,7 @@
       "summons",
       "death_reset"
     ],
-    "sha256": "623E0FD383056625C66AEA239004BCB64DFA16AB57F388FCADBA30EAE504B5BC"
+    "sha256": "0B7B716D3C317830E16626E0853F0B0422577A53008F1E77A39901CD63AA250F"
   },
   {
     "file": "src/game/Objects/Item.h",
@@ -6089,7 +6089,7 @@
     "dependency_signals": [
       "doors"
     ],
-    "sha256": "F6102EF4D004A02CE37ECC9C55FC7ED1C660E0C6690247D0E15FFEB415B38BEE"
+    "sha256": "4BAED4AB033B057FF6E8BA309B487F288D7258AA8BBE9BA7E2F818E10F8D2FD2"
   },
   {
     "file": "src/game/ItemEnchantmentMgr.h",
@@ -16484,7 +16484,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "8C9AC720ECD212914A5B24ABBCACD664B62D75DCE384954D6D152AA7BF48F307"
+    "sha256": "A11298D338172B8D52FF9920FDCBAD0B2FE9BA943C4415BC9C36A0E08780FA26"
   },
   {
     "file": "modules/mod-playerbots/botpch.h",
@@ -16617,7 +16617,7 @@
       "death_reset",
       "instance_state"
     ],
-    "sha256": "ADD802F1D33DF6DCB97253B7578BBDE7EA4B5F0B202325D388A18D0B80C9CCE4"
+    "sha256": "CF05D35FA535F56F85E45F884974A798172712A3D9D910BAB70C3027E85E7EEA"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/RandomPlayerbotFactory.cpp",
@@ -16753,7 +16753,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "3F4D4BB5236DE8EBCB08AFC83E0F01EBA6671FC3710535E0A2342F7C6092EDA9"
+    "sha256": "8774E00B2F9CB9BACEE70DB9859F06C995D8902E5B166D9045B5458CC0A6E2B9"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/Talentspec.cpp",
@@ -16801,7 +16801,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "ED6AF0C29231A9D4B886278DCA1412F5BF9ED0CFCFF21BE13012CE796D376949"
+    "sha256": "D7C4725780265F319250FE1FCA2205A11230E6F951BF0CBAF87CEC92A52ED815"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ChatHelper.cpp",
@@ -16883,7 +16883,7 @@
       "spells",
       "death_reset"
     ],
-    "sha256": "64FB5B62AD7D8F42FD67570D47CB7D78C5C29107E815782EA1DBC86A8E407F6A"
+    "sha256": "C78BE2F99F3A11D651B668A0FEE912967E8977CF0F752F6C3EF0800FFAB61407"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/TravelRoutePolicy.h",
@@ -16940,7 +16940,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "713C5DE6283E6DB4C4364CF1859E1649A0CF829F174AD619DD3C33EC167AE9F1"
+    "sha256": "262C3BC7A8057E3907F6704D7CF2BAA9503F33BC4D1EA416CBC5E39D64DE6A8A"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/FleeManager.h",
@@ -17032,7 +17032,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "868178938BE4DC45926C468F1820499F934D1A109C67D1490AB000406F6CEF7B"
+    "sha256": "AAF99C321B1614AC3B36B711A17D591CDFF16EE202F3839C1224442393694D0C"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/AiObjectContext.cpp",
@@ -17746,7 +17746,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "22E19538EB268E1565402D2BA251C4F40C7A64A4004AAE5A2381ADB65003A6B6"
+    "sha256": "4B5B35D2E5FAA8D71E2DD46F40539B54E75C54E114EAB6DB13B4D6D5770E0D3E"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/triggers/RpgTriggers.h",
@@ -19042,7 +19042,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "B6A7F8EB08479558005491B10A188EBBAE507AB92742B65C17578DECED228EBB"
+    "sha256": "B4F2A6BE04F631099668F77B70A3221720E73B8DD7143E864931A16545AEE4D3"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/PartyMemberWithoutAuraValue.h",
@@ -19175,7 +19175,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "20ABD9A96CCE376D4BEBB8EBE2A11B172D5C0361807375874C32F89E57E92110"
+    "sha256": "6A8329CE6BA28532B6A25D382E9422C0A84F8B4143D232F8CF56F7A4CFC4703B"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/AvoidCreatureListValue.cpp",
@@ -19609,7 +19609,7 @@
     "dependency_signals": [
       "death_reset"
     ],
-    "sha256": "C2E28C6403D77192A4183E03E40377E1E5D83A66EAC834ABFECAF616D3DD4A88"
+    "sha256": "41F698CD8174BF1B08B321F94CE3F81B22BB3C85C59FE1437F19551816E32201"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/DpsTargetValue.h",
@@ -19731,7 +19731,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "4E2E9840B46748DE6CADFD733B8D37E831D7E57C48EC8C9ECA78795FEEA8F083"
+    "sha256": "DAA4F3F69F4C15305EAB04B72B7E39B9278612E964EFD8421E31D01F8404EE1F"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/EngineValues.h",
@@ -20158,7 +20158,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "C5F6F30438198B32351CC68994E3ECFC1F347108A36FDFE0BA6C5DFD6DEE680C"
+    "sha256": "A5A38048298568D496B48C90E4D0AB80FAFF81FC3B79EB5894ACDBA38E0C2CA2"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ChatFilter.h",
@@ -20190,7 +20190,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "4CA5EC63980F236167F8A15AF325CA43C46ED968995E0B0FA66D2B10507E0870"
+    "sha256": "E03D3886B3EF4B3C138C9A1EC7BE03D7D601D4E62C22D1387C4F93E4F49D47BE"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ChatFilter.cpp",
@@ -20240,7 +20240,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "D6E732739110DD21F456DCE805DAF7845F9CFAFE664012EEB17F8BC250C52C59"
+    "sha256": "C73BEAD0F9EA90FF01EB6ADC603EAD2E744DDAF0B27D8C6CC9701EA01904758B"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ChatHelper.h",
@@ -20259,7 +20259,7 @@
       "death_reset",
       "instance_state"
     ],
-    "sha256": "21390F932997F268A6FC7BDCA8BB3415F384DA1162CB6632D02225BD32DC5EA3"
+    "sha256": "B122C1B6F122B4275EF472CA6CDB3F721407F0E87142AF01B2B18D571CF2409B"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/PlayerbotAIConfig.h",
@@ -20267,7 +20267,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "F24A3D6FBB7D8514C7464C4470E0822ECACAA32B32CD8FC091748C828C0570DE"
+    "sha256": "FAD06CD298A4722F9CE9D0D0E22A204D2954632376C88B2EDC784EE6F59887E5"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/BotState.h",
@@ -20327,7 +20327,7 @@
     "dependency_signals": [
       "ai_update"
     ],
-    "sha256": "341C7CC1108E867D9A74F5FCF58FB743CD556814CACBCA6B58D8309D4A523527"
+    "sha256": "F910FEE1F5FAF3426875176889EA43BD4C4064DCAB4D99F738955029F3A25BAC"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ServerFacade.cpp",
@@ -20599,7 +20599,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "E013CD35BFF8F8DD14044787F7D3233A48879205A39C335CF9A3BF7E2A12D72F"
+    "sha256": "9B55D3A5E1344636244134642415DDC63E24F8EC3C379B032451771B241AB33C"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/warrior/ProtectionWarriorStrategy.cpp",
@@ -20855,7 +20855,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "7021EEEA17C2A9F915FE5B9D61ED1C9A76633D7CB1162B189F9614DD84F5C637"
+    "sha256": "C3C0FF6A06475FB7AD984595B5904D2E45AEFB25520B538233F729DA04530610"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/generic/GuardStrategy.cpp",
@@ -22115,7 +22115,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "A42CA5C443F89F8AAA247EB52C1F426891C8FFF695FD6E2077EBF7C356516E6C"
+    "sha256": "E043F3D353AE661FC4FF66A19EF147553212B0512F0384888958B3AE56BF82DD"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/GoAction.cpp",
@@ -22279,7 +22279,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "7796522D63F04F5FB7DC98BA475E70AF3EBDF25BFADA42952660F97C5107CD12"
+    "sha256": "9965CE4D5D4691CEDFCF1B331D5DC23A10F0F5EDF2C1752B4CA2C615811690F4"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/PullActions.cpp",
@@ -22447,7 +22447,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "D4C88B6553F9A4151CC76A2DB483309767278536D8783F95481EDAA9DB92065A"
+    "sha256": "0C9BA5ED1C725159515607B8730CFEAF5ACBE4FE7E392600DBD35962E11385B3"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/ArenaTeamActions.cpp",
@@ -22487,7 +22487,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "4B2BC0E4683B0EB80D3A9022EE1279A71DAE77E967CD57D984AC1CFF22AFEC06"
+    "sha256": "FCF9712880C42578635AD5FE15D9B3078E49DE5125EA043EB692F0961736425E"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/GuildCraftOrderAction.cpp",
@@ -22963,7 +22963,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "B5B026C1DEBAF6F173B0958002463988BA39A9DFE88D0E17E781551CC3BD645B"
+    "sha256": "34B48386D3413128B52832B1FD5CA1C513F29DAE890334DAE3AE072346C184B2"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/CustomStrategyEditAction.h",
@@ -23008,7 +23008,7 @@
       "death_reset",
       "threat"
     ],
-    "sha256": "2D0452E89C5AF3D6B58C80DBF866030A2E55679C23C175D89EE7BB42807F6AE7"
+    "sha256": "ECCAFB95AA4E3DDE49BB97D4E44CB91D8A3802D506A229F75A17A632D82CA4B8"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/GuildAcceptQuestOrderAction.h",
@@ -23570,7 +23570,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "CEC2DE5FE74BC50668482D3DB7EADFF081C2CC0FDB1D3B0DAB7B2E5EC2F9C9CD"
+    "sha256": "81F14502B3FEA0DDF010608536BFB606546C85C998A547FD1D8C8556FCAEA359"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/SecurityCheckAction.cpp",
@@ -23908,7 +23908,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "30DADC779A9F808F2EBAA70C7DEFA23DC8F9C5B90C3648B9AB9F8B8EBC2AB795"
+    "sha256": "F010DC71B931FA0B4F02912BD7BD47F5E28BD006314384C3038ECC72785F6701"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/TellMasterAction.h",
@@ -23934,7 +23934,7 @@
     "dependency_signals": [
       "death_reset"
     ],
-    "sha256": "8A810D39DE1EC13069620A1E1D964799E894E4435D2AA2BA5D49901CDFABC9C9"
+    "sha256": "1CA3D9F960D29453E39C413B0C0C4D95C778E742B371E1A4376C12FD9C1203C0"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/RpgAction.h",
@@ -24124,7 +24124,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "2F9A8F9B94DB8769793D7B1004311B70BAD142FAB07C2CEAD26F2946BBD39A66"
+    "sha256": "6541DE0A6F05822808F13762BC29605576C9580560772FA634953A4C15A73807"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/ChangeStrategyAction.h",
@@ -24168,7 +24168,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "5C127EB6F70A9A15EB4C2E12CC25B2714C32DC942CBF00E1C3C89FFD6E23D5DE"
+    "sha256": "978DCA2FC78FEA14B64C8C8691BE17FF095DAE1A9B79DB465754A331E172813C"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/MoveStyleAction.h",
@@ -24260,7 +24260,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "9CBE9EE7F46880CA6EDF59124C9CF3D676550FCF4061CCF22933B57F358FF005"
+    "sha256": "39B9CE3ED22ADF43C9143773EA6221C1E8B63D772C17A1E0CA60C8A53254F5A6"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/LeaveGroupAction.cpp",
@@ -24336,7 +24336,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "3723DD0BBB19076C930023491349DF85FA5CFEE9CB81747E65FC0E5379A10995"
+    "sha256": "704B95C002F87CA7479884FC3C6D8BE0A8F95E1D92F0549CDD50D7EE40FA22FE"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/TellItemCountAction.cpp",
@@ -24420,7 +24420,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "DD3282F5D5423352B80FB4A68E80450583885201EC616D2F4D85725BC9919F8C"
+    "sha256": "191149AD5ED8F4798A51FED98C3B0C0806F496E343AEF83837F11FEDDA18F381"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/LootStrategyAction.h",
@@ -24556,7 +24556,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "1724DCBF9AC026E00DE1214D19D99BC06941645CA0DB4B5DBB10358554F611BF"
+    "sha256": "04A35CBA87EFEDDEE25FC1818C22A38B325795A920E4446554A43E8AB954C18C"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/RpgSubActions.cpp",
@@ -24581,7 +24581,7 @@
       "death_reset",
       "async"
     ],
-    "sha256": "87458BDC0AFCF1A23C0F99BD6AECDD45A8B660FCA42DF425F931A40110F2CCF7"
+    "sha256": "1BD33E9AB4A4AE8F26DF03B65228E8E30A802E8EE25D42EFF0E8F04BF5C51C2B"
   },
   {
     "file": "src/game/BattleLog.cpp",
@@ -24608,5 +24608,61 @@
       "death_reset"
     ],
     "sha256": "06493460387C0AFA78628A43F59C7CC6C6B138EAA5CD5E647E034866242263FD"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/QuestSync.cpp",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "5ABB59629B6FA9BC0AC1D410E7634896C0DE835083399F18FE5B07802153A032"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/QuestSync.h",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "060C9673228963211F51BC9728C40201DDAD7E9A9ACD4B10D78EB39EE7704388"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/QuestSyncProtocol.h",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "C3ACD9A23F0CFDC1E8D03B983CB16B943F0687FDE75D2313D2A03FD3408E8526"
+  },
+  {
+    "file": "src/game/vmap/WmoTileCoverage.h",
+    "cmake_listed": false,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "EC72CB6A183517274F8D9C27CFFF9114FB4491AD9DBBFD484E555B244AC2D931"
+  },
+  {
+    "file": "src/game/Spells/EnchantingRodRequirements.h",
+    "cmake_listed": false,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "8D063D34C31E324D221EADFFCE627DC6456B2E1938D1147558A7E4E2419FC830"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/ResourceMarkers.cpp",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "2399754B3AD53C54C594C3EC31166E5411B3E3F5817BA9E1A79F763395C2B2AB"
+  },
+  {
+    "file": "modules/mod-playerbots/src/playerbot/ResourceMarkers.h",
+    "cmake_listed": null,
+    "addsc": [],
+    "loader_calls": [],
+    "dependency_signals": [],
+    "sha256": "4681D4C3B4C919B194139EBA57B658505C46C3724D87E87B06CC1BB987631F51"
   }
 ]

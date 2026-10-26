@@ -195,6 +195,15 @@ must not turn an informational chat command into a world-server crash.
 | Gameobjects and interaction | [GameObject.cpp](../src/game/Objects/GameObject.cpp) `Use:1477`; ScriptMgr gossip/GO hooks | GO type determines native behavior. Check door/button state, spell activation, use conditions, area triggers, event callbacks and cooldowns before attaching a new script. |
 | PvP/group systems | [Battleground sources](../src/game/Battlegrounds), [OutdoorPvP sources](../src/game/OutdoorPvP), [Group.cpp](../src/game/Group/Group.cpp), [ThreatManager.cpp](../src/game/Threat/ThreatManager.cpp) | Team/faction and controlled-unit rules, match lifecycle, objective scripts, group state and threat ownership. PvP is not certified by a PvE test. |
 
+### Script-generated NPC gossip
+
+Explicit playerbot `talk` must reach native HandleGossipHelloOpcode before
+deciding whether choices exist: scripts/modules/Lua can create them without
+gossip_menu_option rows. Keep database-menu admission for idle RPG gossip to
+avoid expanding autonomous quest interactions. User-selected replies reuse the
+native menu and selection handler; empty menus and another NPC's current session
+menu must not be indexed. [Native regression and scope](playerbots/SCRIPTED_GOSSIP.md).
+
 ### Trainer lesson to retain
 
 Knowing that a service touches `SPELL_EFFECT_LEARN_SPELL` is only the start. The sibling `SPELL_EFFECT_LEARN_PET_SPELL` uses different state and side effects. The original direct player-learning approach did not cover it. At this baseline the handler reuses the native pet spell path, and a handler regression test covers success/failure/repeat variants. The test uses mocks and does not prove the entire live spell engine. Future changes must inspect sibling effect types and other callers before narrowing a generic service.
@@ -440,8 +449,10 @@ This corrects the fixed 24-second normal item wait without changing regeneration
 item costs, healing priorities, recovery start thresholds or unrelated waits.
 
 UseGameObject decodes the chest through native LootObject before selecting it.
-Mining/herbalism requirements the bot lacks (or has insufficient skill for) are
-silent skips, without changing its selected loot or attempting open loot. Other
+Bots without Mining/Herbalism silently skip those nodes. An explicit use command
+with a trained but insufficient profession reports the formatted node and native
+current/required skill. Both cases leave selected loot untouched and do not
+attempt open loot. Automatic gathering remains silent. Other
 chests, lockpicking, eligible gatherers, missing-tool/open errors and existing
 quest-chest behavior retain their native paths and failure reports.
 
@@ -722,3 +733,365 @@ attackability and tapping remain checked. A stunned runner may be struck in
 melee reach without pursuit; ranged bots retain their finish-from-position lock.
 
 See PARTY_COMBAT_SAFETY_2026-10-18.md for battle evidence and validation limits.
+
+
+## Gathering follower safety consistency (2026-10-18)
+
+Automatic gathering previously rejected grouped followers for any hostile within
+an extra hard-coded 30 yards, before the shared loot admission path applied
+LootHostileDistance (20 on the test VM). Grouped followers now use that existing
+shared safety check, including its configured opt-out and later selection/movement
+rechecks. Solo/group-leader gathering retains its native 30-yard strong-hostile
+policy. Gathering discovery range, LOS, native profession/tool/loot eligibility,
+bag capacity and spell opening are unchanged. Explicit `u go` retains its native
+manual interaction path; it does not establish automatic admission eligibility.
+
+Opt-in debug-loot gathering rejects now identify LOS, loot policy, gathering
+range and solo-hostile failures. The shared parent reports configured hostile
+blocks. No new UI chatter, configuration, logging stream or scheduler is added.
+This corrects a proven policy inconsistency; the old Alon action log only said
+FAILED and does not prove which filter rejected his particular Copper Vein.
+
+## Companion equipment and buff-item decisions (2026-10-20)
+
+CanPlayerMasterChase accepts engaged enemies inside the human master's native
+melee reach as well as the existing follow offset. A master can fight at normal
+melee reach while the companion catches up from behind; selection alone still
+does not authorize a pull. Fleeing targets never authorize pursuit.
+
+ItemUsageValue selects ring/trinket/dual-wield destinations by comparing legal
+native CanEquipItem candidates, rather than assuming NULL_SLOT selects the worst
+item. Roll and automatic-equipment classification share this destination and
+include random properties/enchantments even for equal base item IDs. Miscellaneous
+jewelry/held slots are separate from armor-material preferences. Native class,
+level, skill, uniqueness, binding and inventory constraints stay authoritative.
+
+Upgrade scans retain current hand equipment, refresh candidate classifications
+after mutations, and verify the actual native equipment result before reporting
+success. Two-handed upgrades compare against the combined equipped hand scores;
+an offhand alone cannot evict a two-hander. The scan is conservative: it does not
+search every possible pair of currently inferior bag weapons for a combined upgrade.
+Player Need still takes priority over bot Need, and feedback describes the final
+vote. Irrelevant damage-school bonuses no longer erase useful base caster stats.
+Existing stat-weight data is retained; this is not a new universal gear ranking.
+
+AiPlayerbot.AutoBuffConsumables defaults to 1 and installs the existing non-combat
+consumables strategy for human-owned PvE bots after legacy saved strategies load.
+Set it to 0 to disable automatic addition; an explicitly saved consumables strategy
+remains a separate user choice. Free bots, real players and PvP defaults are unchanged.
+
+Generic classic consumables are classified through their spell effects. Combat
+health regeneration is recognized; physical armor buffs are distinct from reserved
+elemental protection items; stat scrolls are not blocked by a food buff. Selection
+uses real carried items, native cooldowns, native spell-group/rank exclusion and
+self targeting. Lower usable tiers are selected first, existing conflicting effects
+are retained until expiry, and irrelevant Strength/Agility buffs are skipped by
+casters/healers. A rejected candidate does not starve unrelated usable buffs.
+Emergency healing/mana potion scheduling remains separate from this preparation.
+
+tests/playerbot-gear-consumables extracts the production classification, destination,
+scan, equip-dispatch, buff-selection and strategy-reset methods. The master-focus
+fixture covers native melee contact outside the follow offset and retained pursuit
+limits. These fixtures do not establish gameplay, native navmesh or live aura-data
+acceptance; test the actual party after deployment.
+
+## Classic group-roll equipment notification (2026-10-20)
+
+Flore won Shimmering Gloves (6565) at 16:01:08 UTC on e7aa6ff5, but no
+equip-upgrades action followed. Native Group::CountTheRoll stores Need/Greed
+awards and calls OnReceivedItem without SendNewItem; OnReceivedItem only handles
+save/log policy. The bot previously listened for SMSG_ITEM_PUSH_RESULT only.
+
+The Classic bot adapter now queues SMSG_LOOT_ROLL_WON through its existing
+packet/trigger engine and invokes the existing gear scan only for the winning
+bot. The native award, roll votes and item-store contracts are unchanged. The
+notification is not permission to equip the rolled template: the scan evaluates
+real carried instances and still uses native equipment restrictions. Duplicate
+events are harmless, other winners and truncated packets are rejected. Combat
+item restrictions remain authoritative. This packet layout is Classic-only;
+TBC/WotLK registration is unchanged. No new timers, logs, SQL writes or synchronous
+inventory changes inside the packet-send hook are introduced.
+
+The regression constructs the native 34-byte Classic wire layout, delivers only
+the win notification (no item-push), and checks actual scan execution, foreign
+winners, short packets and repeats. Full server build and gameplay remain pending.
+
+## Two-handed upgrade eligibility with an occupied offhand (2026-10-20)
+
+Cria's saved Blackrock Mace plus Runic Stave scores 0 + 68 with the Holy scale;
+Lesser Staff of the Spire scores 198. She has Staves skill. Native CanEquipItem
+rejects a two-hander with an equipped offhand when not_loading=false, before
+the comparison. That mode intentionally avoids implicit offhand displacement
+during loading; it does not answer whether a live upgrade can be equipped.
+
+GetEquipDestination requests live native placement validation for a two-hander
+with an occupied offhand, for both real carried instances and unseen roll
+items. CanEquipUnseenItem forwards that optional flag; its existing default is
+unchanged for other callers. Native CanUnequipItem and CanStoreItem must succeed,
+so a locked offhand or lack of bag space still rejects the change. The comparison
+still includes the combined equipped hand scores. No forced unequip, item-specific
+exception, skill training, scoring-data change or inventory rewrite is added.
+
+The focused regression fails against the old caller and passes after correction;
+carried and unseen replacements and rejected offhand storage are covered. Full
+native build, Linux checks and gameplay validation remain pending.
+
+## Play-session loot follow-ups (2026-10-21)
+
+Native LootHandler::DoLootRelease owns mineral-vein use counts, random depletion,
+GO_READY versus GO_JUST_DEACTIVATED, and loot clearing. ShouldLootObject now
+recognizes a spawned, idle READY mining vein even when its previous generated
+loot is empty. After actual item transfer and native release, StoreLootAction
+re-admits that same vein through AddGatheringLootAction and the existing bounded
+LootTargetRetryDelay. Normal gathering strategy, master range, skill/tool, bags,
+LOS and hostile admission remain authoritative; combat/death/in-use/depletion
+prevent automatic continuation. Herb and ordinary-container lifecycles remain
+native. No fixed use count, forced state transition or new timer was introduced.
+
+AiPlayerbot.AutoLootSkipItems is a configurable default item-policy exclusion:
+20516 (Bobbing Apple), plus Turtle Classic 51751 (Bone Chew Toy). Classic's
+custom ID is not applied to TBC/WotLK defaults. Active quest needs and the existing
+always-loot and forced Need/Greed overrides take precedence; existing explicit skip-list precedence
+is unchanged. Source admission declines only known templates consisting wholly
+of those excluded items, preserving unknown and mixed loot. Existing inventory
+is not deleted. The initial confirmed sources are Apple Bob (300203) and
+Bone Chew Toy (1000380), not blanket seasonal/quality/name categories.
+
+Follower loot safety retains the configured native 3D radius. Within that radius,
+idle hostiles without native geometric LOS to the destination no longer block
+it solely through walls/floors. Engaged enemies remain conservative. The shared
+hostile-unit query and creature aggro mechanics are unchanged. This destination
+check does not establish path-wide safety or repair missing collision geometry.
+Source-extracted loot-followups, gathering-safety and loot-safety regressions
+cover these contracts; full image compilation and live acceptance are separate.
+
+## Party-bot quest snapshots and pfQuest extension (2026-10-21)
+
+The exact LANG_ADDON `PFQBOT` prefix is a read-only request protocol, not ordinary
+bot chat. PlayerbotMgr's existing authenticated chat ingress reaches
+PlayerbotAI::HandleCommand; only the named bot's real-player master in the same
+group can enqueue a valid version-1 request. A five-second atomic admission gate
+and one-pending flag bound ingress. A private native ChatCommandHolder carries
+the requester's GUID rather than retaining its Player pointer. HandleCommands
+resolves that identity again on the bot's serialized AI owner and rechecks
+master/group authorization before reading quest slots/status/counters. A second
+send-rate gate bounds replies. Logout, master change and group departure cancel
+access. Capture does not invoke a gameplay action, interrupt casts, traverse a
+foreign player's quest map, query SQL or mutate quest state.
+
+QuestSync's adapter reads actual slots first, retaining active repeated quests
+even when earlier reward history exists. Requested IDs absent from the log use
+the native saved-in-memory reward flag for historical R versus absent N; absence
+alone is never a turn-in. Read-only map find operations avoid inserting status
+rows. Item and creature/GO/cast counters, exploration and required money preserve
+their native meanings; ready/failed remain native quest states.
+
+Player::SendAddonMessage provides the existing LANG_ADDON local-recipient GUILD
+packet shape; this does not broadcast to a guild or use human whispers. Replies
+contain version/token/bot/hash/part metadata with 128-byte payload chunks and a
+192-chunk maximum. Unchanged data sends one freshness packet. The client accepts
+only its own native sender identity, an outstanding token and a current roster
+member, validates the complete bounded data snapshot, then atomically replaces
+the last valid cache. Partial/malformed/timed-out responses retain stale data.
+The hash is an equality tag, not a security primitive.
+
+The separate [pfQuest-partybots repository](https://github.com/pjw345/pfQuest-partybots)
+contains the AddOn, client tests and release downloads. It wraps the installed pfQuest 8.0.1 ButtonEvent,
+ButtonEnter and DoLayout surface. Personal quest data, pfQuest database/maps,
+normal row interactions, Quest Log bindings and helper commands remain native.
+Bot-only rows use a companion footer/panel, never synthetic personal quest slots.
+Current roster names are derived from client unit APIs. The comparison includes
+stable quest IDs, while tracker rows show compact per-bot progress and hovers
+show objective counts. Freshness/offline/unknown states stay explicit.
+
+tests/playerbot-quest-sync compiles the production adapter/protocol with host API
+fakes and can emit actual native packets. The companion repository owns the Lua
+decoder tests and consumes those packets via --wire. Lua 5.0.3 and 5.1 tests can
+extract the installed pfQuest's unmodified row/layout functions. See
+`docs/playerbots/PFQUEST_PARTY_PROGRESS.md` for installation and cross-repository validation.
+These checks are separate from full native image compilation, socket/client
+AddOn delivery, actual graphics and live quest-progress acceptance.
+
+
+## Collision asset identity and Tower of Azora (2026-10-21)
+
+WMO extraction must retain complete source-path identity. Vanilla and custom Turtle assets can share a basename; flattening them can bind a map spawn to the wrong geometry. Root outputs and ADT, WDT/global and game-object references now share `WmoOutputName`. Existing model-name substring controls and the native Zeppelin adjustment are preserved; M2 naming and native collision/navigation formats are unchanged. See `docs/navigation/AZORA_WMO_COLLISION_REPAIR.md` for provenance, native reader/writer repair, the two Azora tile references and migration limits. A full fresh extraction must regenerate matching metadata/navigation together; never mix new names with legacy references. Offline connectivity success is not live movement acceptance.
+
+## Vanilla quest request transport correction (2026-10-22)
+
+Live testing found `Core.lua:126: Invalid escape code in chat message`: the
+1.12 client validates pipes in SendAddonMessage before transmitting. Requests
+now use `Q:1:token:bot:hash:questIds`. ParseRequest accepts that complete envelope
+and retains legacy `Q|1|...` input; mixed delimiters and doubled-pipe input are
+rejected. Snapshot/reply formats, queued GUID ownership, native capture, rate
+limits and size/row bounds are unchanged. This corrects the transport rather
+than bypassing the client's validation or parsing human chat.
+
+Companion 1.0.1 requires this parser; deployed image 2151c15b does not accept
+colon requests. Focused tests can run on the Windows workstation while playing;
+full server compilation/activation must wait until the game services are stopped.
+Live transport and UI acceptance remain pending.
+
+## Bounded WMO tile coverage and Stormwind (2026-10-22)
+
+Per-tile collision metadata must include every existing bounded, non-global WMO placement whose bounds overlap that tile, even when an ADT overlay omits a repeated placement record. `TileAssembler` now completes these references without changing native models, spatial-tree indices, transforms, M2/global handling or runtime collision/movement policy. See `docs/navigation/STORMWIND_WMO_TILE_COVERAGE.md` for the demonstrated missing Stormwind street surface, native-format scoped repair, matching navigation regeneration and live acceptance limits. Keep the deployed map parameters and earlier Azora repair; do not substitute teleporting or relaxed collision checks for missing geometry.
+
+## Prepared session fixes (23 October 2026; not compiled)
+
+Branch `codex/session-followup-fixes` contains source drafts for #58, #66 and #67.
+No configuration, CMake generation, compiler, test executable, image build or
+runtime activation has been run for these drafts.
+
+- Classic gathering admission reuses `GameObjectInfo::IsRepeatableGatheringChest`,
+  the same predicate now called from the existing native opening-spell LOS
+  exemption. Non-Classic bot variants retain their previous LOS check. Ordinary
+  chest LOS, approach safety, skill/tools, range, bags and native depletion are
+  unchanged. Live evidence showed manual mining succeeds where admission rejected
+  the same node after loot release. Full build and repeat-mining acceptance remain.
+- Buyback captures item identity/count before native storage, then confirms an
+  emptied buyback slot and increased carried item count before telling the requester
+  the actual recovered quantity. Failed storage/money/vendor cases cannot emit a
+  success confirmation. Native handler/prices remain authoritative (#66).
+- Enchanting tool checks accept higher-tier runed rods from the five verified
+  Classic/Turtle item definitions. Exact other-tool checks and consumed-reagent
+  checks remain native; bank-only rods are not added to the carried predicate.
+  Client initiation/UI and trade enchanting still need verification (#67).
+
+`tests/session-followups` contains future regression source, not executed results.
+See `docs/playerbots/NEXT_BUILD_20261023.md` for pending work and validation.
+
+- Item-started bot quests: `UseAction::UseQuestGiverItem` passes the actual owned item to `Player::AddQuest`. Native acceptance retains required/source starters and consumes other starters while preserving item quest-accept hooks. Do not unconditionally destroy the starter afterward: An Unsent Letter (2874, quest 373) is also its delivery objective.
+
+- Transport follow: compare actual native passenger attachments before replacing ordinary follow. Different stored movement GUIDs alone do not constitute a transfer. Movement packets without ONTRANSPORT clear their omitted transport payload; native boarding/removal hooks remain in HandleMoverRelocation.
+
+## Activated quest-chest availability (2026-10-25)
+
+Loot::HasQuestLootForPlayer is a read-only counterpart to FillQuestLoot and the
+quest branch of LootItemInSlot. Existing per-player slots retain their taken
+state and current AllowedForPlayer conditions; a missing view checks remaining
+shared quest items and the native slot-capacity limit without populating slots,
+adding allowed looters or changing unlootedCount. Bot activated-chest reopening
+and serialized turn selection use this query. READY chests still use template
+eligibility and native generation. Shared non-FFA quest loot is not duplicated.
+
+Native release remains responsible for global exhaustion and deactivation.
+A crate with another player's counted item remains ACTIVATED; taking the final
+item makes isLooted true, then release deactivates and normal update schedules
+the configured respawn/restock. Do not erase other players' loot or force
+respawn merely because one player's window is empty. No new timer is added.
+
+## Successful mining repeat pacing (2026-10-25)
+
+QueueNextMiningAttempt runs only after a verified item transfer and native
+loot release. Successful continuation uses the existing lootDelay, rounded up
+from milliseconds to whole seconds for Defer, with a one-second minimum.
+lootTargetRetryDelay remains for actual opening/storage failures. Preserve
+native casts, depletion, master/range/safety/tool/bag admission and cancellation.
+Do not shorten the global reaction/GCD or force gathering through follow/recovery
+conditions merely to make node collection quicker.
+
+## Level-aware loot safety (2026-10-25)
+
+Follower loot admission, queued selection and approach rechecks share
+LootObject::IsApproachSafe. Idle hostile creatures use native
+Creature::GetAttackDistance(bot), retaining level scaling, native detection and
+detected-range auras, server aggro rate, custom detection ranges and native caps.
+The target is the bot that approaches, not its master. Non-initiating creatures
+and zero native aggro do not block merely by proximity. Idle LOS/floor separation
+remains; engaged enemies retain the configured combat exclusion radius as a minimum
+while also respecting a larger native aggro/interaction radius.
+
+Candidate discovery covers the native visible area, including area overrides (or a larger configured
+combat radius), so normal higher-level aggro is not truncated at the old 15-yard
+scan. Idle threat distance adds the existing INTERACTION_DISTANCE to protect
+possible interaction positions around a node and uses native centre distance.
+This is conservative destination-area safety, not proof that every path segment
+or scripted encounter is safe; native pathing, cast and combat checks remain.
+No new global hostile query behavior, level table or timer is introduced.
+Debug loot logs the bot/hostile levels and effective aggro/safety radii.
+
+### Group resource minimap feed
+
+RESBOT version 1 is a silent opt-in, read-only gathering feed. Incoming party/raid
+requests pass the same controlled-master/group authorization as quest sync and a
+separate five-second admission gate. GUID-only requests are processed through the
+existing bot command queue; current requester/group/world state is revalidated on
+the serialized bot owner. No object pointer or world scan is retained on the chat
+handler. Native lock requirements, current Mining/Herbalism skills, spawn/loot
+state, both players' native visibility, bounded discovery range and native
+Map2ZoneCoordinates control eligibility. Nearest 32 eligible nodes are returned
+as at most 16 packets, each at most 240 bytes. Empty snapshots clear old state.
+No loot target, movement, cast, strategy, player tracking field or skill is changed.
+An active client request grants a twelve-second lease suppressing legacy resource
+reveal speech/pings; other uses of Ping are unchanged. Without a compatible client,
+the legacy reveal behavior remains available. The client uses pfQuest's installed
+minimap dimensions/zoom support for separate, non-clickable ore/herb textures,
+deduplicates GUIDs as strings, expires data and clears on roster/zoning events.
+Unsupported instance coordinates fail closed. These markers express profession
+eligibility, not a promise that a path is safe or a node immediately gatherable.
+
+### Custom game-object catalogue and novelty source exclusion
+
+The CMaNGOS sGOStorage compatibility proxy now reports an exclusive upper bound
+from Turtle's native ObjectMgr catalogue instead of the old 200000 stub. Apple
+Bob 300203 and Bone Chew Toy 1000380 were omitted by DropMapValue's source scan,
+leaving the earlier excluded-only source check with an unknown/empty item list.
+Actual item storage still rejected apples, explaining travel without pickup.
+Native maximum + one includes the highest template. Existing sparse lookups and
+all source-policy overrides stay intact; no object ID/name blacklist was added.
+Other catalogue consumers (travel purposes, random-item source data, transport
+generation) now see custom templates too. These are startup/lazy catalogue scans,
+not per-AI-tick loops; sparse high IDs increase scan work. The current read-only DB
+snapshot has 21196 templates, maximum 7000035, of which 12091 are above the old
+bound. Source-extracted tests cover the catalogue pipeline. Full image build,
+startup cost and gameplay acceptance remain pending, with no live mutation.
+
+### Player and bot resource union
+
+The helper has one On/Off control; On always requests both supported resource
+types and merges the human player's own snapshot with controlled bots' snapshots.
+RESSELF requests use native guild addon transport, intercepted/consumed by the
+module before guild membership/broadcast handling (including solo/unguilded users).
+The session chat hook only deposits a bounded request in the current human's
+manager mailbox. Native player map updates consume it and scan only that player's
+skills/world. No grid traversal occurs on the session handler. The mutex mailbox
+admits one pending request at most per five seconds; logout destroys its owner.
+The self feed does not require a group. Bot feed authorization remains unchanged.
+The client keys self snapshots by its own name, separately validates grouped bot
+names, merges string GUIDs, and clears stale or departed contributors normally.
+Only Mining/Herbalism game-object resources are supported; skins/corpses are not
+introduced as minimap resources. Native tracking auras and professions are untouched.
+
+### Prompt first gathering discovery
+
+Live Alon action logs on 18d7060b showed follow(priority20) repeatedly winning
+while add-gathering-loot(priority2) waited; follow decisions were about2.9 seconds
+apart. Once the scan ran at14:18:27.870, native loot selection/opening followed
+within100ms. Discovery now has priority ACTION_HIGH+1, below existing loot/move/
+open and higher emergency actions. Native timer cadence remains once per second;
+range, profession/tool, bag, LOS, safety and leash admission are unchanged. An
+ineligible scan still fails and lets follow proceed normally. isUseful preserves
+casts/sitting/death and delegates ready food/drink checks to the existing native
+triggers/actions/inventory values; no consumable thresholds are duplicated. The
+successful-repeat pacing accepted by the user is unchanged. Existing action waits,
+native cast time and other activity can still contribute to response time.
+
+## Collision placement identity (2026-10-25)
+
+The native assembler distinguishes MDDF/M2 from MODF/WMO when deduplicating
+placement IDs and assigning tile/tree references. Custom ADTs can reuse an ID
+across these types; the Dun Morogh tunnel UID 5525455 previously aliased a
+distant Westfallshed M2. Serialized IDs/formats and runtime ownership remain
+unchanged. Same-type duplicate IDs keep first-record semantics. See
+`docs/navigation/DUN_MOROGH_TUNNEL_REPAIR.md` for reproduction, migration
+constraints, focused staging and offline/live verification boundaries.
+
+## Far-formation rear geometry (2026-10-25)
+
+FarFormation::GetAngle requests a stable pi-radian rear offset. Getters must
+not interpolate using the active follow generator's last requested angle: this
+created alternating requests and repeatedly replaced the native controller.
+Native target selection, saved distance/radius conversion, prediction, pathfinding
+and speed/talent handling remain unchanged. See
+`docs/playerbots/STABLE_REAR_FOLLOW.md` for the production getter reproduction,
+source-extracted follow/dispatch regression, and pending full build/live checks.

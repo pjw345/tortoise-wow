@@ -483,6 +483,13 @@ struct GameObjectInfo
         return autoCloseTime / 0x10000;
     }
 
+    // The native opening spell exempts these chests from LOS because mineral
+    // placements may be embedded in terrain. Reuse the same rule for bot admission.
+    bool IsRepeatableGatheringChest() const
+    {
+        return type == GAMEOBJECT_TYPE_CHEST && chest.minSuccessOpens != 0;
+    }
+
     uint32 GetLootId() const
     {
         switch(type)

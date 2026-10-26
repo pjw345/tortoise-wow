@@ -36,7 +36,8 @@ struct Player;
 class Unit;
 struct PlayerbotAI {};
 struct MovementGenerator { int type; int GetMovementGeneratorType() const { return type; } };
-struct Spline { bool Finalized() const { return false; } };
+struct Point {float x=1,y=2,z=3;};
+struct Spline {bool initialized=true;bool Initialized()const{return initialized;}unsigned GetId(){return 123;}int timePassed(){return 100;}int Duration(){if(!initialized)throw std::runtime_error("Duration read on uninitialized spline");return 200;}Point FinalDestination(){return {};} bool Finalized() const { return false; } };
 struct Creature;
 class Unit
 {
@@ -67,6 +68,10 @@ public:
     int propagations=0, packets=0, broadcasts=0, aiLookups=0, reads=0;
     MovementGenerator idle{0}, follow{14};
     std::vector<MovementGenerator*> motion{&idle,&follow};
+    struct {struct {unsigned long long GetRawValue(){return 99;}}t_guid;}m_movementInfo;
+    unsigned GetMapId(){return 36;}unsigned GetInstanceId(){return 1;}
+    float GetPositionX(){return 4;}float GetPositionY(){return 5;}float GetPositionZ(){return 6;}
+    void* GetTransport(){return nullptr;}
     Spline spline;
     Spline* movespline=&spline;
     bool IsPlayer() const { return true; }
@@ -173,6 +178,12 @@ int main()
         Check(std::fabs(unit.GetSpeedRate(MOVE_RUN)-5)<.001f,"slow multiplied once by cheat ratio");
         Check(Contains("SPEED_RECALC reason=speed cheat") && Contains("SPEED_RESULT reason=speed cheat") && Contains("slow=-50"),"recalculation context");
         Check(Contains("generators=[0,14]") && Contains("flags=0x100 state=0x200"),"full motion stack and flags");
+        unit.spline.initialized=false;
+        BotActionLog_LogSpeed(&unit,"UNINITIALIZED",MOVE_RUN,1,1,false,1,"login before first spline");
+        Check(Contains("duration=0"),"empty spline must not read native duration storage");
+        unit.spline.initialized=true;
+        BotActionLog_LogSpeed(&unit,"INITIALIZED",MOVE_RUN,1,1,false,1,"normal spline");
+        Check(Contains("duration=200"),"initialized spline duration retained");
         unit.motion.clear();
         BotActionLog_LogSpeed(&unit,"EMPTY",MOVE_RUN,5,5,false,1,"empty stack");
         Check(Contains("generators=[]"),"empty motion stack is safe");

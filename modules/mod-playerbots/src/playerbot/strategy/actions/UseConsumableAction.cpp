@@ -3,6 +3,7 @@
 #include "playerbot/ServerFacade.h"
 #include "playerbot/PlayerbotAIConfig.h"
 #include "playerbot/AiFactory.h"
+#include "Spells/SpellMgr.h"
 
 using namespace ai;
 
@@ -66,7 +67,8 @@ bool UseConsumableAction::IsProtectionConsumable(const ItemPrototype* proto) con
         bool hasOtherBuff = false;
         for (int j = 0; j < 3; ++j)
         {
-            if (spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_RESISTANCE)
+            if (spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_RESISTANCE &&
+                (spellInfo->EffectMiscValue[j] & ~SPELL_SCHOOL_MASK_NORMAL))
                 hasResistance = true;
             else if (spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_STAT ||
                 spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_ATTACK_POWER ||
@@ -74,6 +76,7 @@ bool UseConsumableAction::IsProtectionConsumable(const ItemPrototype* proto) con
                 spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_HIT_CHANCE ||
                 spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_CRIT_PERCENT ||
                 spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_POWER_REGEN ||
+                spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_HEALTH_REGEN_IN_COMBAT ||
                 spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_HEALING_DONE)
                 hasOtherBuff = true;
         }
@@ -130,6 +133,7 @@ bool UseConsumableAction::IsStatBuffSpell(uint32 spellId) const
             spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_HIT_CHANCE ||
             spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_CRIT_PERCENT ||
             spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_POWER_REGEN ||
+            spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_HEALTH_REGEN_IN_COMBAT ||
             spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_HEALING_DONE ||
             spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_RESISTANCE)
         {
@@ -162,6 +166,7 @@ bool UseConsumableAction::IsStatBuffSpell(uint32 spellId) const
                         triggered->EffectApplyAuraName[k] == SPELL_AURA_MOD_HIT_CHANCE ||
                         triggered->EffectApplyAuraName[k] == SPELL_AURA_MOD_CRIT_PERCENT ||
                         triggered->EffectApplyAuraName[k] == SPELL_AURA_MOD_POWER_REGEN ||
+                        triggered->EffectApplyAuraName[k] == SPELL_AURA_MOD_HEALTH_REGEN_IN_COMBAT ||
                         triggered->EffectApplyAuraName[k] == SPELL_AURA_MOD_HEALING_DONE ||
                         triggered->EffectApplyAuraName[k] == SPELL_AURA_MOD_RESISTANCE)
                     {
@@ -189,6 +194,7 @@ uint32 UseConsumableAction::ResolveBuffAuraSpellId(uint32 spellId) const
             spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_HIT_CHANCE ||
             spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_CRIT_PERCENT ||
             spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_POWER_REGEN ||
+            spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_HEALTH_REGEN_IN_COMBAT ||
             spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_HEALING_DONE ||
             spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_RESISTANCE)
         {
@@ -208,6 +214,7 @@ uint32 UseConsumableAction::ResolveBuffAuraSpellId(uint32 spellId) const
                         triggered->EffectApplyAuraName[k] == SPELL_AURA_MOD_HIT_CHANCE ||
                         triggered->EffectApplyAuraName[k] == SPELL_AURA_MOD_CRIT_PERCENT ||
                         triggered->EffectApplyAuraName[k] == SPELL_AURA_MOD_POWER_REGEN ||
+                        triggered->EffectApplyAuraName[k] == SPELL_AURA_MOD_HEALTH_REGEN_IN_COMBAT ||
                         triggered->EffectApplyAuraName[k] == SPELL_AURA_MOD_HEALING_DONE ||
                         triggered->EffectApplyAuraName[k] == SPELL_AURA_MOD_RESISTANCE)
                     {
@@ -372,7 +379,9 @@ bool UseConsumableAction::ClassifyConsumable(const ItemPrototype* proto, Consuma
             if (IsStatBuffSpell(spellId))
             {
                 outSpellId = ResolveBuffAuraSpellId(spellId);
-                outType = ConsumableType::FoodBuff;
+                // Classic data puts stat scrolls and regeneration elixirs in
+                // generic subclass 0; only actual food belongs to FoodBuff.
+                outType = ConsumableType::Elixir;
                 return true;
             }
         }
@@ -445,6 +454,19 @@ bool UseConsumableAction::HasAnyCandidateAura(const ConsumableCandidate& candida
     {
         if (ai->HasAura(id, bot))
             return true;
+#ifdef MANGOS
+        // Use Turtle's native spell-group/rank contracts, not an effect-name
+        // heuristic: different buffs may legally stack despite sharing an aura.
+        if (SpellEntry const* spell = sServerFacade.LookupSpellInfo(id))
+            if (bot->HasMorePowerfulSpellActive(spell)) return true;
+        for (auto const& aura : bot->GetSpellAuraHolderMap())
+        {
+            SpellGroup group;
+            if (sSpellMgr.CheckSpellGroupStackRules(id, aura.first, group) != SPELL_GROUP_STACK_RULE_DEFAULT ||
+                sSpellMgr.IsNoStackSpellDueToSpell(id, aura.first))
+                return true;
+        }
+#endif
     }
     return false;
 }
@@ -536,8 +558,8 @@ float UseConsumableAction::GetStatWeight(uint32 statType) const
         {
         case BotConsumableRole::MeleeDps:       return 1.0f;
         case BotConsumableRole::RangedPhysDps:  return 0.1f;
-        case BotConsumableRole::CasterDps:      return 0.05f;
-        case BotConsumableRole::Healer:         return 0.05f;
+        case BotConsumableRole::CasterDps:      return 0.0f;
+        case BotConsumableRole::Healer:         return 0.0f;
         case BotConsumableRole::Tank:           return 0.6f;
         }
         break;
@@ -547,8 +569,8 @@ float UseConsumableAction::GetStatWeight(uint32 statType) const
         {
         case BotConsumableRole::MeleeDps:       return 1.0f;
         case BotConsumableRole::RangedPhysDps:  return 1.0f;
-        case BotConsumableRole::CasterDps:      return 0.05f;
-        case BotConsumableRole::Healer:         return 0.05f;
+        case BotConsumableRole::CasterDps:      return 0.0f;
+        case BotConsumableRole::Healer:         return 0.0f;
         case BotConsumableRole::Tank:           return 0.8f;
         }
         break;
@@ -601,7 +623,8 @@ float UseConsumableAction::ScoreSpellStats(uint32 spellId) const
 
     for (int i = 0; i < 3; ++i)
     {
-        float amount = (float)spellInfo->EffectBasePoints[i];
+        if (!spellInfo->EffectApplyAuraName[i]) continue;
+        float amount = float(spellInfo->EffectBasePoints[i] + 1);
         if (amount <= 0)
             continue;
 
@@ -658,6 +681,9 @@ float UseConsumableAction::ScoreSpellStats(uint32 spellId) const
             score += amount * w;
             break;
         }
+        case SPELL_AURA_MOD_HEALTH_REGEN_IN_COMBAT:
+            score += amount;
+            break;
         case SPELL_AURA_MOD_POWER_REGEN:
         {
             float w;
@@ -687,6 +713,7 @@ float UseConsumableAction::ScoreSpellStats(uint32 spellId) const
 float UseConsumableAction::ScoreCandidate(const ConsumableCandidate& candidate) const
 {
     float base = ScoreSpellStats(candidate.spellId);
+    if (base <= 0.0f) return 0.0f;
 
     // Priority: Flask -> Elixir -> Scroll -> Food -> Alcohol
     switch (candidate.type)
@@ -722,7 +749,7 @@ std::vector<ConsumableCandidate> UseConsumableAction::CollectCandidates()
             if (!proto || proto->Class != ITEM_CLASS_CONSUMABLE)
                 continue;
 
-            if (bot->CanUseItem(proto) != EQUIP_ERR_OK)
+            if (bot->CanUseItem(item) != EQUIP_ERR_OK || HasItemCooldown(proto->ItemId))
                 continue;
 
             ConsumableType type;
@@ -749,7 +776,7 @@ std::vector<ConsumableCandidate> UseConsumableAction::CollectCandidates()
         if (!proto || proto->Class != ITEM_CLASS_CONSUMABLE)
             continue;
 
-        if (bot->CanUseItem(proto) != EQUIP_ERR_OK)
+        if (bot->CanUseItem(item) != EQUIP_ERR_OK || HasItemCooldown(proto->ItemId))
             continue;
 
         ConsumableType type;
@@ -806,6 +833,12 @@ bool UseConsumableAction::Execute(Event& event)
 
     std::sort(candidates.begin(), candidates.end(), [](const ConsumableCandidate& a, const ConsumableCandidate& b)
         {
+            // Exhaust lower usable tiers before higher ones. Existing effects
+            // are retained until expiration, rather than overwritten next tick.
+            if (a.item->GetProto()->ItemLevel != b.item->GetProto()->ItemLevel)
+                return a.item->GetProto()->ItemLevel < b.item->GetProto()->ItemLevel;
+            if (a.item->GetProto()->RequiredLevel != b.item->GetProto()->RequiredLevel)
+                return a.item->GetProto()->RequiredLevel < b.item->GetProto()->RequiredLevel;
             return a.score > b.score;
         });
 
@@ -814,7 +847,7 @@ bool UseConsumableAction::Execute(Event& event)
 
     for (const auto& c : candidates)
     {
-        if (HasAnyCandidateAura(c))
+        if (c.score <= 0.0f || HasAnyCandidateAura(c))
             continue;
 
         switch (c.type)
@@ -857,12 +890,8 @@ bool UseConsumableAction::Execute(Event& event)
             continue;
         }
 
-        if (selectedItemId)
-            break;
+        if (selectedItemId && UseItemIdAction::Execute(event)) return true;
+        selectedItemId = 0;
     }
-
-    if (!selectedItemId)
-        return false;
-
-    return UseItemIdAction::Execute(event);
+    return false;
 }

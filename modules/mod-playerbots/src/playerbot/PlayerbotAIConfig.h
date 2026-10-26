@@ -137,6 +137,7 @@ public:
     uint32 lowMana, mediumMana;
 
     uint32 openGoSpell;
+    std::list<uint32> autoLootSkipItems;
     bool randomBotAutologin;
     BotAutoLogin botAutologin;
     std::string randomBotMapsAsString;
@@ -377,6 +378,7 @@ public:
 
     std::string autoPickReward;
     bool autoEquipUpgradeLoot;
+    bool autoBuffConsumables;
     bool syncQuestWithPlayer;
     bool syncQuestForPlayer;
     std::string autoTrainSpells;

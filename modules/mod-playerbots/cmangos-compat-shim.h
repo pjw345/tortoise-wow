@@ -717,7 +717,14 @@ struct CmangosGOStorageProxy
 {
     template<typename T = GameObjectInfo>
     T const* LookupEntry(uint32 id) const { return sObjectMgr.GetGameObjectInfo(id); }
-    uint32 GetMaxEntry() const { return 200000; }
+    // SQLStorage callers use this as an exclusive iteration bound. Turtle's
+    // sparse native catalogue includes custom entries above the old 200000
+    // stub; missing them also bypassed excluded-only loot-source admission.
+    uint32 GetMaxEntry() const
+    {
+        return sObjectMgr.GetGameObjectInfoMap().empty() ? 0 :
+            sObjectMgr.GetMaxGameObjectInfoEntry() + 1;
+    }
 };
 inline CmangosGOStorageProxy sGOStorage;
 

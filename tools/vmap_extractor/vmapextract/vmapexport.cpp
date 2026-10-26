@@ -48,6 +48,7 @@
 #include "mpq_libmpq04.h"
 
 #include "vmapexport.h"
+#include "WmoOutputName.h"
 
 //------------------------------------------------------------------------------
 // Defines
@@ -71,6 +72,7 @@ char output_path[128] = ".";
 char input_path[1024] = ".";
 bool hasInputPathParam = false;
 bool preciseVectorData = false;
+std::string singleWmoSource;
 
 // Constants
 
@@ -203,8 +205,7 @@ bool ExtractSingleWmo(std::string& fname)
 
     char szLocalFile[1024];
     const char* plain_name = GetPlainName(fname.c_str());
-    sprintf(szLocalFile, "%s/%s", szWorkDirWmo, plain_name);
-    fixnamen(szLocalFile, strlen(szLocalFile));
+    sprintf(szLocalFile, "%s/%s", szWorkDirWmo, WmoOutputName(fname).c_str());
 
     //if (FileExists(szLocalFile))
     //    return true;
@@ -274,7 +275,7 @@ bool ExtractSingleWmo(std::string& fname)
                 break;
             }
 
-            if (strcmp(szLocalFile, "./Buildings/Transport_Zeppelin.wmo") == 0)
+            if (CanonicalWmoSourcePath(plain_name) == "transport_zeppelin.wmo")
                 FixZepp(fgroup);
 
             Wmo_nVertices += fgroup.ConvertToVMAPGroupWmo(output, &froot, preciseVectorData);
@@ -426,6 +427,11 @@ bool processArgv(int argc, char** argv)
                 result = false;
             }
         }
+        else if (strcmp("--wmo", argv[i]) == 0)
+        {
+            if (i + 1 < argc) singleWmoSource = argv[++i];
+            else result = false;
+        }
         else if (strcmp("-?", argv[1]) == 0)
         {
             result = false;
@@ -447,6 +453,7 @@ bool processArgv(int argc, char** argv)
         printf("   -s : (default) small size (data size optimization), ~500MB less vmap data.\n");
         printf("   -l : large size, ~500MB more vmap data. (might contain more details)\n");
         printf("   -d <path>: Path to the vector data source folder.\n");
+        printf("   --wmo <MPQ path>: Extract one root WMO and its groups; no world/GO extraction.\n");
         printf("   -? : This message.\n");
     }
     return result;
@@ -501,6 +508,14 @@ int main(int argc, char** argv)
         return 1;
     }
     ReadLiquidTypeTableDBC();
+
+    if (!singleWmoSource.empty())
+    {
+        std::string output = std::string(szWorkDirWmo) + "/" + WmoOutputName(singleWmoSource);
+        bool ok = success && ExtractSingleWmo(singleWmoSource) && FileExists(output.c_str());
+        delete [] LiqType;
+        return ok ? 0 : 1;
+    }
 
     // extract data
     if (success)

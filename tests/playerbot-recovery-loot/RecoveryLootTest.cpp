@@ -51,13 +51,14 @@ struct PlayerbotAI {
  bool recoveringFood=false, recoveringDrink=false, isWaiting=false, stay=false, hasSkill=false, openResult=true;
  uint32 aiInternalUpdateDelay=24000;
  int opens=0, messages=0, selections=0;
+ std::string lastMessage;
  explicit PlayerbotAI(Bot* b):bot(b) {}
  void BeginConsumableRecovery(bool, bool); void UpdateConsumableRecovery();
  bool HasStrategy(const char*, BotState) { return stay; }
  void SetAIInternalUpdateDelay(uint32 value) { aiInternalUpdateDelay=value; }
  bool HasSkill(SkillType) { return hasSkill; }
  bool DoSpecificAction(const char*, Event&, bool) { ++opens; return openResult; }
- void TellPlayerNoFacing(Player*, const std::string&, PlayerbotSecurityLevel, bool) { ++messages; }
+ void TellPlayerNoFacing(Player*, const std::string& message, PlayerbotSecurityLevel, bool) { ++messages; lastMessage=message; }
 };
 #define SET_AI_VALUE(type, name, value) do { ++ai->selections; } while(0)
 struct UseAction { Bot* bot; PlayerbotAI* ai; Chat* chat; bool UseGameObject(Player*, Event&, GameObject*); };
@@ -86,15 +87,25 @@ int main() {
  { Bot p; p.hp=50; PlayerbotAI a(&p); a.BeginConsumableRecovery(false,true); a.UpdateConsumableRecovery(); require(p.stands==1,"drink-only does not wait for absent food"); }
  { Bot p; p.mp=50; PlayerbotAI a(&p); a.BeginConsumableRecovery(true,false); a.UpdateConsumableRecovery(); require(p.stands==1,"food-only does not wait for absent drink"); }
  for(int skill : {int(SKILL_MINING),int(SKILL_HERBALISM),int(SKILL_LOCKPICKING),0}) {
-  for(int state=0;state<4;++state) {
+  for(int state=0;state<6;++state) {
    Bot p; PlayerbotAI a(&p); Chat chat; Event event;
    GameObject go; go.skill=skill; go.required=75; selectedObject=&go;
    a.hasSkill=state!=0; p.skill=state==1?74:75; a.openResult=state!=3;
+   if(state==4) p.skill=76;
+   if(state==5) { go.required=0; p.skill=0; }
    UseAction action{&p,&a,&chat};
    bool result=action.UseGameObject(nullptr,event,&go);
    bool skip=(skill==SKILL_MINING||skill==SKILL_HERBALISM)&&state<2;
    require(a.opens==(skip?0:1) && a.selections==(skip?0:1),"skip ineligible profession without changing selected loot");
-   require(a.messages==(skip?0:1),"silent skip but report genuine failures");
+   bool profession=skill==SKILL_MINING||skill==SKILL_HERBALISM;
+   require(a.messages==((profession && state==0)?0:1),"only missing profession stays silent");
+   if(profession && state==1) {
+    std::string expected=skill==SKILL_MINING
+      ? "Failed to mine node: requires Mining 75; my Mining is 74."
+      : "Failed to gather node: requires Herbalism 75; my Herbalism is 74.";
+    require(a.lastMessage==expected,"skill shortage includes formatted node and native current/required skill");
+   }
+   if(!skip) require(a.lastMessage==(state==3?"Failed to loot node":"Looting node"),"preserve normal open feedback");
    require(result==(!skip && state!=3),"preserve open result");
   }
  }

@@ -22,6 +22,7 @@
 
 #include "BattleLog.h"
 #include "Spell.h"
+#include "EnchantingRodRequirements.h"
 #include "Database/DatabaseEnv.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
@@ -5974,7 +5975,7 @@ SpellCastResult Spell::CheckCast(bool strict)
         if (goTarget->GetGoType() == GAMEOBJECT_TYPE_CHEST)
         {
             if (!m_IsTriggeredSpell && !(m_spellInfo->AttributesEx2 & SPELL_ATTR_EX2_IGNORE_LOS)
-              && !goTarget->GetGOInfo()->chest.minSuccessOpens                // don't check for gathering nodes, too many are halfway in walls
+              && !goTarget->GetGOInfo()->IsRepeatableGatheringChest()         // native gathering-node LOS exemption
               && !goTarget->HasFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND)  // don't check for quest items
               && !(goTarget->GetEntry() == 160845)                            // exemption for Dark Coffer
               && !m_caster->IsWithinLOSInMap(goTarget, false))
@@ -7511,7 +7512,8 @@ SpellCastResult Spell::CheckItems()
         {
             if (i != 0)
             {
-                if (p_caster->HasItemCount(i, 1))
+                if (Enchanting::HasRequiredTool(i, [p_caster](uint32 itemId)
+                    { return p_caster->HasItemCount(itemId, 1); }))
                 {
                     totems -= 1;
                     continue;

@@ -165,3 +165,198 @@ GCD, movement and action lifecycles remain in use. Source-extracted tests cover
 stale target caches, live chase cancellation, adjacent stunned runners, protected
 CC, delayed emergency coverage, retarget continuity and range boundaries.
 Full server/image compilation and playtesting remain deferred by user request.
+
+
+### 2026-10-18 automatic gathering admission follow-up
+
+Traced automatic gather timer -> AddGatheringLootAction -> AddAllLootAction ->
+LootObject::IsApproachSafe, and compared explicit UseGameObject -> OpenLootAction.
+Removed the duplicate follower-only hard-coded hostile scan in favor of the
+existing configured admission/selection/movement safety contract. Solo and group
+leader strong-hostile policy remains native. Focused extracted regressions cover
+configured radii, opt-out, owner gathering ranges, LOS/eligibility/bags, legacy
+solo/leader cases and opt-in rejection logging. Full server/image build and live
+acceptance are pending; the running server was not changed for this follow-up.
+
+Explicit use commands now distinguish a missing gathering profession (silent)
+from insufficient trained skill (one requester reply with native node link and
+current/required values). Both return before selecting or opening loot. Native
+LootObject lock requirements and GetSkillValue remain authoritative; automatic
+scan admission, tools and open-error handling are unchanged. The existing
+source-extracted profession-command fixture covers these boundaries.
+
+### 2026-10-20 equipment, buff-item and melee-contact follow-up
+
+Reviewed the native item-push packet, CanEquipItem/FindEquipSlot, SwapItem and
+auto-equip handler contracts, native group voting, spell aura/rank/stack-group
+checks and legacy strategy restoration before changing their Playerbot adapters.
+NULL_SLOT indicates a legal destination, not the least valuable equipped item.
+Automatic scans previously unequipped hand items and reused cached upgrade results;
+same-template variants and generic-subclass buff consumables were also misclassified.
+
+The adapters now compare fresh equipment/variants and legal paired destinations,
+verify completed native mutations, preserve player Need priority, and enable owned
+non-combat buff preparation after saved strategies load. Native melee reach corrects
+the demonstrated catch-up failure without authorizing unengaged or fleeing pursuit.
+Turtle spell-group/rank checks protect existing consumable effects. Native content,
+spell casts, equipment mutations and loot resolution are reused; stat-weight SQL and
+character inventories are not rewritten. Current upstream/main has no corresponding
+Playerbot module implementation to transplant; variant config templates retain the
+existing shared adapter while Turtle-specific spell-group calls are MANGOS-gated.
+
+Focused fixtures exercise production methods under Windows and Linux toolchains.
+Full image compilation and gameplay acceptance must be recorded separately in the
+release receipt. A successful fixture/build does not prove live equipment, consumable
+use, movement or combat acceptance. Deadmines floor/path behavior remains parked.
+
+## Classic group-roll equipment notification (2026-10-20)
+
+Flore won Shimmering Gloves (6565) at 16:01:08 UTC on e7aa6ff5, but no
+equip-upgrades action followed. Native Group::CountTheRoll stores Need/Greed
+awards and calls OnReceivedItem without SendNewItem; OnReceivedItem only handles
+save/log policy. The bot previously listened for SMSG_ITEM_PUSH_RESULT only.
+
+The Classic bot adapter now queues SMSG_LOOT_ROLL_WON through its existing
+packet/trigger engine and invokes the existing gear scan only for the winning
+bot. The native award, roll votes and item-store contracts are unchanged. The
+notification is not permission to equip the rolled template: the scan evaluates
+real carried instances and still uses native equipment restrictions. Duplicate
+events are harmless, other winners and truncated packets are rejected. Combat
+item restrictions remain authoritative. This packet layout is Classic-only;
+TBC/WotLK registration is unchanged. No new timers, logs, SQL writes or synchronous
+inventory changes inside the packet-send hook are introduced.
+
+The regression constructs the native 34-byte Classic wire layout, delivers only
+the win notification (no item-push), and checks actual scan execution, foreign
+winners, short packets and repeats. Full server build and gameplay remain pending.
+
+## Two-handed upgrade eligibility with an occupied offhand (2026-10-20)
+
+Cria's saved Blackrock Mace plus Runic Stave scores 0 + 68 with the Holy scale;
+Lesser Staff of the Spire scores 198. She has Staves skill. Native CanEquipItem
+rejects a two-hander with an equipped offhand when not_loading=false, before
+the comparison. That mode intentionally avoids implicit offhand displacement
+during loading; it does not answer whether a live upgrade can be equipped.
+
+GetEquipDestination requests live native placement validation for a two-hander
+with an occupied offhand, for both real carried instances and unseen roll
+items. CanEquipUnseenItem forwards that optional flag; its existing default is
+unchanged for other callers. Native CanUnequipItem and CanStoreItem must succeed,
+so a locked offhand or lack of bag space still rejects the change. The comparison
+still includes the combined equipped hand scores. No forced unequip, item-specific
+exception, skill training, scoring-data change or inventory rewrite is added.
+
+The focused regression fails against the old caller and passes after correction;
+carried and unseen replacements and rejected offhand storage are covered. Full
+native build, Linux checks and gameplay validation remain pending.
+
+### 2026-10-21 mining, novelty loot and floor-separated hostiles
+
+Traced native mineral release through use-count/depletion and loot clearing.
+READY veins with empty old loot were rejected by ShouldLootObject; explicit
+post-release gathering re-admission now retains the same node only after a real
+item transfer, with existing bounded defer and normal admission gates.
+
+Confirmed novelty item/source IDs with read-only world queries: Bobbing Apple
+20516 from Apple Bob 300203; Bone Chew Toy 51751 from 1000380 is a quest item.
+A configurable default exclusion reuses item/source selection and preserves
+active quest needs, manual loot-list precedence, mixed/unknown sources and
+existing inventories. Custom Classic item IDs are not expansion-wide defaults.
+
+The Ilgalar barrel report was a 3D-radius rejection, not a 2D height omission.
+The loot-specific safety predicate now checks native LOS for idle blockers,
+without changing shared hostile searches or native aggro. Engaged enemies stay
+blocking. A destination LOS check is not proof of route safety; absent VMAP
+collision cannot be repaired by this adapter. Existing geometric aggro and
+release semantics remain native. No DB writes or new asynchronous owner exist.
+
+### 2026-10-21 authorized party quest snapshots
+
+The older human quest queries are formatted chat and do not carry a reliable
+atomic snapshot or historical reward boundary. The user now explicitly requests
+both server support and integration with the installed pfQuest tracker. Reuse
+PlayerbotMgr's validated ingress, the native bot command queue/owner and
+Player::SendAddonMessage's local LANG_ADDON delivery rather than parsing human
+whispers, issuing gameplay commands or reading the database from an AddOn.
+
+The narrow exact-prefix protocol rechecks master and group ownership after a
+GUID-based queued request is resolved, with bounded admission/packet assembly,
+no retained requester pointer, and explicit current versus rewarded-history
+states. pfQuest's real public row/layout functions are wrapped in a separate
+extension; its source/database and normal Quest Log controls remain untouched.
+The extension and client tests are maintained separately at
+https://github.com/pjw345/pfQuest-partybots; this repository owns the server
+adapter/protocol and native tests.
+The production adapter/protocol and shipped Lua have focused regressions,
+including actual native packet consumption and optional installed pfQuest
+function extraction under Lua 5.0.3/5.1. Full native build and live graphics,
+transport and gameplay acceptance remain pending while the server is in use.
+
+
+## WMO basename aliasing discovered at Azora (2026-10-21)
+
+Different complete client WMO paths shared the output basename Magetower.wmo. The deployed model matched a custom variant; the original client's model restores native connectivity after scoped binding correction and regeneration. `WmoOutputName` is shared by extraction and all WMO reference writers (ADT, WDT/global, game objects). Native formats/ownership/lifecycle remain unchanged. Source and data validation, existing no-LOS substring controls, preserved custom variants and fresh-extraction migration constraints are documented in `docs/navigation/AZORA_WMO_COLLISION_REPAIR.md`. Full extraction and in-game stair clearance remain unverified.
+
+## Vanilla quest request transport correction (2026-10-22)
+
+Live testing found `Core.lua:126: Invalid escape code in chat message`: the
+1.12 client validates pipes in SendAddonMessage before transmitting. Requests
+now use `Q:1:token:bot:hash:questIds`. ParseRequest accepts that complete envelope
+and retains legacy `Q|1|...` input; mixed delimiters and doubled-pipe input are
+rejected. Snapshot/reply formats, queued GUID ownership, native capture, rate
+limits and size/row bounds are unchanged. This corrects the transport rather
+than bypassing the client's validation or parsing human chat.
+
+Companion 1.0.1 requires this parser; deployed image 2151c15b does not accept
+colon requests. Focused tests can run on the Windows workstation while playing;
+full server compilation/activation must wait until the game services are stopped.
+Live transport and UI acceptance remain pending.
+
+## Missing overlapping WMO references in Stormwind (2026-10-22)
+
+The native Stormwind placement overlaps 16 tiles but deployed metadata referenced it in only six. Tile 30,47 consequently had no city floor at the captured bot/master positions, and native navigation could not place either endpoint. Completing existing placement references and rebuilding with unchanged defaults restores native floors and a complete route. The assembler completes bounded non-global WMO coverage generically; native fixture tests preserve M2/global handling and deduplicate added references. See `docs/navigation/STORMWIND_WMO_TILE_COVERAGE.md`. This establishes an offline data defect and repair, not gameplay acceptance for all city movement or area-trigger transitions.
+
+## Prepared session fixes (23 October 2026; not compiled)
+
+Branch `codex/session-followup-fixes` contains source drafts for #58, #66 and #67.
+No configuration, CMake generation, compiler, test executable, image build or
+runtime activation has been run for these drafts.
+
+- Classic gathering admission reuses `GameObjectInfo::IsRepeatableGatheringChest`,
+  the same predicate now called from the existing native opening-spell LOS
+  exemption. Non-Classic bot variants retain their previous LOS check. Ordinary
+  chest LOS, approach safety, skill/tools, range, bags and native depletion are
+  unchanged. Live evidence showed manual mining succeeds where admission rejected
+  the same node after loot release. Full build and repeat-mining acceptance remain.
+- Buyback captures item identity/count before native storage, then confirms an
+  emptied buyback slot and increased carried item count before telling the requester
+  the actual recovered quantity. Failed storage/money/vendor cases cannot emit a
+  success confirmation. Native handler/prices remain authoritative (#66).
+- Enchanting tool checks accept higher-tier runed rods from the five verified
+  Classic/Turtle item definitions. Exact other-tool checks and consumed-reagent
+  checks remain native; bank-only rods are not added to the carried predicate.
+  Client initiation/UI and trade enchanting still need verification (#67).
+
+`tests/session-followups` contains future regression source, not executed results.
+See `docs/playerbots/NEXT_BUILD_20261023.md` for pending work and validation.
+
+## M2/WMO placement identity follow-up (2026-10-25)
+
+Native assembly previously merged MDDF and MODF placements sharing a numeric
+ID. A custom Dun Morogh tunnel was replaced by a distant shed's placement and
+tree index. Assembly keys now retain the ID plus placement type throughout
+deduplication, coverage and index lookup; runtime formats/IDs are unchanged.
+Production fixtures pass in both input orders and the old assembler fails both
+negative controls. Same-type duplicate behavior is preserved. See
+`docs/navigation/DUN_MOROGH_TUNNEL_REPAIR.md`; staged collision recovery is
+separate from navigation and live party-following acceptance.
+
+## Far-formation follow update (2026-10-25)
+
+A reproduced feedback loop in FarFormation::GetAngle alternated requested
+geometry despite unchanged positional input. The getter now requests the native
+rear offset; the native follow controller owns movement updates. Shared matching
+tolerances, target selection, saved distance, collision and speed bonuses remain
+authoritative. Production-class/dispatch fixtures pass and the old class fails
+the negative control. Full image and gameplay checks remain pending; see
+`docs/playerbots/STABLE_REAR_FOLLOW.md`.

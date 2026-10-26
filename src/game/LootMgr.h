@@ -413,6 +413,8 @@ struct Loot
 
     // TrinityCore
     bool hasItemFor(Player* player) const;
+    // Read the quest slots SendLoot can expose without creating a player view.
+    bool HasQuestLootForPlayer(Player const* player) const;
     bool hasOverThresholdItem() const;
     bool IsAllowedLooter(ObjectGuid guid, bool doPersonalCheck = true) const;
     bool IsOriginalLooter(ObjectGuid guid) { return IsAllowedLooter(guid, false); }

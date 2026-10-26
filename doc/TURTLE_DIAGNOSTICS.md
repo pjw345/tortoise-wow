@@ -1188,3 +1188,128 @@ correlate cast_start/cast_finish, native failure codes, HP and attack timing in
 the battle capture. Current mean-melee estimates are conservative and omit
 ranged bursts/DoTs/mitigation. No new logging stream, per-tick trace or retention
 policy was added for this follow-up; existing action logging can be disabled.
+
+
+## Automatic gathering rejection records (2026-10-18)
+
+Existing non-combat `debug loot` enables `event=gather-reject` for eligible
+profession objects rejected by LOS, native loot/skill/tool policy, master range
+or the retained solo-hostile check. Shared follower hostile safety is logged by
+the existing parent reject record. `loot-policy` is a grouped category, not a
+claim of a particular missing skill/tool. Failed discovery before a valid
+LootObject exists remains unclassified. Output follows the existing scan rate,
+logger and retention controls. Disable `debug loot` to remove these records.
+Automatic scans add no chat messages or logging thread. Explicit `u go` can
+reply when a trained gatherer lacks the required skill, including the node and
+current/required values. Bots without the profession remain silent.
+
+## Equipment/consumable corrections (2026-10-20)
+
+No new logging stream, timer, per-tick probe or retention policy was introduced.
+Existing EquipAction events/chat now require a verified native equipment result.
+Existing opt-in roll feedback reports the final vote after player priority and
+loot policy. Existing debug equip output remains controlled by that strategy.
+Focused tests and deployment receipts are offline artifacts, not runtime telemetry.
+
+Classic group-roll equipment recovery reuses the existing equip/action logs and
+packet queue; no additional diagnostic output or runtime switches are added.
+
+Two-hand eligibility correction adds no logs or runtime switches; native inventory
+errors and the existing roll/equip feedback remain the observation points.
+
+## Play-session loot follow-ups (2026-10-21)
+
+No new logging stream, scan timer, thread, or per-tick probe. Mining continuation
+uses the existing gathering admission records, defer queue and LootTargetRetryDelay;
+source/item policy remains observable through debug loot. AutoLootSkipItems is
+a behaviour configuration, not a diagnostic switch; an empty list disables its
+default exclusions. Existing always/skip loot lists retain their documented
+precedence. Floor-separated safety uses native LOS; current blocker logs still
+name rather than uniquely identify a hostile. Live tower geometry and approach
+safety must be checked in gameplay, not inferred from the test fixtures.
+
+## Party-bot quest snapshots (2026-10-21)
+
+QuestSync adds no log stream, background thread, database polling or diagnostic
+flag. The paced read-only request is the feature's data transport. There is at
+most one pending request per bot; queued and sent requests have independent
+five-second limits. Responses are bounded and unchanged snapshots receive one
+small freshness packet. The client normally polls each roster member every 15
+seconds, spaces requests by half a second and retains stale snapshots on error.
+Manual/player-quest refreshes retain a six-second client minimum per member.
+
+The AddOn exposes pending/offline/unavailable/stale state and last-response time
+in its tracker hover and comparison panel. Requests and replies use the exact
+PFQBOT AddOn prefix and never generate human-chat/conversation messages. Disable
+the companion AddOn to stop requests; no server configuration cleanup is needed.
+The AddOn and client tests are maintained at https://github.com/pjw345/pfQuest-partybots;
+server/native test instructions are in tests/playerbot-quest-sync/README.md.
+Native full build, actual AddOn delivery, client graphics and live quest state
+acceptance remain separate from the source-extracted and Lua API-fixture tests.
+
+
+## Offline WMO identity/navigation verification (2026-10-21)
+
+Extractor-only tools `vmap_model_tool` and `mmap_path_check` inspect native collision records and native Detour paths in staged files. They add no runtime hook, timer, log writer or production overhead. `vmap_model_tool` refuses existing outputs, mismatched/duplicate identities and malformed records; unaffected record bytes stay exact. `mmap_path_check` treats partial or exhausted paths as failure. Build with USE_EXTRACTORS; remove the optional targets/helpers and focused tests together if retired. See `docs/navigation/AZORA_WMO_COLLISION_REPAIR.md` for source provenance, rollback and live-test limits.
+
+### Vanilla request send failure (2026-10-22)
+
+`Core.lua:126: Invalid escape code in chat message` occurs before the request
+reaches the server. Companion 1.0.1 sends colon-delimited requests; it requires
+the matching ParseRequest correction. Server replies keep their original format.
+No log stream, packet polling change, chat filter, diagnostic flag or runtime
+validation bypass is added. Distinguish client error removal from successful
+server snapshot delivery; live acceptance needs the rebuilt server.
+
+## 2026-10-24 position and spline correlation
+
+Existing opt-in per-bot MOVEMENT_STATE samples (at most one per two seconds)
+now include map/instance, XYZ, stored transport GUID versus actual attachment,
+spline ID, elapsed/duration and final destination. Existing speed-event rows
+carry the same fields. This reuses EnableActionLog, per-bot file bounds and
+owner-thread reads; there are no floor/navmesh queries or new logging threads.
+Disable EnableActionLog after the Deadmines/follow investigation. Remove the
+additional fields once movement/height loss is correlated and accepted.
+Samples locate a stalled/falling bot but do not themselves prove map corruption.
+
+### Empty-spline startup guard (2026-10-25)
+
+MoveSpline::Duration delegates to spline.length(), which indexes native length
+storage and requires an initialized spline. Freshly logged-in bots can have no
+spline yet. Diagnostic duration reads must check Initialized and emit zero for
+that state. FinalDestination already has its native empty-spline guard; no
+movement or spline initialization is forced just to produce telemetry. The
+speed fixture now rejects uninitialized duration access and tests empty and
+ordinary initialized samples. Disable logging is not the production workaround.
+
+### Level-aware loot blocker details (2026-10-25)
+
+Existing opt-in debug loot emits loot-threat with bot/hostile levels, native
+aggro radius, interaction-area safety radius and engagement state on rejection.
+It uses the existing bounded loot log, no extra query or thread. Disable the
+per-bot debug loot strategy after capture. Candidate scans expand from the old
+combat radius to the native visibility range, including area overrides; only follower loot checks use
+that scope. This does not establish route-wide or scripted-encounter safety.
+
+Level-aware candidate filtering applies native range before LOS, matching native
+AI ordering, so the wider scan does not cast rays for out-of-range candidates.
+
+### Resource markers (RESBOT)
+
+No diagnostic logging is enabled. The optional client polls once per 5.5 seconds
+for the group; each authorized bot admits at most one request per five seconds,
+scans existing cells within min(grindDistance, reactDistance), and sends at most
+32 nodes / 16 bounded packets. No polling or scan is added without addon requests.
+Client redraw is throttled to 10 Hz, snapshots expire after twelve seconds, and
+`/botresources off` stops polling and hides icons. An addon lease suppresses only
+gathering reveal chat/pings, not combat alerts or manual group pings. Server image
+build, installation and live acceptance are separate from source validation.
+
+RESSELF adds one opt-in owner-scoped request per five seconds and at most one
+32-node self scan/snapshot per request, even without bots or a guild. Session
+handling does no world work; the player's manager update consumes the mailbox.
+No diagnostics are enabled. The On/Off control stops both human and bot requests.
+
+First-gather scheduling changes priority, not timer frequency. No new diagnostics
+or background scan is enabled. The existing strategy's once-per-second discovery
+can run while follow would otherwise win; retain normal per-bot debug-loot controls.

@@ -25,6 +25,9 @@ extract("${BOT_ROOT}/ServerFacade.cpp"
 extract("${BOT_ROOT}/strategy/actions/MovementActions.cpp"
     "    if (sServerFacade.IsFollowing(bot, target, formationDistance, angle))"
     "WorldPosition CalculatePerpendicularPoint" NativeFollowDispatch.inc)
+# Include the production far-formation getter and class, not a copied policy.
+extract("${BOT_ROOT}/strategy/values/Formations.cpp"
+    "    class FarFormation : public FollowFormation" "    class CustomFormation" NativeFarFormation.inc)
 add_executable(FollowMovementInspectionTest FollowMovementInspectionTest.cpp)
 target_compile_features(FollowMovementInspectionTest PRIVATE cxx_std_17)
 target_include_directories(FollowMovementInspectionTest PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")

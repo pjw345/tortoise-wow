@@ -401,7 +401,9 @@ bool RandomItemMgr::CheckItemStats(uint8 clazz, uint8 sp, uint8 ap, uint8 tank)
 
 bool RandomItemMgr::ShouldEquipArmorForSpec(uint8 playerclass, uint8 spec, ItemPrototype const* proto)
 {
-    if (proto->InventoryType == INVTYPE_TABARD)
+    if (proto->InventoryType == INVTYPE_TABARD || proto->InventoryType == INVTYPE_FINGER ||
+        proto->InventoryType == INVTYPE_TRINKET || proto->InventoryType == INVTYPE_NECK ||
+        proto->InventoryType == INVTYPE_CLOAK || proto->InventoryType == INVTYPE_HOLDABLE)
         return true;
 
     if (!m_weightScales[spec].info.id)
@@ -507,7 +509,9 @@ bool RandomItemMgr::ShouldEquipArmorForSpec(uint8 playerclass, uint8 spec, ItemP
 
 bool RandomItemMgr::CanEquipArmor(uint8 clazz, uint8 spec, uint32 level, ItemPrototype const* proto)
 {
-    if (proto->InventoryType == INVTYPE_TABARD)
+    if (proto->InventoryType == INVTYPE_TABARD || proto->InventoryType == INVTYPE_FINGER ||
+        proto->InventoryType == INVTYPE_TRINKET || proto->InventoryType == INVTYPE_NECK ||
+        proto->InventoryType == INVTYPE_CLOAK || proto->InventoryType == INVTYPE_HOLDABLE)
         return true;
 
     if ((clazz == CLASS_WARRIOR || clazz == CLASS_PALADIN || clazz == CLASS_SHAMAN)
@@ -1719,7 +1723,7 @@ uint32 RandomItemMgr::CalculateStatWeight(uint8 playerclass, uint8 spec, ItemPro
                         if ((spellproto->EffectMiscValue[j] & SPELL_SCHOOL_MASK_NATURE) != 0)
                             specialDamage += CalculateSingleStatWeight(playerclass, spec, "natsplpwr", spellDamage);
 
-                        if (!isWhitelist && !specialDamage && isSpellDamageItem)
+                        if (!isWhitelist && !specialDamage && isSpellDamageItem && basicStatsWeight <= 0 && !statWeight)
                             return 0;
 
                         effectAuraDamageStatWeight += specialDamage;
@@ -2084,15 +2088,15 @@ uint32 RandomItemMgr::CalculateStatWeight(uint8 playerclass, uint8 spec, ItemPro
             return 0;
 
 #ifndef MANGOSBOT_TWO
-        if (!isWhitelist && (spec != 6 && spec != 21) && !spellPower && !spellHeal && isSpellDamageItem)
+        if (!isWhitelist && (spec != 6 && spec != 21) && !spellPower && !spellHeal && isSpellDamageItem && basicStatsWeight <= 0 && !statWeight)
             return 0;
 
         if (!isWhitelist && /*(spec != 6 && spec != 21) && */!spellHeal && isHealingItem && !isSpellDamageItem)
             return 0;
 #endif
 
-        if (!isWhitelist && (spec != 6 && spec != 21) && !noCaster && isSpellDamageItem && !spellPower && !(spellDamage && spellHealing && proto->IsWeapon() && proto->InventoryType == INVTYPE_WEAPONMAINHAND))
-            return 0;
+        // An irrelevant damage-school bonus contributes zero; it must not erase
+        // useful intellect/spirit on the same item (e.g. Phoenix Pants for a priest).
 
         bool playerCaster = false;
         for (std::vector<WeightScaleStat>::iterator i = m_weightScales[spec].stats.begin(); i != m_weightScales[spec].stats.end(); ++i)

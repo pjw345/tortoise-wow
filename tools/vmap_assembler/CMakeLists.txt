@@ -105,3 +105,10 @@ target_link_libraries(vmap_assembler PUBLIC
 )
 
 install(TARGETS vmap_assembler DESTINATION ${BIN_DIR})
+
+# Offline repair uses the same model reader/writer and collision assembler.
+add_executable(vmap_model_tool model_tool.cpp)
+target_link_libraries(vmap_model_tool PRIVATE vmap g3dlite ${ACE_LIBRARIES}
+    shared framework ${OPENSSL_LIBRARIES} ${MYSQL_LIBRARY})
+
+install(TARGETS vmap_model_tool DESTINATION ${BIN_DIR})

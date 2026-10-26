@@ -215,7 +215,7 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid, bool explicit
             out << blocker->GetName() << " is blocking " << wo->GetName() << ", need to kill it or I will not loot";
             ai->TellError(requester, out.str());
             if (debugLoot)
-                sLog.outLoot("bot=%s event=reject guid=%lu reason=hostile blocker=\"%s\" radius=%.0f",
+                sLog.outLoot("bot=%s event=reject guid=%lu reason=hostile blocker=\"%s\" configured-radius=%.0f",
                     bot->GetName(), guid.GetRawValue(), blocker->GetName(), sPlayerbotAIConfig.lootHostileDistance);
         }
         return false;
@@ -263,6 +263,29 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid, bool explicit
     return added;
 }
 
+bool AddGatheringLootAction::isUseful()
+{
+    // Earlier discovery must not interrupt a cast or active food/drink rest.
+    if (!bot->IsAlive() || bot->IsSitState() || bot->IsNonMeleeSpellCasted(true))
+        return false;
+
+    // Preserve the existing food strategy's readiness rather than hard-coding
+    // new health/mana thresholds. Without supplies, let its normal failure
+    // fallback continue to permit eligible gathering.
+    if (ai->HasStrategy("food", BotState::BOT_STATE_NON_COMBAT))
+    {
+        for (auto const& recovery : {std::make_pair("low health", "food"), std::make_pair("high mana", "drink")})
+        {
+            Trigger* trigger = context->GetTrigger(recovery.first);
+            Action* action = context->GetAction(recovery.second);
+            if (trigger && trigger->IsActive() && action && action->isUseful() && action->isPossible() &&
+                (ai->HasCheat(BotCheatMask::item) || !AI_VALUE2(std::list<Item*>, "inventory items", recovery.second).empty()))
+                return false;
+        }
+    }
+    return AddAllLootAction::isUseful();
+}
+
 bool AddGatheringLootAction::AddLoot(Player* requester, ObjectGuid guid, bool explicitTarget)
 {
     LootObject loot(bot, guid);
@@ -271,14 +294,34 @@ bool AddGatheringLootAction::AddLoot(Player* requester, ObjectGuid guid, bool ex
     if (loot.IsEmpty() || !wo)
         return false;
 
-    if (!sServerFacade.IsWithinLOSInMap(bot, wo))
-        return false;
-
     if (loot.skillId == SKILL_NONE)
         return false;
 
-    if (!loot.IsLootPossible(bot))
+    bool const debugLoot = ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT);
+    // Classic native opening spells permit mineral chests embedded in terrain.
+    // Admission and post-release re-admission must not reject those same nodes.
+    // Other variants retain their existing check until their native rule is verified.
+    bool nativeGatheringLosExemption = false;
+#ifdef MANGOSBOT_ZERO
+    if (guid.IsGameObject())
+    {
+        GameObject* go = ai->GetGameObject(guid);
+        nativeGatheringLosExemption = go && go->GetGOInfo()->IsRepeatableGatheringChest();
+    }
+#endif
+    if (!nativeGatheringLosExemption && !sServerFacade.IsWithinLOSInMap(bot, wo))
+    {
+        if (debugLoot)
+            sLog.outLoot("bot=%s event=gather-reject guid=%lu reason=line-of-sight", bot->GetName(), guid.GetRawValue());
         return false;
+    }
+
+    if (!loot.IsLootPossible(bot))
+    {
+        if (debugLoot)
+            sLog.outLoot("bot=%s event=gather-reject guid=%lu reason=loot-policy", bot->GetName(), guid.GetRawValue());
+        return false;
+    }
 
     float gatheringDistanceToUse = sPlayerbotAIConfig.gatheringDistance;
 
@@ -309,39 +352,36 @@ bool AddGatheringLootAction::AddLoot(Player* requester, ObjectGuid guid, bool ex
 
     if (sServerFacade.IsDistanceGreaterThan(sServerFacade.GetDistance2d(requester, wo), gatheringDistanceToUse))
     {
+        if (debugLoot)
+            sLog.outLoot("bot=%s event=gather-reject guid=%lu reason=range master-distance=%.1f cap=%.1f",
+                bot->GetName(), guid.GetRawValue(), sServerFacade.GetDistance2d(requester, wo), gatheringDistanceToUse);
         return false;
     }
 
-    //check hostile units after distance checks, to avoid unnecessary calculations
-
-    float MOB_AGGRO_DISTANCE = 30.0f;
-    std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(wo, MOB_AGGRO_DISTANCE);
-    std::list<Unit*> strongHostiles;
-    for (auto hostile : hostiles)
+    // Followers use the same configured destination safety as ordinary loot.
+    // AddAllLootAction rechecks it immediately before admission, and the native
+    // selection/movement paths recheck it again. Preserve solo/leader policy.
+    if (!isInGroup || ai->IsGroupLeader())
     {
-        if (!(bot->GetLevel() > hostile->GetLevel() + 7))
+        float MOB_AGGRO_DISTANCE = 30.0f;
+        std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(wo, MOB_AGGRO_DISTANCE);
+        std::list<Unit*> strongHostiles;
+        for (auto hostile : hostiles)
         {
-            strongHostiles.push_back(hostile);
+            if (!(bot->GetLevel() > hostile->GetLevel() + 7))
+            {
+                strongHostiles.push_back(hostile);
+            }
         }
-    }
 
-    if (isInGroup && !ai->IsGroupLeader())
-    {
-        if (hostiles.size() > 0)
-        {
-            std::ostringstream out;
-            out << hostiles.front()->GetName() << " is blocking " << wo->GetName() << ", need to kill it or I will not gather";
-            ai->TellError(requester, out.str());
-            return false;
-        }
-    }
-    else
-    {
         if (strongHostiles.size() > 1)
         {
             std::ostringstream out;
             out << strongHostiles.front()->GetName() << " is blocking " << wo->GetName() << ", need to kill it or I will not gather";
             ai->TellError(requester, out.str());
+            if (debugLoot)
+                sLog.outLoot("bot=%s event=gather-reject guid=%lu reason=solo-hostiles radius=%.0f",
+                    bot->GetName(), guid.GetRawValue(), MOB_AGGRO_DISTANCE);
             return false;
         }
     }

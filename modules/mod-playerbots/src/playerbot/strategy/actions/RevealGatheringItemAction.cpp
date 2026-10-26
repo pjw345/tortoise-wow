@@ -57,7 +57,7 @@ bool ai::CanRevealGatheringItem(PlayerbotAI* ai, GameObject* go)
 
 bool RevealGatheringItemAction::Execute(Event& event)
 {
-    if (!bot->GetGroup() || ai->HasPendingGatheringPings())
+    if (ai->HasResourceMarkers() || !bot->GetGroup() || ai->HasPendingGatheringPings())
         return false;
 
     std::list<GameObject*> targets;

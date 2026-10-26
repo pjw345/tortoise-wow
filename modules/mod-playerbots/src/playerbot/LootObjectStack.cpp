@@ -13,16 +13,18 @@ bool ai::CanOpenActivatedQuestChest(Player* bot, GameObject* go)
     return bot && go && go->GetGoType() == GAMEOBJECT_TYPE_CHEST &&
         go->getLootState() == GO_ACTIVATED &&
         sObjectMgr.IsGameObjectForQuests(go->GetEntry()) &&
-        go->ActivateToQuest(bot);
+        go->ActivateToQuest(bot) &&
+        go->loot.HasQuestLootForPlayer(bot);
 }
 
 namespace
 {
-    // Personal quest loot is created per player, but the underlying chest is
-    // still one shared game object. Choose one nearby eligible bot using the
-    // group's stable member order so several bots do not cast OPEN_LOCK on the
-    // same chest simultaneously. After the chosen bot stores its quest item,
-    // ActivateToQuest becomes false for it and the next eligible bot advances.
+    // Quest views are created per player, but ordinary non-FFA quest items
+    // are shared: an incomplete quest does not imply remaining loot. The
+    // underlying chest is still one shared game object. Choose one nearby
+    // eligible bot using stable group order to avoid simultaneous OPEN_LOCK.
+    // A shared take advances the turn even when another bot's quest remains
+    // incomplete but that spawn no longer contains its objective item.
     Player* GetPersonalQuestChestTurn(Player* bot, GameObject* go)
     {
         if (!bot || !go || go->GetGoType() != GAMEOBJECT_TYPE_CHEST ||
@@ -46,7 +48,8 @@ namespace
             if (!groupMember || !GetBotAI(groupMember) || !groupMember->IsAlive() ||
                 groupMember->GetMapId() != go->GetMapId() ||
                 sServerFacade.GetDistance2d(groupMember, go) > maxDistance ||
-                !go->ActivateToQuest(groupMember))
+                !go->ActivateToQuest(groupMember) ||
+                (go->getLootState() == GO_ACTIVATED && !go->loot.HasQuestLootForPlayer(groupMember)))
                 continue;
 
             return groupMember;
@@ -316,12 +319,58 @@ bool LootObject::IsApproachSafe(Player* bot, Unit** blocker)
     WorldObject* object = GetWorldObject(bot);
     if (!object)
         return false;
-    std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(object, sPlayerbotAIConfig.lootHostileDistance);
-    if (hostiles.empty())
-        return true;
-    if (blocker)
-        *blocker = hostiles.front();
-    return false;
+    // Search the native visible area, not just the configured combat radius:
+    // higher-level creatures can initiate aggro from beyond that old cutoff.
+    float const searchRadius = std::max(sPlayerbotAIConfig.lootHostileDistance,
+        std::max(bot->GetVisibilityDistance(), object->GetVisibilityDistance()));
+    std::list<Unit*> hostiles = ai->GetAllHostileNPCNonPetUnitsAroundWO(object, searchRadius);
+    for (Unit* hostile : hostiles)
+    {
+        bool const engaged = hostile->IsInCombat();
+        float safetyRadius = sPlayerbotAIConfig.lootHostileDistance;
+        float aggroRadius = 0.0f;
+        if (!engaged)
+        {
+            // Preserve native wall/floor separation for idle enemies. Use the
+            // gathering bot's level/auras, not its human master's level.
+            Creature* creature = hostile->ToCreature();
+            if (!creature || !creature->CanInitiateAttack())
+                continue;
+            aggroRadius = creature->GetAttackDistance(bot);
+            if (aggroRadius <= 0.0f)
+                continue;
+
+            // The bot can stand up to INTERACTION_DISTANCE from the object.
+            // Protect that interaction area, not just the object's centre.
+            safetyRadius = aggroRadius + INTERACTION_DISTANCE;
+        }
+
+        else if (Creature* creature = hostile->ToCreature())
+        {
+            // Fighting enemies remain conservative: never shrink the old
+            // combat boundary, and still account for a larger native reach.
+            aggroRadius = creature->GetAttackDistance(bot);
+            if (aggroRadius > 0.0f)
+                safetyRadius = std::max(safetyRadius, aggroRadius + INTERACTION_DISTANCE);
+        }
+
+        // Idle aggro uses the same centre-distance convention as native AI.
+        // Engaged enemies retain size-aware combat exclusion as a minimum.
+        if (!hostile->IsWithinDistInMap(object, safetyRadius, true,
+            engaged ? SizeFactor::BoundingRadius : SizeFactor::None))
+            continue;
+        // Native AI also rejects cheap range checks before casting LOS rays.
+        if (!engaged && !hostile->IsWithinLOSInMap(object, true))
+            continue;
+        if (ai->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+            sLog.outLoot("bot=%s event=loot-threat hostile=\"%s\" bot-level=%u hostile-level=%u aggro-radius=%.1f safety-radius=%.1f engaged=%d",
+                bot->GetName(), hostile->GetName(), bot->GetLevel(), hostile->GetLevel(),
+                aggroRadius, safetyRadius, engaged ? 1 : 0);
+        if (blocker)
+            *blocker = hostile;
+        return false;
+    }
+    return true;
 }
 
 bool LootObject::IsLootPossible(Player* bot, bool* suppressRediscovery)
@@ -336,9 +385,9 @@ bool LootObject::IsLootPossible(Player* bot, bool* suppressRediscovery)
 
     // An activated personal quest chest does not expose this bot's quest-item
     // slots until the bot opens it and Player::SendLoot calls
-    // FillNotNormalLootFor(bot). Do not ask "should loot object" first: that
-    // value can only see the still-empty per-player view and would reject the
-    // chest before the core has a chance to populate it.
+    // FillNotNormalLootFor(bot). The native read-only query checks the actual
+    // remaining quest items before bypassing the unpopulated per-player view.
+    // Template eligibility alone can repeatedly admit an empty shared chest.
     GameObject* questChest = guid.IsGameObject() ? ai->GetGameObject(guid) : nullptr;
     bool canOpenPersonalQuestLoot = CanOpenActivatedQuestChest(bot, questChest);
 

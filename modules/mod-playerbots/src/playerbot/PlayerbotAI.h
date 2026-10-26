@@ -384,6 +384,7 @@ public:
     void EnsureDefaultMovementStrategy(Player* requester = nullptr);
 	std::string HandleRemoteCommand(std::string command);
     void HandleCommand(uint32 type, const std::string& text, Player& fromPlayer, const uint32 lang = LANG_UNIVERSAL);
+    bool AdmitQuestSyncSend();
     bool IsBotCommandMessage(std::string message);
     void QueueChatResponse(uint32 msgType, ObjectGuid guid1, ObjectGuid guid2, std::string message, std::string chanName, std::string name, bool noDelay = false);
 	void HandleBotOutgoingPacket(const WorldPacket& packet);
@@ -482,6 +483,10 @@ public:
     void Ping(float x, float y);
     void BeginConsumableRecovery(bool food, bool drink);
     void UpdateConsumableRecovery();
+    bool HasResourceMarkers() const { return resourceMarkersUntil > time(0); }
+    std::atomic<time_t> resourceMarkersLastQueued{0};
+    std::atomic<bool> resourceMarkersQueued{false};
+    time_t resourceMarkersUntil = 0; // Accessed only on the bot's serialized owner.
     bool HasPendingGatheringPings() const { return gatheringPing.remaining != 0; }
     void StartGatheringPings(GameObject* go);
     void UpdateGatheringPings(uint32 elapsed);
@@ -867,6 +872,9 @@ protected:
     BotState currentState;
     ChatHelper chatHelper;
     std::queue<ChatCommandHolder> chatCommands;
+    std::atomic<time_t> questSyncLastQueued{0};
+    std::atomic<time_t> questSyncLastSent{0};
+    std::atomic<bool> questSyncQueued{false};
     std::queue<ChatQueuedReply> chatReplies;
     std::mutex chatRepliesMutex;
     std::mutex updateExecutionMutex;

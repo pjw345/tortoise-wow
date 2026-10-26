@@ -814,12 +814,27 @@ bool UseAction::UseGameObject(Player* requester, Event& event, GameObject* gameO
     if (gameObject->GetGoType() == GAMEOBJECT_TYPE_CHEST)
     {
         LootObject loot(bot, guid);
-        // Group use commands reach every bot. An ineligible gatherer is not
-        // a failed loot attempt: leave its selected loot/work untouched.
-        if ((loot.skillId == SKILL_MINING || loot.skillId == SKILL_HERBALISM) &&
-            (!ai->HasSkill(static_cast<SkillType>(loot.skillId)) ||
-                bot->GetSkillValue(loot.skillId) < loot.reqSkillValue))
-            return false;
+        // Group use commands reach every bot. Only trained gatherers should
+        // explain a skill shortage; leave selected loot/work untouched on failure.
+        if (loot.skillId == SKILL_MINING || loot.skillId == SKILL_HERBALISM)
+        {
+            if (!ai->HasSkill(static_cast<SkillType>(loot.skillId)))
+                return false;
+
+            uint32 skillValue = bot->GetSkillValue(loot.skillId);
+            if (skillValue < loot.reqSkillValue)
+            {
+                bool mining = loot.skillId == SKILL_MINING;
+                char const* profession = mining ? "Mining" : "Herbalism";
+                std::ostringstream out;
+                out << (mining ? "Failed to mine " : "Failed to gather ")
+                    << chat->formatGameobject(gameObject) << ": requires "
+                    << profession << " " << loot.reqSkillValue << "; my "
+                    << profession << " is " << skillValue << ".";
+                ai->TellPlayerNoFacing(requester, out.str(), PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
+                return false;
+            }
+        }
 
         SET_AI_VALUE(LootObject, "loot target", loot);
 
@@ -975,12 +990,12 @@ bool UseAction::UseQuestGiverItem(Player* requester, Item* item)
     if (!bot->CanAddQuest(quest, true))
         return false;
 
-    bot->AddQuest(quest, nullptr);
+    // Native acceptance preserves starter items needed for objectives or source
+    // items, consumes other starters, and runs item quest-accept hooks.
+    bot->AddQuest(quest, item);
 
     if (bot->CanCompleteQuest(quest->GetQuestId()))
         bot->CompleteQuest(quest->GetQuestId());
-
-    bot->DestroyItemCount(proto->ItemId, 1, true);
 
     if (verbose)
     {

@@ -2,6 +2,9 @@
 #include "PlayerbotMgr.h"
 #include "ahbot/AhBot.h"
 #include "playerbot/playerbot.h"
+#include "playerbot/QuestSync.h"
+#include "playerbot/ResourceMarkers.h"
+#include "playerbot/QuestSyncProtocol.h"
 #include "playerbot/strategy/actions/RevealGatheringItemAction.h"
 #include "playerbot/AiContextAugment.h"
 #include "playerbot/PerformanceMonitor.h"
@@ -224,6 +227,9 @@ PlayerbotAI::PlayerbotAI(Player* bot) :
     botOutgoingPacketHandlers.AddHandler(SMSG_TEXT_EMOTE, "receive text emote");
     botOutgoingPacketHandlers.AddHandler(SMSG_EMOTE, "receive emote");
     botOutgoingPacketHandlers.AddHandler(SMSG_LOOT_START_ROLL, "loot start roll", true);
+#ifdef MANGOSBOT_ZERO
+    botOutgoingPacketHandlers.AddHandler(SMSG_LOOT_ROLL_WON, "loot roll won", true);
+#endif
     botOutgoingPacketHandlers.AddHandler(SMSG_SUMMON_REQUEST, "summon request");
     botOutgoingPacketHandlers.AddHandler(MSG_RAID_READY_CHECK, "ready check");
     botOutgoingPacketHandlers.AddHandler(SMSG_QUEST_CONFIRM_ACCEPT, "confirm quest");
@@ -920,7 +926,8 @@ bool PlayerbotAI::CanPlayerMasterChase(Unit* target)
     // An attack toggle/selection is not combat contact. Let pulls come to the
     // human tank and keep companion pursuit within the existing follow range.
     // Stationary defense is decided separately from permission to move.
-    return target->IsInCombat() && target->IsWithinDistInMap(master, GetRange("follow"));
+    return target->IsInCombat() && (master->CanReachWithMeleeAttack(target) ||
+        target->IsWithinDistInMap(master, GetRange("follow")));
 }
 
 Unit* PlayerbotAI::GetPlayerMasterFleeingControlTarget(SpellEntry const* spell)
@@ -1596,7 +1603,17 @@ void PlayerbotAI::HandleCommands()
 
         std::string command = holder.GetCommand();
         Player* owner = holder.GetOwner();
-        if (!helper.ParseChatCommand(command, owner) && holder.GetType() == CHAT_MSG_WHISPER)
+        if (command.compare(0, 8, "RESBOT\t:") == 0)
+        {
+            resourceMarkersQueued.store(false);
+            ai::resources::SendQueuedSnapshot(this, command.substr(8));
+        }
+        else if (command.compare(0, 8, "PFQBOT\t:") == 0)
+        {
+            questSyncQueued.store(false);
+            ai::questsync::SendQueuedSnapshot(this, command.substr(8));
+        }
+        else if (!helper.ParseChatCommand(command, owner) && holder.GetType() == CHAT_MSG_WHISPER)
         {
             //ostringstream out; out << "Unknown command " << command;
             //TellPlayer(out);
@@ -1872,6 +1889,33 @@ bool PlayerbotAI::IsAllowedCommand(std::string text)
 
 void PlayerbotAI::HandleCommand(uint32 type, const std::string& text, Player& fromPlayer, const uint32 lang)
 {
+    // An exact data prefix cannot enter command splitting, response-channel
+    // overrides or conversation. Capture on the bot owner via the native queue.
+    if (lang == LANG_ADDON && text.compare(0, 7, "PFQBOT\t") == 0)
+    {
+        ai::questsync::Request request;
+        if ((type != CHAT_MSG_PARTY && type != CHAT_MSG_RAID) ||
+            !ai::questsync::Authorized(this, &fromPlayer) ||
+            !ai::questsync::ParseRequest(text.substr(7), bot->GetName(), request) ||
+            !ai::questsync::Admit(questSyncLastQueued, time(0)) || questSyncQueued.exchange(true))
+            return;
+        // Store identity, not a requester pointer that can outlive logout.
+        chatCommands.push(ChatCommandHolder("PFQBOT\t:" + std::to_string(fromPlayer.GetGUIDLow()) +
+            ":" + text.substr(7), nullptr, CHAT_MSG_WHISPER));
+        return;
+    }
+    if (lang == LANG_ADDON && text.compare(0, 7, "RESBOT\t") == 0)
+    {
+        ai::resources::Request request;
+        if ((type != CHAT_MSG_PARTY && type != CHAT_MSG_RAID) ||
+            !ai::questsync::Authorized(this, &fromPlayer) ||
+            !ai::resources::ParseRequest(text.substr(7), request) ||
+            !ai::questsync::Admit(resourceMarkersLastQueued, time(0)) || resourceMarkersQueued.exchange(true))
+            return;
+        chatCommands.push(ChatCommandHolder("RESBOT\t:" + std::to_string(fromPlayer.GetGUIDLow()) +
+            ":" + text.substr(7), nullptr, CHAT_MSG_WHISPER));
+        return;
+    }
     std::string filtered = text;
 
     if (!IsAllowedCommand(filtered) && !GetSecurity()->CheckLevelFor(PlayerbotSecurityLevel::PLAYERBOT_SECURITY_INVITE, type != CHAT_MSG_WHISPER, &fromPlayer))
@@ -3262,6 +3306,12 @@ void PlayerbotAI::ResetStrategies(bool autoLoad)
     {
         reactionEngine->addStrategy("heal interrupt");
     }
+
+    // Restore automatic owned buff-item use after loading legacy saved strategies.
+    // The existing action retains native use, stacking and cooldown checks.
+    if (sPlayerbotAIConfig.autoBuffConsumables && HasActivePlayerMaster() &&
+        !IsRealPlayer() && !IsInPvp())
+        engines[(uint8)BotState::BOT_STATE_NON_COMBAT]->addStrategy("consumables");
 
     // A role handed out by the dungeon finder wins over both the talent spec
     // and the stored strategy set - hence applied last. addStrategy() drops the
@@ -8928,7 +8978,7 @@ void PlayerbotAI::UpdateConsumableRecovery()
 
 void PlayerbotAI::StartGatheringPings(GameObject* go)
 {
-    if (HasPendingGatheringPings() || !bot->GetGroup() || !ai::CanRevealGatheringItem(this, go))
+    if (HasResourceMarkers() || HasPendingGatheringPings() || !bot->GetGroup() || !ai::CanRevealGatheringItem(this, go))
         return;
     gatheringPing.guid = go->GetObjectGuid();
     gatheringPing.map = bot->GetMapId();
@@ -8941,6 +8991,7 @@ void PlayerbotAI::StartGatheringPings(GameObject* go)
 
 void PlayerbotAI::UpdateGatheringPings(uint32 elapsed)
 {
+    if (HasResourceMarkers()) { gatheringPing = {}; return; }
     if (!gatheringPing.remaining)
         return;
     if (!bot->IsInWorld() || bot->IsBeingTeleported() || !bot->IsAlive() ||

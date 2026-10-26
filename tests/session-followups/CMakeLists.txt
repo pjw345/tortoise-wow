@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.16)
+project(SessionFollowups LANGUAGES CXX)
+enable_testing()
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/extract.py"
+ "${CMAKE_CURRENT_BINARY_DIR}/Buyback.inc" "${CMAKE_CURRENT_BINARY_DIR}/Gathering.inc" RESULT_VARIABLE result)
+if(NOT result EQUAL 0)
+ message(FATAL_ERROR "Production method extraction failed")
+endif()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS extract.py
+ ../../modules/mod-playerbots/src/playerbot/strategy/actions/BuyAction.cpp ../../src/game/Objects/GameObject.h)
+add_executable(SessionFollowupsTest SessionFollowupsTest.cpp)
+target_compile_features(SessionFollowupsTest PRIVATE cxx_std_17)
+target_include_directories(SessionFollowupsTest PRIVATE "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../../src/game/Spells")
+add_test(NAME session_followups COMMAND SessionFollowupsTest)

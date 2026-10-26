@@ -4,7 +4,10 @@ The fixture compiles the production recovery methods and the chest branch of
 UseAction::UseGameObject against focused adapters. It checks completion, partial
 mana/health, simultaneous recovery, explicit wait/stay and seated-master intent,
 casting/combat/death/world/teleport states, and profession missing/too-low/exact
-skill, ordinary chest/lockpicking and real open failures. Extraction also checks
+and above-required skill, zero requirement, ordinary chest/lockpicking and real
+open failures. Missing professions stay silent; trained low-skill gatherers
+report the formatted node and native current/required values without selecting
+loot or attempting to open it. Extraction also checks
 the real item and item-cheat paths register recovery before the update loop.
 
 Run cmake -S tests/playerbot-recovery-loot -B build/recovery-loot, build, then

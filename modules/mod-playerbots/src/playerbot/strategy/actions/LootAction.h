@@ -31,6 +31,10 @@ namespace ai
         StoreLootAction(PlayerbotAI* ai) : Action(ai, "store loot") {}
         virtual bool Execute(Event& event) override;
         static bool IsLootAllowed(ItemQualifier& itemQualifier, PlayerbotAI *ai);
+        static bool IsLootExcludedByDefault(uint32 itemId, PlayerbotAI* ai);
+
+    private:
+        bool QueueNextMiningAttempt(Player* requester, ObjectGuid guid);
     };
 
     class ReleaseLootAction : public MovementAction

@@ -1,0 +1,17 @@
+cmake_minimum_required(VERSION 3.16)
+project(ResourceMarkers LANGUAGES CXX)
+enable_testing()
+add_executable(resource-markers protocol.cpp)
+target_compile_features(resource-markers PRIVATE cxx_std_17)
+target_include_directories(resource-markers PRIVATE ../../modules/mod-playerbots/src/playerbot)
+add_test(NAME bounded_resource_marker_protocol COMMAND resource-markers)
+
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/extract.py" "${CMAKE_CURRENT_BINARY_DIR}/native-resource.inc" COMMAND_ERROR_IS_FATAL ANY)
+add_executable(resource-world world.cpp)
+target_compile_features(resource-world PRIVATE cxx_std_17)
+target_include_directories(resource-world PRIVATE ../../modules/mod-playerbots/src/playerbot "${CMAKE_CURRENT_BINARY_DIR}")
+add_test(NAME source_extracted_resource_world COMMAND resource-world)
+
+find_package(Threads REQUIRED)
+target_link_libraries(resource-markers PRIVATE Threads::Threads)

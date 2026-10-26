@@ -20,6 +20,7 @@
 #include "MapTree.h"
 #include "BIH.h"
 #include "VMapDefinitions.h"
+#include "WmoTileCoverage.h"
 
 #include <set>
 #include <iomanip>
@@ -96,14 +97,33 @@ bool TileAssembler::convertWorld2()
             spawnedModelFiles.insert(entry->second.name);
         }
 
+        // ADT overlays can omit a repeated WMO placement even though the same
+        // bounded building still crosses that tile. Both runtime collision and
+        // MoveMapGen load per-tile references; complete coverage from the native
+        // placement bounds without changing models, tree indices or transforms.
+        TileMap& coverageEntries = map_iter->second->TileEntries;
+        std::set<std::pair<uint32, SpawnKey>> references(coverageEntries.begin(), coverageEntries.end());
+        for (ModelSpawn const* spawn : mapSpawns)
+        {
+            if ((spawn->flags & (MOD_M2 | MOD_WORLDSPAWN)) || !(spawn->flags & MOD_HAS_BOUND))
+                continue;
+            const AABox& bounds = spawn->getBounds();
+            for (auto const& tile : WmoTileCoverage(bounds.low().x, bounds.low().y, bounds.high().x, bounds.high().y))
+            {
+                const uint32 tileID = StaticMapTree::packTileID(tile.first, tile.second);
+                if (references.emplace(tileID, GetSpawnKey(*spawn)).second)
+                    coverageEntries.emplace(tileID, GetSpawnKey(*spawn));
+            }
+        }
+
         printf("Creating map tree...\n");
         BIH pTree;
         pTree.build(mapSpawns, BoundsTrait<ModelSpawn*>::getBounds);
 
         // ===> possibly move this code to StaticMapTree class
-        std::map<uint32, uint32> modelNodeIdx;
+        std::map<SpawnKey, uint32> modelNodeIdx;
         for (uint32 i = 0; i < mapSpawns.size(); ++i)
-            modelNodeIdx.insert(pair<uint32, uint32>(mapSpawns[i]->ID, i));
+            modelNodeIdx.insert(std::make_pair(GetSpawnKey(*mapSpawns[i]), i));
 
         // write map tree file
         std::stringstream mapfilename;
@@ -175,7 +195,7 @@ bool TileAssembler::convertWorld2()
                 const ModelSpawn& spawn2 = map_iter->second->UniqueEntries[tile->second];
                 success = success && ModelSpawn::writeToFile(tilefile, spawn2);
                 // MapTree nodes to update when loading tile:
-                std::map<uint32, uint32>::iterator nIdx = modelNodeIdx.find(spawn2.ID);
+                std::map<SpawnKey, uint32>::iterator nIdx = modelNodeIdx.find(GetSpawnKey(spawn2));
                 if (success && fwrite(&nIdx->second, sizeof(uint32), 1, tilefile) != 1) success = false;
             }
 
@@ -243,8 +263,8 @@ bool TileAssembler::readMapSpawns()
         else
             current = (*map_iter).second;
 
-        current->UniqueEntries.insert(pair<uint32, ModelSpawn>(spawn.ID, spawn));
-        current->TileEntries.insert(pair<uint32, uint32>(StaticMapTree::packTileID(tileX, tileY), spawn.ID));
+        current->UniqueEntries.insert(std::make_pair(GetSpawnKey(spawn), spawn));
+        current->TileEntries.insert(std::make_pair(StaticMapTree::packTileID(tileX, tileY), GetSpawnKey(spawn)));
     }
 
     bool success = (ferror(dirf) == 0);

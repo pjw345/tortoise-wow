@@ -230,6 +230,14 @@ class PlayerbotPlayerScript : public PlayerScript
                 mgr->HandleCommand(type, msg, lang, to);
         }
 
+        // Guild is the native solo-capable addon envelope (as used by Turtle
+        // services). Consume before guild broadcast/membership handling; only
+        // this client's own manager receives its queued resource request.
+        bool CanUseGroupChat(Player*, uint32 type, uint32 lang, std::string& msg) override
+        {
+            return !(type == CHAT_MSG_GUILD && lang == LANG_ADDON && msg.compare(0, 8, "RESSELF\t") == 0);
+        }
+
         // Was the CreatePlayerbotMgr() call in HandlePlayerLogin. Only a person
         // at a client gets a controller for their alts.
         //

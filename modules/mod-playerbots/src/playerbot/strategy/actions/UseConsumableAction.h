@@ -42,6 +42,8 @@ namespace ai
 
     protected:
         uint32 GetItemId() override { return selectedItemId; }
+        Unit* GetTarget() override { return bot; }
+        bool UseInventoryItemOnly() const override { return true; }
 
     private:
 

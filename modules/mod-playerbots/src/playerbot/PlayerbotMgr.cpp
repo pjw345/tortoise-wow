@@ -1438,6 +1438,8 @@ PlayerbotMgr::~PlayerbotMgr()
 
 void PlayerbotMgr::UpdateAIInternal(uint32 elapsed, bool minimal)
 {
+    std::string const request = resourceMarkerRequests.Take();
+    if (!request.empty()) ai::resources::SendPlayerSnapshot(GetMaster(), request);
     SetAIInternalUpdateDelay(sPlayerbotAIConfig.reactDelay);
     CheckTellErrors(elapsed);
 
@@ -1448,6 +1450,12 @@ void PlayerbotMgr::UpdateAIInternal(uint32 elapsed, bool minimal)
 
 void PlayerbotMgr::HandleCommand(uint32 type, const std::string& text, uint32 lang, const std::string& to)
 {
+    if (lang == LANG_ADDON && text.compare(0, 8, "RESSELF\t") == 0)
+    {
+        if (type == CHAT_MSG_GUILD && sPlayerbotAIConfig.enabled && GetMaster() && IsRealPlayer(GetMaster()))
+            resourceMarkerRequests.Queue(text.substr(8), time(0));
+        return;
+    }
     Player *master = GetMaster();
     if (!master)
         return;
