@@ -1104,3 +1104,16 @@ to legacy generator state and is not an equivalent translation predicate.
 Otherwise the existing cast preparation can skip StopMoving and native spell
 movement interruption can cancel gathering. Keep native cast/stop/recovery and
 other expansion predicates authoritative. See playerbots/NATIVE_MOVEMENT_STATE.md.
+
+
+### Close rear circle for player-led companions (26 October 2026)
+
+CircleFormation retains native role/roster slot ordering and configured radial
+distance. With an active human master outside combat, halve each slot's angular
+deviation from the rear centre; front-side outer slots become a spaced rear arc.
+Combat placement around the current enemy, free/solo bot circles, other
+formations, native height correction, pathfinding and movement prediction retain
+their existing behavior. The live party was configured to circle/follow 2 yards;
+rear-only circle geometry requires the next image build and live acceptance.
+tests/playerbot-rear-circle extracts the actual circle class and native roster
+angle calculation with controlled unit/map services and an old-code control.
