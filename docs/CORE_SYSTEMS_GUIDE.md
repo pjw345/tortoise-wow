@@ -1136,3 +1136,43 @@ by 18:42:30 and body opening at 18:43:30, matching the remaining ignore period.
 The queue fixture validates native-predicate-controlled recovery and inspection,
 failure, replacement and clear controls. The extension is source-only until the
 next build; the running 4e848db2 skin transition has successful live casts.
+
+## Companion profession skill-up notices (26 October 2026)
+
+Player::UpdateSkillPro dispatches OnProfessionSkillGain only after a committed
+positive increase, using native IsProfessionSkill (including Turtle Survival).
+Its probabilistic return value alone does not prove a gain. Existing native
+field updates, caps, persistence state and Eluna OnSkillChange remain in place.
+The new hook is appended so existing hook indices retain their values; the
+default empty virtual requires no bot-disabled stub. The bot module privately
+notifies its active human master in the same group through TellPlayerNoFacing,
+preserving silent policy and localised skill links. It does not announce ordinary
+human gains, weapon/defence skills, initial training/loading, caps or failed rolls.
+No polling, database lookup or packet manipulation is added.
+See playerbots/PROFESSION_SKILL_NOTICES.md. Source-only until a requested build.
+
+
+### Selected corpse loot recovery (26 October 2026)
+
+The loot movement trigger now uses the same configured master-to-corpse range
+as LootAction selection, retaining native 3D interaction reach. The former
+follow-distance gate could strand a selected corpse and block an eligible herb.
+LootAvailableTrigger permits native reselection when the selected target is no
+longer eligible or its corpse is beyond that range; combat/mount admission,
+candidate safety, existing corpse-first ordering and native release remain.
+tests/playerbot-loot-target-recovery extracts the actual triggers and selector
+with controlled services and old-code negative controls. This is a source fix;
+image build/deployment and live corpse/herb/follow acceptance remain pending.
+
+
+### Close rear circle for player-led companions (26 October 2026)
+
+CircleFormation retains native role/roster slot ordering and configured radial
+distance. With an active human master outside combat, halve each slot's angular
+deviation from the rear centre; front-side outer slots become a spaced rear arc.
+Combat placement around the current enemy, free/solo bot circles, other
+formations, native height correction, pathfinding and movement prediction retain
+their existing behavior. The live party was configured to circle/follow 2 yards;
+rear-only circle geometry requires the next image build and live acceptance.
+tests/playerbot-rear-circle extracts the actual circle class and native roster
+angle calculation with controlled unit/map services and an old-code control.

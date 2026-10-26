@@ -140,6 +140,30 @@ class PlayerbotPlayerScript : public PlayerScript
     public:
         PlayerbotPlayerScript() : PlayerScript("PlayerbotPlayerScript") {}
 
+        void OnProfessionSkillGain(Player* player, uint16 skillId,
+                                   uint32 oldValue, uint32 newValue, uint32 maxValue) override
+        {
+            if (!player || newValue <= oldValue)
+                return;
+
+            PlayerbotAI* ai = GetBotAI(player);
+            if (!ai || ai->IsRealPlayer() || !ai->HasActivePlayerMaster())
+                return;
+
+            Player* master = ai->GetMaster();
+            if (!master || !master->IsInWorld() || !player->GetGroup() ||
+                player->GetGroup() != master->GetGroup())
+                return;
+
+            std::ostringstream text;
+            text << player->GetName() << ": "
+                 << ai->GetChatHelper()->formatSkill(skillId, nullptr)
+                 << " increased to " << newValue << "/" << maxValue << ".";
+            // One event per committed gain, with the normal private/silent policy.
+            ai->TellPlayerNoFacing(master, text.str(),
+                PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, true, false);
+        }
+
         bool IsAIControlled(Player const* player) override
         {
             return player && GetBotAI(player) != nullptr;

@@ -151,6 +151,7 @@ enum PlayerHook
     PLAYERHOOK_CAN_USE_GROUP_CHAT,
     PLAYERHOOK_ON_AI_UPDATE,
     PLAYERHOOK_IS_AI_UPDATE_DUE,
+    PLAYERHOOK_ON_PROFESSION_SKILL_GAIN,
     PLAYERHOOK_END
 };
 
@@ -200,6 +201,9 @@ class PlayerScript : public ScriptObject
         virtual void OnMapChanged(Player* /*player*/) {}
         virtual void OnBeforeTeleport(Player* /*player*/, uint32 /*mapId*/, float /*x*/, float /*y*/, float /*z*/, float /*orientation*/) {}
         virtual void OnLootItem(Player* /*player*/, Item* /*item*/, uint32 /*count*/, ObjectGuid /*lootGuid*/) {}
+        // Committed progression from UpdateSkillPro, not a training/load/rank update.
+        virtual void OnProfessionSkillGain(Player* /*player*/, uint16 /*skillId*/,
+                                           uint32 /*oldValue*/, uint32 /*newValue*/, uint32 /*maxValue*/) {}
 
         // Whether some module drives this character instead of a human at a client.
         // Asked wherever the core needs to treat a puppet differently from a player -
