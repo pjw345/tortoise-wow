@@ -5873,7 +5873,7 @@
       "timers",
       "threat"
     ],
-    "sha256": "FEFC43608EA36CC71EBFABCDBF5C1E890394BB92DFDB45CB23BAA0BBEEAA24C9"
+    "sha256": "9AE2E3B00E418025FDBDA7C87D501CD9998AD5242B6207C98BE9D91D2C32C0E7"
   },
   {
     "file": "src/game/Objects/TemporarySummon.h",
@@ -6115,7 +6115,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "687853451D86F1E22CF04577FB734753F591787A3CCE3B56262DEF5DBBDE8C85"
+    "sha256": "8E8BEC40F5DA2F608F4137570400FFC73D0F4947630ED4D7ED1526C884A93E68"
   },
   {
     "file": "src/game/ObjectMgr.h",
@@ -20327,7 +20327,7 @@
     "dependency_signals": [
       "ai_update"
     ],
-    "sha256": "F910FEE1F5FAF3426875176889EA43BD4C4064DCAB4D99F738955029F3A25BAC"
+    "sha256": "4972F3B5A86B79E2B04CC3974D4A9110CF2A174EC8DF635D662110D015F7E062"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ServerFacade.cpp",

@@ -7081,6 +7081,13 @@ bool Player::UpdateSkillPro(uint16 SkillId, int32 Chance, uint32 step)
         if (Eluna* e = GetEluna())
             e->OnSkillChange(this, SkillId, new_value);
 #endif
+        if (new_value > SkillValue && IsProfessionSkill(SkillId))
+        {
+            ScriptRegistry<PlayerScript>::ForEachEnabledHook(PLAYERHOOK_ON_PROFESSION_SKILL_GAIN, [&](PlayerScript* script)
+            {
+                script->OnProfessionSkillGain(this, SkillId, SkillValue, new_value, MaxValue);
+            });
+        }
         DEBUG_LOG("Player::UpdateSkillPro Chance=%3.1f%% taken", Chance / 10.0);
         return true;
     }

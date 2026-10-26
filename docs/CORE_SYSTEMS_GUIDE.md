@@ -1104,3 +1104,17 @@ to legacy generator state and is not an equivalent translation predicate.
 Otherwise the existing cast preparation can skip StopMoving and native spell
 movement interruption can cancel gathering. Keep native cast/stop/recovery and
 other expansion predicates authoritative. See playerbots/NATIVE_MOVEMENT_STATE.md.
+
+## Companion profession skill-up notices (26 October 2026)
+
+Player::UpdateSkillPro dispatches OnProfessionSkillGain only after a committed
+positive increase, using native IsProfessionSkill (including Turtle Survival).
+Its probabilistic return value alone does not prove a gain. Existing native
+field updates, caps, persistence state and Eluna OnSkillChange remain in place.
+The new hook is appended so existing hook indices retain their values; the
+default empty virtual requires no bot-disabled stub. The bot module privately
+notifies its active human master in the same group through TellPlayerNoFacing,
+preserving silent policy and localised skill links. It does not announce ordinary
+human gains, weapon/defence skills, initial training/loading, caps or failed rolls.
+No polling, database lookup or packet manipulation is added.
+See playerbots/PROFESSION_SKILL_NOTICES.md. Source-only until a requested build.
