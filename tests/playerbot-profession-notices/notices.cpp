@@ -82,7 +82,7 @@ struct Fixture{
 };
 void primary(){for(uint32 id:{164u,165u,171u,182u,186u,197u,202u,333u,393u,755u,1234u}){Fixture f;f.bot.learn(id);check(f.bot.UpdateSkillPro(id,1000,1),"native update result");check(f.bot.skill(id)==29,"native stored gain");check(dispatches==1,"exactly one hook dispatch");f.messageCount(1);
 #ifdef TEST_MODULE
- check(messages[0].recipient==&f.master,"message goes to actual master");check(messages[0].privateMessage&&!messages[0].noRepeat,"private event notice without repeat suppression");check(messages[0].text.find("29/75")!=std::string::npos,"reports actual new value/max");check(messages[0].text.find("Mercy: ")==0,"identifies bot");
+ check(messages[0].recipient==&f.master,"message goes to actual master");check(messages[0].privateMessage&&!messages[0].noRepeat,"private event notice without repeat suppression");check(messages[0].text.find("29/75")!=std::string::npos,"reports actual new value/max");
 #endif
  }}
 void secondary(){for(uint32 id:{SKILL_COOKING,SKILL_FIRST_AID,SKILL_FISHING,SKILL_SURVIVAL2}){Fixture f;f.bot.learn(id);f.bot.UpdateSkillPro(id,1000,2);check(f.bot.skill(id)==30,"secondary gain preserved");f.messageCount(1);}}

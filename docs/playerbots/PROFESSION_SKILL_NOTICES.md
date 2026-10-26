@@ -1,7 +1,8 @@
 # Companion profession skill-up notices
 
 A grouped bot whispers its active human master after a real primary or secondary
-profession point gain, for example: Mercy: [Skinning] increased to 29/75.
+profession point gain, for example: [Skinning] increased to 29/75.
+The whisper sender already identifies the bot.
 Names/links use existing ChatHelper localisation. Native IsProfessionSkill also
 includes Turtle Survival; no separate profession list is maintained.
 
