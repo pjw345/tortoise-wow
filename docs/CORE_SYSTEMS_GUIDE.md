@@ -1105,6 +1105,26 @@ Otherwise the existing cast preparation can skip StopMoving and native spell
 movement interruption can cancel gathering. Keep native cast/stop/recovery and
 other expansion predicates authoritative. See playerbots/NATIVE_MOVEMENT_STATE.md.
 
+
+### Explicit non-traded item offers (27 October 2026)
+
+The nt chat trigger selects TradeAction with source nt. It requests one owned
+item in TRADE_SLOT_NONTRADED, regardless of transferability. Ordinary t keeps
+normal trade slots and the existing non-transferable-item fallback. Resolve and
+verify the requested partner before touching a trade; reject an unrelated busy
+partner or missing nt item. Turtle's HandleInitiateTradeOpcode synchronously
+creates both TradeData objects only after native eligibility/scripts succeed.
+Use native HandleBeginTradeOpcode before the first item update, then continue
+the same command. Other core variants keep their previous initiate/ack flow.
+Native HandleSetTradeItemOpcode alone populates the slot; prefilling SetItem
+would trip its duplicate check. Native ownership, bag/bank restrictions,
+acceptance reset, enchant cancellation and updates remain authoritative. An
+occupied non-traded slot is retained, and repeating its same item is idempotent.
+The command never accepts/completes trade or moves equipped inventory. It runs
+on the existing map-owner chat reaction path; no timer, pending request, world
+scan, background worker or alternate trade state is added. See issue #37.
+Source-only until an explicitly requested build and live trade/enchant check.
+
 ## Companion profession skill-up notices (26 October 2026)
 
 Player::UpdateSkillPro dispatches OnProfessionSkillGain only after a committed
