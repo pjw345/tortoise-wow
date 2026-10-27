@@ -9,6 +9,7 @@ enum class SizeFactor{None,BoundingRadius};
 enum{CONFIG_FLOAT_RATE_CREATURE_AGGRO,SPELL_AURA_MOD_DETECT_RANGE,SPELL_AURA_MOD_DETECTED_RANGE};
 constexpr int MAX_LEVEL_DIFF_FOR_AGGRO_RANGE=25;
 constexpr float INTERACTION_DISTANCE=5;
+constexpr uint32 SKILL_NONE=0;
 struct Event {};
 struct WorldObject{float visibility=60;float GetVisibilityDistance(){return visibility;}float boundingRadius=0;bool los=true;};
 struct Creature;struct Player;
@@ -41,12 +42,14 @@ struct Config {float lootHostileDistance=30; unsigned lootTargetInspectDelay=10,
 struct Log {template<class... T> void outLoot(T...) {}} sLog;
 struct BotState {static const int BOT_STATE_NON_COMBAT=0;};
 struct LootObject {
+    uint32 skillId=SKILL_NONE;
     ObjectGuid guid; WorldObject* object=nullptr;
     WorldObject* GetWorldObject(Player*) {return object;}
     bool IsLootPossible(Player*, bool* suppress) {*suppress=false;return true;}
     bool IsApproachSafe(Player*,Unit** blocker=nullptr);
+    static bool IsWorldObjectApproachSafe(Player*,WorldObject*,Unit** blocker=nullptr);
 };
-struct LootObjectStack {int defers=0, removes=0; void Ignore(ObjectGuid,unsigned){} void Remove(ObjectGuid){++removes;} void Defer(ObjectGuid,unsigned){++defers;}} stack;
+struct LootObjectStack {int defers=0, removes=0; void Ignore(ObjectGuid,unsigned,bool=false,bool=false){} void Remove(ObjectGuid){++removes;} void Defer(ObjectGuid,unsigned){++defers;}} stack;
 LootObject current; int nativeMoves=0;
 template<class T> T value(const char*);
 template<> LootObject value<LootObject>(const char*) {return current;}
@@ -61,7 +64,9 @@ int main() {try{
     PlayerbotAI ai;Player bot;bot.ai=&ai; WorldObject corpse;Creature hostile;Event event;
     current.guid.id=1;current.object=&corpse;LootObject loot=current;Unit* blocker=&hostile;
     check(loot.IsApproachSafe(&bot,&blocker)&&blocker==nullptr,"safe loot clears blocker");
+    check(LootObject::IsWorldObjectApproachSafe(&bot,&corpse,&blocker)&&blocker==nullptr,"reporting target uses native safe result");
     ai.hostiles={&hostile};
+    check(!LootObject::IsWorldObjectApproachSafe(&bot,&corpse,&blocker)&&blocker==&hostile,"reporting target uses native threat blocker");
     check(!loot.IsApproachSafe(&bot,&blocker)&&blocker==&hostile,"active master cannot bypass safety");
     ai.activeMaster=false;check(!loot.IsApproachSafe(&bot),"inactive master still protected");
     hostile.los=false;

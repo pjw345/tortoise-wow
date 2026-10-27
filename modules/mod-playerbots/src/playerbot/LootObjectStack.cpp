@@ -112,7 +112,14 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
     Creature* creature = ai->GetCreature(guid);
     if (creature && sServerFacade.GetDeathState(creature) == CORPSE)
     {
-        if (creature->HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE))
+        // Turtle sets LOOTABLE from the template even when the body roll is
+        // empty. Native IsAllowedToLoot then correctly refuses body looting,
+        // but the remaining skinning phase must still be classified below.
+        bool hasBodyLoot = creature->HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+#ifdef MANGOSBOT_ZERO
+        hasBodyLoot = hasBodyLoot && !creature->loot.isLooted();
+#endif
+        if (hasBodyLoot)
         {
             // The lootable flag is set group-wide on a tapped corpse, so it alone does not mean
             // this bot may loot it. Require tap rights, otherwise the bot walks to and kneels on
@@ -316,7 +323,18 @@ bool LootObject::IsApproachSafe(Player* bot, Unit** blocker)
     // opt-out. An active human master does not make unattended loot safe.
     if (!bot->GetGroup() || ai->IsGroupLeader() || sPlayerbotAIConfig.lootHostileDistance <= 0.0f)
         return true;
-    WorldObject* object = GetWorldObject(bot);
+    return IsWorldObjectApproachSafe(bot, GetWorldObject(bot), blocker);
+}
+
+bool LootObject::IsWorldObjectApproachSafe(Player* bot, WorldObject* object, Unit** blocker)
+{
+    if (blocker)
+        *blocker = nullptr;
+    PlayerbotAI* ai = GetBotAI(bot);
+    // Same policy for a visible reporting target; no classification, admission
+    // or movement. The wrapper retains its early return before any refresh.
+    if (!bot->GetGroup() || ai->IsGroupLeader() || sPlayerbotAIConfig.lootHostileDistance <= 0.0f)
+        return true;
     if (!object)
         return false;
     // Search the native visible area, not just the configured combat radius:
@@ -534,7 +552,35 @@ bool LootObjectStack::Add(ObjectGuid guid)
 
     std::map<ObjectGuid, time_t>::const_iterator ignored = ignoredLoot.find(guid);
     if (ignored != ignoredLoot.end())
+    {
+#ifdef MANGOSBOT_ZERO
+        // Recheck a rejected body when native ownership/item eligibility
+        // changes. Successful inspections and real failures retain their
+        // own suppression; gathering also admits the later skinning phase.
+        if (!ignoredBodyLoot.count(guid))
+            return false;
+        LootObject current(bot, guid);
+        Creature* corpse = GetBotAI(bot)->GetCreature(guid);
+        bool bodyReady = unavailableBodyLoot.count(guid) &&
+            current.skillId == SKILL_NONE && corpse &&
+            !corpse->loot.isLooted() && current.IsLootPossible(bot);
+        bool skinReady = !bodyReady &&
+            GetBotAI(bot)->HasStrategy("gather", BotState::BOT_STATE_NON_COMBAT) &&
+            current.skillId == SKILL_SKINNING && corpse &&
+            corpse->IsSkinnableBy(bot) && !corpse->lootForSkin &&
+            corpse->loot.isLooted() && current.IsLootPossible(bot);
+        if (!bodyReady && !skinReady)
+            return false;
+        ignoredLoot.erase(guid);
+        ignoredBodyLoot.erase(guid);
+        unavailableBodyLoot.erase(guid);
+        if (GetBotAI(bot)->HasStrategy("debug loot", BotState::BOT_STATE_NON_COMBAT))
+            sLog.outLoot("bot=%s event=%s guid=%lu", bot->GetName(),
+                bodyReady ? "body-loot-ready" : "body-to-skin-ready", guid.GetRawValue());
+#else
         return false;
+#endif
+    }
 
     LootTargetList::iterator existing = availableLoot.find(guid);
     if (existing != availableLoot.end())
@@ -585,10 +631,18 @@ void LootObjectStack::Defer(ObjectGuid guid, uint32 seconds)
     deferredLoot[guid] = time(0) + std::max<uint32>(1, seconds);
 }
 
-void LootObjectStack::Ignore(ObjectGuid guid, uint32 seconds)
+void LootObjectStack::Ignore(ObjectGuid guid, uint32 seconds, bool bodyLoot, bool unavailableBody)
 {
     Remove(guid);
     ignoredLoot[guid] = time(0) + std::max<uint32>(1, seconds);
+    ignoredBodyLoot.erase(guid);
+    unavailableBodyLoot.erase(guid);
+    if (bodyLoot && guid.IsCreature())
+    {
+        ignoredBodyLoot.insert(guid);
+        if (unavailableBody)
+            unavailableBodyLoot.insert(guid);
+    }
 }
 
 void LootObjectStack::PruneIgnored()
@@ -597,7 +651,11 @@ void LootObjectStack::PruneIgnored()
     for (std::map<ObjectGuid, time_t>::iterator i = ignoredLoot.begin(); i != ignoredLoot.end();)
     {
         if (i->second <= now)
+        {
+            ignoredBodyLoot.erase(i->first);
+            unavailableBodyLoot.erase(i->first);
             ignoredLoot.erase(i++);
+        }
         else
             ++i;
     }
@@ -620,6 +678,8 @@ void LootObjectStack::Clear()
     availableLoot.clear();
     deferredLoot.clear();
     ignoredLoot.clear();
+    ignoredBodyLoot.clear();
+    unavailableBodyLoot.clear();
 }
 
 bool LootObjectStack::CanLoot(float maxDistance)
@@ -661,7 +721,7 @@ std::vector<LootObject> LootObjectStack::OrderByDistance(float maxDistance)
         if (!lootObject.IsLootPossible(bot, &suppressRediscovery))
         {
             if (guid.IsCreature() && suppressRediscovery)
-                Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay);
+                Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay, lootObject.skillId == SKILL_NONE, lootObject.skillId == SKILL_NONE);
             else
                 Remove(guid);
             continue;

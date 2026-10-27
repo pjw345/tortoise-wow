@@ -11,4 +11,5 @@ parent=block(s,'bool AddAllLootAction::AddLoot(')
 assert 'loot.IsApproachSafe(bot, &blocker)' in parent
 assert parent.index('loot.IsApproachSafe(bot, &blocker)') < parent.index('->Add(guid)')
 safety=block((root/'LootObjectStack.cpp').read_text(encoding='utf-8'),'bool LootObject::IsApproachSafe(')
+safety+='\n'+block((root/'LootObjectStack.cpp').read_text(encoding='utf-8'),'bool LootObject::IsWorldObjectApproachSafe(')
 Path(sys.argv[1]).write_text(safety+'\n'+block(s,'bool AddGatheringLootAction::AddLoot(')+'\n',encoding='utf-8',newline='\n')

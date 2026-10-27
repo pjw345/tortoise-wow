@@ -21,6 +21,7 @@ namespace ai
         bool IsEmpty() { return !guid; }
         bool IsLootPossible(Player* bot, bool* suppressRediscovery = nullptr);
         bool IsApproachSafe(Player* bot, Unit** blocker = nullptr);
+        static bool IsWorldObjectApproachSafe(Player* bot, WorldObject* object, Unit** blocker = nullptr);
         void Refresh(Player* bot, ObjectGuid guid, bool debug = false);
         WorldObject* GetWorldObject(Player* bot);
         ObjectGuid guid;
@@ -60,7 +61,7 @@ namespace ai
         bool Add(ObjectGuid guid);
         void Remove(ObjectGuid guid);
         void Defer(ObjectGuid guid, uint32 seconds);
-        void Ignore(ObjectGuid guid, uint32 seconds);
+        void Ignore(ObjectGuid guid, uint32 seconds, bool bodyLoot = false, bool unavailableBody = false);
         void Clear();
         bool CanLoot(float maxDistance);
         LootObject GetLoot(float maxDistance = 0);
@@ -76,6 +77,8 @@ namespace ai
         LootTargetList availableLoot;
         std::map<ObjectGuid, time_t> deferredLoot;
         std::map<ObjectGuid, time_t> ignoredLoot;
+        std::set<ObjectGuid> ignoredBodyLoot;
+        std::set<ObjectGuid> unavailableBodyLoot;
     };
 
 };

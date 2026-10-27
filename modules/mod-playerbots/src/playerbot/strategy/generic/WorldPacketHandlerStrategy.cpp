@@ -13,6 +13,9 @@ WorldPacketHandlerStrategy::WorldPacketHandlerStrategy(PlayerbotAI* ai) : PassTr
     supported.push_back("quest update failed timer");
     supported.push_back("quest update complete");
     supported.push_back("party command");
+#ifdef MANGOSBOT_ZERO
+    supported.push_back("party kill");
+#endif
     supported.push_back("ready check");
     supported.push_back("uninvite");
     supported.push_back("lfg role check");

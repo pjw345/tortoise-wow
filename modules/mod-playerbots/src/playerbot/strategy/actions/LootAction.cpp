@@ -654,7 +654,7 @@ bool StoreLootAction::Execute(Event& event)
 
     LootObjectStack* lootStack = AI_VALUE(LootObjectStack*, "available loot");
     if (guid.IsCreature() && !transferFailed)
-        lootStack->Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay);
+        lootStack->Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay, loot_type == LOOT_CORPSE);
     else if (transferFailed)
         lootStack->Ignore(guid, sPlayerbotAIConfig.lootTargetRetryDelay);
     else
