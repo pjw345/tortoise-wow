@@ -189,6 +189,9 @@ namespace ai
 			creators["auto learn spell"] = [](PlayerbotAI* ai) { return new AutoLearnSpellAction(ai); };
             creators["auto share quest"] = [](PlayerbotAI* ai) { return new AutoShareQuestAction(ai); };
             creators["xp gain"] = [](PlayerbotAI* ai) { return new XpGainAction(ai); };
+#ifdef MANGOSBOT_ZERO
+            creators["party kill"] = [](PlayerbotAI* ai) { return new PartyKillLootAction(ai); };
+#endif
             creators["honor gain"] = [](PlayerbotAI* ai) { return new HonorGainAction(ai); };
             creators["invite nearby"] = [](PlayerbotAI* ai) { return new InviteNearbyToGroupAction(ai); };
             creators["invite guild"] = [](PlayerbotAI* ai) { return new InviteGuildToGroupAction(ai); };

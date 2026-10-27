@@ -30,7 +30,7 @@ struct {float lootHostileDistance=20,gatheringDistance=15,groupMemberGatheringDi
 struct {bool IsWithinLOSInMap(Player*,WorldObject* o){return o->los;}float GetDistance2d(Player*,WorldObject*){return currentAI->masterDistance;}bool IsDistanceGreaterThan(float a,float b){return a>b;}}sServerFacade;
 struct {int count=0;template<class...T>void outLoot(T...){++count;}}sLog;
 WorldObject node;bool possible=true,empty=false;uint8 bagSpace=0;int skill=186;
-struct LootObject{int skillId;LootObject(Player*,ObjectGuid):skillId(skill){}bool IsEmpty(){return empty;}WorldObject* GetWorldObject(Player*){return &node;}bool IsLootPossible(Player*){return possible;}bool IsApproachSafe(Player*,Unit** = nullptr);};
+struct LootObject{int skillId;LootObject(Player*,ObjectGuid):skillId(skill){}bool IsEmpty(){return empty;}WorldObject* GetWorldObject(Player*){return &node;}bool IsLootPossible(Player*){return possible;}bool IsApproachSafe(Player*,Unit** = nullptr);static bool IsWorldObjectApproachSafe(Player*,WorldObject*,Unit** = nullptr);};
 struct AddAllLootAction{AI* ai;Player* bot;int parentCalls=0;bool AddLoot(Player*,ObjectGuid guid,bool){++parentCalls;LootObject loot(bot,guid);return loot.IsApproachSafe(bot);}};
 struct AddGatheringLootAction:AddAllLootAction{bool AddLoot(Player*,ObjectGuid,bool=false);};
 namespace PlayerbotSecurityLevel{constexpr int PLAYERBOT_SECURITY_ALLOW_ALL=0;}

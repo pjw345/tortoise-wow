@@ -1,5 +1,6 @@
 #pragma once
 #include "GenericActions.h"
+#include "playerbot/LootObjectStack.h"
 
 namespace ai
 {
@@ -47,6 +48,15 @@ namespace ai
 #endif 
     };
 
+#ifdef MANGOSBOT_ZERO
+    class PartyKillLootAction : public AddAllLootAction
+    {
+    public:
+        PartyKillLootAction(PlayerbotAI* ai) : AddAllLootAction(ai, "party kill") {}
+        bool Execute(Event& event) override;
+    };
+#endif
+
     class AddGatheringLootAction : public AddAllLootAction
     {
     public:
@@ -57,6 +67,11 @@ namespace ai
 
     private:
         bool AllowsGatheringTargets() const override { return true; }
+
+#ifdef MANGOSBOT_ZERO
+        void TellInsufficientSkinningSkill(ObjectGuid guid, LootObject const& loot);
+        LootTargetList skinningSkillWarnings;
+#endif
 
 #ifdef GenerateBotHelp
         virtual std::string GetHelpName() { return "add gathering loot"; }
