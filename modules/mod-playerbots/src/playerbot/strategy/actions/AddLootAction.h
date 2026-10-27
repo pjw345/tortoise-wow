@@ -1,5 +1,6 @@
 #pragma once
 #include "GenericActions.h"
+#include "playerbot/LootObjectStack.h"
 
 namespace ai
 {
@@ -66,6 +67,11 @@ namespace ai
 
     private:
         bool AllowsGatheringTargets() const override { return true; }
+
+#ifdef MANGOSBOT_ZERO
+        void TellInsufficientSkinningSkill(ObjectGuid guid, LootObject const& loot);
+        LootTargetList skinningSkillWarnings;
+#endif
 
 #ifdef GenerateBotHelp
         virtual std::string GetHelpName() { return "add gathering loot"; }

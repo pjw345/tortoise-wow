@@ -1189,3 +1189,21 @@ movement, native opening/casts and corpse lifecycle remain unchanged.
 A successful new admission invalidates only the cached has-available-loot value.
 The five-second scan and XP path remain fallbacks; no global timer is reduced.
 Other bot variants retain their existing registrations. Source-only until build.
+
+### Insufficient companion Skinning skill warning (27 October 2026)
+
+ZERO gathering discovery privately reports the native required/current Skinning
+points when low skill excludes an otherwise locally skinnable corpse. Native
+classification keeps its empty GUID and refusal; this feedback does not enqueue,
+ignore, defer, move to, cast on or mutate the corpse. A read-only temporary target
+reuses destination safety solely before reporting. The active human master must
+share the group; the body must be looted, skin loot unused, native tap/skin rights
+valid, knife present, and normal master gathering range, height and LOS valid.
+Existing private/silent/security and text-repeat handling remain authoritative.
+An independent existing LootTargetList remembers successful warnings per corpse
+for LootTargetInspectDelay, then prunes its timestamps on the next eligible check.
+Other variants retain existing behavior. No extra discovery, polling, database
+query or always-on diagnostic stream is added. The cast's two-second duration,
+native skill/tool/ownership checks and real loot retry state remain unchanged.
+Blank manual-cast failure text is a separate compatibility issue (#98).
+Source-only until a requested server build and live acceptance.

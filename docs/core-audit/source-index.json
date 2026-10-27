@@ -23570,7 +23570,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "A5DDFB226B05829F8EC6B658C7D60140D2F88BB0915BDA3EF9A38E59F19B04C7"
+    "sha256": "3D1E2409ECF88BDA15A2831F2507EE24B0AD2CE8417C041B3D2F3B722E3D152F"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/SecurityCheckAction.cpp",
@@ -23908,7 +23908,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "8F324C1898AF5F6C07F522600545DA4738A3E61788D250832DB5D200DFD76A70"
+    "sha256": "841812316D40BB40624EF7928915ADD3AC3326965D7AFA7F7B8499C5795AF50A"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/TellMasterAction.h",
