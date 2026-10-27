@@ -1124,3 +1124,137 @@ The command never accepts/completes trade or moves equipped inventory. It runs
 on the existing map-owner chat reaction path; no timer, pending request, world
 scan, background worker or alternate trade state is added. See issue #37.
 Source-only until an explicitly requested build and live trade/enchant check.
+
+## Companion profession skill-up notices (26 October 2026)
+
+Player::UpdateSkillPro dispatches OnProfessionSkillGain only after a committed
+positive increase, using native IsProfessionSkill (including Turtle Survival).
+Its probabilistic return value alone does not prove a gain. Existing native
+field updates, caps, persistence state and Eluna OnSkillChange remain in place.
+The new hook is appended so existing hook indices retain their values; the
+default empty virtual requires no bot-disabled stub. The bot module privately
+notifies its active human master in the same group through TellPlayerNoFacing,
+preserving silent policy and localised skill links. It does not announce ordinary
+human gains, weapon/defence skills, initial training/loading, caps or failed rolls.
+No polling, database lookup or packet manipulation is added.
+See playerbots/PROFESSION_SKILL_NOTICES.md. Source-only until a requested build.
+
+
+### Body-loot to skinning transition (26 October 2026)
+
+The existing per-bot ignore cache distinguishes ordinary body inspection/rights
+suppression from real failures and completed skinning. A marked body suppression
+may end early only when native skinning ownership and full-body-loot readiness,
+unused skin loot and existing skill/tool eligibility all permit the next phase.
+Unchanged bodies, other objects and real failed-skinning retry periods retain
+their timers. No native ownership/outsider timer or loot generation is changed.
+The first queue-only fix was built/deployed as 4e848db2, but the first live
+boar still produced no body loot or skinning before despawn. Native loot-rights
+rejections alone do not identify an owner: IsAllowedToLoot also rejects an
+already-empty body. Turtle Unit::Kill sets LOOTABLE from template presence,
+including empty rolls. ZERO corpse classification must therefore inspect native
+loot.isLooted() before giving that flag priority over SKINNABLE. Keep non-empty
+body loot first, native skinning ownership/readiness/tool/skill gates intact,
+and other variants unchanged. Source-extracted real corpse classification and
+queue fixtures cover these complementary paths. The classifier extension still
+requires a full image build and live acceptance; the exact live corpse's native
+loot contents/dynamic flags were not captured before it despawned.
+
+Ordinary body rejection also uses an availability marker separate from successful
+body inspection. ZERO may release only that rejection marker when the native body
+still contains loot and current ownership/item-policy checks now permit it. This
+recovery does not require the profession gather strategy. Successful inspection,
+actual failure/retry, unchanged native denial and other variants keep their
+timers. Live evidence shows Mercy's last rejection at 18:41:30, eligible discovery
+by 18:42:30 and body opening at 18:43:30, matching the remaining ignore period.
+The queue fixture validates native-predicate-controlled recovery and inspection,
+failure, replacement and clear controls. The extension is source-only until the
+next build; the running 4e848db2 skin transition has successful live casts.
+
+### Grey party-kill loot admission (26 October 2026)
+
+Turtle group kills emit SMSG_PARTYKILLLOG (killer GUID then victim GUID) even
+when they grant no XP. The existing bot outgoing-packet queue delays repeat
+events until their trigger can consume them. ZERO now maps that native event
+to normal AddAllLootAction admission for living loot-enabled companions with an
+active human master in the same group. Existing ownership, distance, safety,
+bags and profession opt-in still decide admission; selection/combat checks,
+movement, native opening/casts and corpse lifecycle remain unchanged.
+A successful new admission invalidates only the cached has-available-loot value.
+The five-second scan and XP path remain fallbacks; no global timer is reduced.
+Other bot variants retain their existing registrations. Source-only until build.
+
+### Insufficient companion Skinning skill warning (27 October 2026)
+
+ZERO gathering discovery privately reports the native required/current Skinning
+points when low skill excludes an otherwise locally skinnable corpse. Native
+classification keeps its empty GUID and refusal; this feedback does not enqueue,
+ignore, defer, move to, cast on or mutate the corpse. A read-only temporary target
+reuses destination safety solely before reporting. The active human master must
+share the group; the body must be looted, skin loot unused, native tap/skin rights
+valid, knife present, and normal master gathering range, height and LOS valid.
+Existing private/silent/security and text-repeat handling remain authoritative.
+An independent existing LootTargetList remembers successful warnings per corpse
+for LootTargetInspectDelay, then prunes its timestamps on the next eligible check.
+Other variants retain existing behavior. No extra discovery, polling, database
+query or always-on diagnostic stream is added. The cast's two-second duration,
+native skill/tool/ownership checks and real loot retry state remain unchanged.
+Blank manual-cast failure text is a separate compatibility issue (#98).
+Source-only until a requested server build and live acceptance.
+
+
+### Skinning warning refresh contract (27 October 2026)
+
+GetWorldObject calls Refresh using the classified GUID. Low-skill classification
+deliberately leaves that GUID empty while retaining required skill metadata.
+Report that refusal before resolving the loot object, or a refresh of the empty
+GUID erases its reason. Reassigning a GUID to a temporary LootObject is also
+insufficient: IsApproachSafe resolves/refreshes it and rejects it again for low
+skill. The warning instead passes its native corpse pointer to the extracted
+IsWorldObjectApproachSafe policy. The ordinary IsApproachSafe wrapper keeps its
+original early policy opt-out before resolving a loot target, and delegates to
+that same policy. Native combat/threat/LOS/range, body readiness, skin rights,
+skill/tool and reporting-repeat checks remain unchanged; no low-skill corpse is
+admitted. Real GetWorldObject regression and two old/partial negative controls
+cover both failure boundaries. Source-only until a requested build/live check.
+
+### Close rear circle for player-led companions (26 October 2026)
+
+CircleFormation retains native role/roster slot ordering and configured radial
+distance. With an active human master outside combat, halve each slot's angular
+deviation from the rear centre; front-side outer slots become a spaced rear arc.
+Combat placement around the current enemy, free/solo bot circles, other
+formations, native height correction, pathfinding and movement prediction retain
+their existing behavior. The live party was configured to circle/follow 2 yards;
+rear-only circle geometry requires the next image build and live acceptance.
+tests/playerbot-rear-circle extracts the actual circle class and native roster
+angle calculation with controlled unit/map services and an old-code control.
+
+### Selected corpse loot recovery (26 October 2026)
+
+The loot movement trigger now uses the same configured master-to-corpse range
+as LootAction selection, retaining native 3D interaction reach. The former
+follow-distance gate could strand a selected corpse and block an eligible herb.
+LootAvailableTrigger permits native reselection when the selected target is no
+longer eligible or its corpse is beyond that range; combat/mount admission,
+candidate safety, existing corpse-first ordering and native release remain.
+tests/playerbot-loot-target-recovery extracts the actual triggers and selector
+with controlled services and old-code negative controls. This is a source fix;
+image build/deployment and live corpse/herb/follow acceptance remain pending.
+
+### Companion loot selection and inherited combat flags (27 October 2026)
+
+Only ZERO's active-human-led PvE loot trigger distinguishes inherited nearby
+group combat flags from native combat links. The bot's own combat flag remains
+a hold. Nearby same-map party members with a native hostile reference, living
+victim or living attacker (including their pet's links) still hold selection.
+A lingering master/group-member flag alone, such as during Bloodrage's native
+regeneration interruption, no longer holds ordinary corpse or gathering selection.
+The existing same-group/master, PvP, mounted, availability, current-target and
+configured corpse-range rules retain their other semantics. Random/free/real
+players, nonmatching master contexts, PvP and other variants keep the old flag
+gate. No spell ID, special buff name, timer, combat/assist/healing predicate or
+native combat exit is changed. Existing selection/movement/opening retain native
+ownership, skill/tool, LOS/range and hostile destination safety. The helper reads
+existing native player/pet combat references; it adds no world scan or background
+state. This is source-only until a requested build and live acceptance.

@@ -17,6 +17,42 @@ using namespace MaNGOS;
 
 using namespace ai;
 
+#ifdef MANGOSBOT_ZERO
+bool PartyKillLootAction::Execute(Event& event)
+{
+    if (!bot->IsAlive() || !ai->HasActivePlayerMaster() ||
+        !ai->HasStrategy("loot", BotState::BOT_STATE_NON_COMBAT))
+        return false;
+
+    Player* master = ai->GetMaster();
+    if (!master || !master->IsInWorld() || !bot->GetGroup() ||
+        bot->GetGroup() != master->GetGroup())
+        return false;
+
+    WorldPacket packet(event.getPacket());
+    if (packet.GetOpcode() != SMSG_PARTYKILLLOG || packet.size() < 2 * sizeof(uint64))
+        return false;
+
+    packet.rpos(0);
+    ObjectGuid killer, victim;
+    packet >> killer >> victim;
+    if (!killer.IsPlayer() || !victim.IsCreature())
+        return false;
+
+    LootObject loot(bot, victim);
+    if (loot.skillId != SKILL_NONE &&
+        !ai->HasStrategy("gather", BotState::BOT_STATE_NON_COMBAT))
+        return false;
+
+    // Admission only: native ownership, range, safety and bag policy still
+    // run here; selection/movement/opening remain with the normal loot engine.
+    bool added = AddLoot(master, victim);
+    if (added)
+        RESET_AI_VALUE(bool, "has available loot");
+    return added;
+}
+#endif
+
 bool AddLootAction::Execute(Event& event)
 {
     ObjectGuid guid = event.getObject();
@@ -144,7 +180,7 @@ bool AddAllLootAction::AddLoot(Player* requester, ObjectGuid guid, bool explicit
     if (!loot.IsLootPossible(bot, &suppressRediscovery))
     {
         if (suppressRediscovery && guid.IsCreature())
-            AI_VALUE(LootObjectStack*, "available loot")->Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay);
+            AI_VALUE(LootObjectStack*, "available loot")->Ignore(guid, sPlayerbotAIConfig.lootTargetInspectDelay, loot.skillId == SKILL_NONE, loot.skillId == SKILL_NONE);
         if (debugLoot && traceTarget)
             sLog.outLoot("bot=%s event=reject guid=%lu reason=loot-policy suppress=%d",
                 bot->GetName(), guid.GetRawValue(), suppressRediscovery ? 1 : 0);
@@ -286,9 +322,69 @@ bool AddGatheringLootAction::isUseful()
     return AddAllLootAction::isUseful();
 }
 
+#ifdef MANGOSBOT_ZERO
+void AddGatheringLootAction::TellInsufficientSkinningSkill(ObjectGuid guid, LootObject const& loot)
+{
+    if (loot.skillId != SKILL_SKINNING || !loot.reqSkillValue ||
+        !ai->HasSkill(SKILL_SKINNING) || !ai->HasActivePlayerMaster() || ai->IsRealPlayer())
+        return;
+
+    uint32 current = bot->GetSkillValue(SKILL_SKINNING);
+    if (current >= loot.reqSkillValue)
+        return;
+
+    Player* master = ai->GetMaster();
+    Creature* corpse = ai->GetCreature(guid);
+    if (!master || !master->IsInWorld() || !bot->GetGroup() ||
+        bot->GetGroup() != master->GetGroup() || !corpse ||
+        sServerFacade.GetDeathState(corpse) != CORPSE ||
+        !corpse->IsSkinnableBy(bot) || !corpse->loot.isLooted() ||
+        corpse->lootForSkin || !bot->HasItemCount(7005, 1))
+        return;
+
+    // Same active-master gathering range/LOS and native destination safety;
+    // a warning must not imply permission to leave the group or loot.
+    float range = ai->IsGroupLeader() ? sPlayerbotAIConfig.gatheringDistance :
+        sPlayerbotAIConfig.groupMemberGatheringDistanceWithActiveMaster;
+    if (sServerFacade.IsDistanceGreaterThan(sServerFacade.GetDistance2d(master, corpse), range) ||
+        fabs(corpse->GetPositionZ() - bot->GetPositionZ()) > INTERACTION_DISTANCE ||
+        !sServerFacade.IsWithinLOSInMap(bot, corpse))
+        return;
+
+    // The corpse is a reporting target, not eligible loot. Resolve no loot
+    // GUID here: refreshing would reject it again for the same low skill.
+    if (!LootObject::IsWorldObjectApproachSafe(bot, corpse))
+        return;
+
+    // Reuse the existing bounded GUID/timestamp list independently of the
+    // real loot queue. Nothing is ignored, deferred, selected or cast here.
+    skinningSkillWarnings.shrink(time(0) - std::max<uint32>(1, sPlayerbotAIConfig.lootTargetInspectDelay));
+    if (skinningSkillWarnings.find(guid) != skinningSkillWarnings.end())
+        return;
+
+    std::ostringstream text;
+    text << "Not enough " << ai->GetChatHelper()->formatSkill(SKILL_SKINNING, nullptr)
+         << " skill to skin. Required skill: " << loot.reqSkillValue
+         << "; my skill: " << current << ".";
+    if (ai->TellPlayerNoFacing(master, text.str(),
+        PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, true))
+        skinningSkillWarnings.insert(guid);
+}
+#endif
+
 bool AddGatheringLootAction::AddLoot(Player* requester, ObjectGuid guid, bool explicitTarget)
 {
     LootObject loot(bot, guid);
+
+    // GetWorldObject refreshes using the classified GUID. An insufficient-skill
+    // corpse has an empty GUID; resolving it would erase its rejection details.
+    if (loot.IsEmpty())
+    {
+#ifdef MANGOSBOT_ZERO
+        TellInsufficientSkinningSkill(guid, loot);
+#endif
+        return false;
+    }
 
     WorldObject *wo = loot.GetWorldObject(bot);
     if (loot.IsEmpty() || !wo)

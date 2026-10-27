@@ -7,15 +7,99 @@
 #include "playerbot/ServerFacade.h"
 using namespace ai;
 
+namespace
+{
+#ifdef MANGOSBOT_ZERO
+    bool HasLiveLootCombatLinks(Unit* unit)
+    {
+        if (!unit || !unit->IsInWorld() || !sServerFacade.IsAlive(unit))
+            return false;
+
+        // Reuse the native references used by combat exit. A regeneration-
+        // blocking aura or a combat timer alone is not an engaged enemy.
+        if (!unit->GetHostileRefManager().isEmpty())
+            return true;
+        Unit* victim = unit->GetVictim();
+        if (victim && victim->IsInWorld() && victim->GetMap() == unit->GetMap() &&
+            sServerFacade.IsAlive(victim))
+            return true;
+        for (Unit* attacker : unit->getAttackers())
+        {
+            if (attacker && attacker->IsInWorld() && attacker->GetMap() == unit->GetMap() &&
+                sServerFacade.IsAlive(attacker))
+                return true;
+        }
+        return false;
+    }
+#endif
+
+    bool IsLootCombatActive(PlayerbotAI* ai, Player* bot, bool sharedCombat)
+    {
+#ifdef MANGOSBOT_ZERO
+        if (!sharedCombat || !ai->HasActivePlayerMaster() || ai->IsRealPlayer() || ai->IsInPvp())
+            return sharedCombat;
+
+        Player* master = ai->GetMaster();
+        Group* group = bot->GetGroup();
+        if (!master || !master->IsInWorld() || master->GetMap() != bot->GetMap() ||
+            !group || group != master->GetGroup())
+            return sharedCombat;
+
+        // The bot's own combat flag remains authoritative. Relax only the
+        // inherited nearby-party hold when nobody has native combat links.
+        if (sServerFacade.IsInCombat(bot))
+            return true;
+        for (auto const& slot : group->GetMemberSlots())
+        {
+            Player* member = sObjectMgr.GetPlayer(slot.guid);
+            if (!member || member == bot || !member->IsInWorld() ||
+                member->GetMap() != bot->GetMap() || !sServerFacade.IsInCombat(member) ||
+                !sServerFacade.IsDistanceLessOrEqualThan(sServerFacade.GetDistance2d(member, bot),
+                    sPlayerbotAIConfig.reactDistance))
+                continue;
+
+            if (HasLiveLootCombatLinks(member))
+                return true;
+            Pet* pet = member->GetPet();
+            if (pet && pet->GetMap() == bot->GetMap() && HasLiveLootCombatLinks(pet))
+                return true;
+        }
+        return false;
+#else
+        return sharedCombat;
+#endif
+    }
+
+    bool IsCorpseOutsideMasterLootRange(PlayerbotAI* ai, Player* bot, LootObject const& loot)
+    {
+        Player* master = ai->GetMaster();
+        Creature* corpse = ai->GetCreature(loot.guid);
+        if (!master || master == bot || !corpse || sServerFacade.GetDeathState(corpse) != CORPSE)
+            return false;
+
+        // Match LootAction::Execute's existing companion corpse admission.
+        float range = sPlayerbotAIConfig.lootDistance;
+        if (bot->GetGroup() && !ai->IsGroupLeader())
+            range = ai->HasActivePlayerMaster() ?
+                sPlayerbotAIConfig.groupMemberLootDistanceWithActiveMaster :
+                sPlayerbotAIConfig.groupMemberLootDistance;
+        return sServerFacade.GetDistance2d(master, corpse) > range;
+    }
+}
+
 bool LootAvailableTrigger::IsActive()
 {
-    return AI_VALUE(bool, "has available loot") &&
-            (
-                    sServerFacade.IsDistanceLessOrEqualThan(AI_VALUE2(float, "distance", "loot target"), INTERACTION_DISTANCE) ||
-                    AI_VALUE(std::list<ObjectGuid>, "all targets").empty()
-            ) &&
-            !AI_VALUE2(bool, "combat", "self target") &&
-            !AI_VALUE2(bool, "mounted", "self target");
+    if (!AI_VALUE(bool, "has available loot") ||
+        IsLootCombatActive(ai, bot, AI_VALUE2(bool, "combat", "self target")) ||
+        AI_VALUE2(bool, "mounted", "self target"))
+        return false;
+
+    LootObject current = AI_VALUE(LootObject, "loot target");
+    // A selected target that cannot proceed must not strand another queued
+    // candidate. Native selection still rechecks eligibility and approach safety.
+    return !current.IsLootPossible(bot) || IsCorpseOutsideMasterLootRange(ai, bot, current) ||
+        sServerFacade.IsDistanceLessOrEqualThan(AI_VALUE2(float, "distance", "loot target"), INTERACTION_DISTANCE) ||
+        AI_VALUE(std::list<ObjectGuid>, "all targets").empty();
 }
 
 bool FarFromCurrentLootTrigger::IsActive()
@@ -25,22 +109,10 @@ bool FarFromCurrentLootTrigger::IsActive()
     if (!loot.IsLootPossible(bot))
         return false;
 
-    // Abandon loot the bot cannot safely reach without breaking its follow leash.
-    // "move to loot" runs at priority 7 but "out of free move range" fires "follow" at
-    // ACTION_HIGH (20). A corpse is only reachable without oscillation if the master is
-    // within followDistance + GetMaxLootDistance of it — otherwise the bot must leave the
-    // leash to reach the corpse and follow immediately wins, causing a yo-yo.
-    Player* master = ai->GetMaster();
-    if (master && master != bot)
-    {
-        Creature* creature = ai->GetCreature(loot.guid);
-        if (creature && sServerFacade.GetDeathState(creature) == CORPSE)
-        {
-            float safeRange = sPlayerbotAIConfig.followDistance + bot->GetMaxLootDistance(creature);
-            if (sServerFacade.GetDistance2d(master, creature) > safeRange)
-                return false;
-        }
-    }
+    // The movement trigger must accept the same configured corpse range as
+    // selection; a follow-distance gate can select a target but never approach it.
+    if (IsCorpseOutsideMasterLootRange(ai, bot, loot))
+        return false;
 
     // Must agree with OpenLootAction::DoLoot's loot-range rule, or the bot deadlocks: for a
     // creature corpse the server validates loot with a 3D distance check (Player::SendLoot),

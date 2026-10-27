@@ -5873,7 +5873,7 @@
       "timers",
       "threat"
     ],
-    "sha256": "FEFC43608EA36CC71EBFABCDBF5C1E890394BB92DFDB45CB23BAA0BBEEAA24C9"
+    "sha256": "9AE2E3B00E418025FDBDA7C87D501CD9998AD5242B6207C98BE9D91D2C32C0E7"
   },
   {
     "file": "src/game/Objects/TemporarySummon.h",
@@ -6115,7 +6115,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "687853451D86F1E22CF04577FB734753F591787A3CCE3B56262DEF5DBBDE8C85"
+    "sha256": "8E8BEC40F5DA2F608F4137570400FFC73D0F4947630ED4D7ED1526C884A93E68"
   },
   {
     "file": "src/game/ObjectMgr.h",
@@ -16940,7 +16940,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "262C3BC7A8057E3907F6704D7CF2BAA9503F33BC4D1EA416CBC5E39D64DE6A8A"
+    "sha256": "A92DE2CF65A0FE36E1FD145DA8D71AEDBE8C7FEC3D0915D7C93A7609FBA99FC8"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/FleeManager.h",
@@ -17664,7 +17664,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "90F7FA598FB7641060B7530EB76719358DD8C281F4D3782EA54696D27A9ECA86"
+    "sha256": "C5AFA7F57FA99E471E638B0C249B15ED783698ABC8C6A2874D31DF9439E29C7B"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/triggers/PullTriggers.cpp",
@@ -17746,7 +17746,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "4B5B35D2E5FAA8D71E2DD46F40539B54E75C54E114EAB6DB13B4D6D5770E0D3E"
+    "sha256": "824DAB994379D29B4F542E8E82A657F47B5B466B067202812ED1AC12E8B9A30B"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/triggers/RpgTriggers.h",
@@ -19609,7 +19609,7 @@
     "dependency_signals": [
       "death_reset"
     ],
-    "sha256": "41F698CD8174BF1B08B321F94CE3F81B22BB3C85C59FE1437F19551816E32201"
+    "sha256": "7C400877A6902BA2A032D8BD95C8B4512D299094C0CA9F5522C90F808A9AAF19"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/DpsTargetValue.h",
@@ -20158,7 +20158,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "A5A38048298568D496B48C90E4D0AB80FAFF81FC3B79EB5894ACDBA38E0C2CA2"
+    "sha256": "73BD0DC6E56B92AD55DCA05370431E792599778722F8426BB7FDA92880C12CFE"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ChatFilter.h",
@@ -20327,7 +20327,7 @@
     "dependency_signals": [
       "ai_update"
     ],
-    "sha256": "F910FEE1F5FAF3426875176889EA43BD4C4064DCAB4D99F738955029F3A25BAC"
+    "sha256": "634055C3EBF878A3C9A705486519E77A0B575705F8C749DC239271AEBD938785"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/ServerFacade.cpp",
@@ -20599,7 +20599,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "9B55D3A5E1344636244134642415DDC63E24F8EC3C379B032451771B241AB33C"
+    "sha256": "E493EFC1D03247F8E946FFF0A374DBB4695DA0DC0E210790BC810C10F3119CB9"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/warrior/ProtectionWarriorStrategy.cpp",
@@ -22279,7 +22279,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "9965CE4D5D4691CEDFCF1B331D5DC23A10F0F5EDF2C1752B4CA2C615811690F4"
+    "sha256": "6A2B3463E8D5667263104A36217591043027CF950EC31F2E29C10280164F62C3"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/PullActions.cpp",
@@ -23008,7 +23008,7 @@
       "death_reset",
       "threat"
     ],
-    "sha256": "ECCAFB95AA4E3DDE49BB97D4E44CB91D8A3802D506A229F75A17A632D82CA4B8"
+    "sha256": "BB2B5D7DE80536B0C9B8C2589A6D958D7E6B3568B854BB9A82D65CEC6326B90E"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/GuildAcceptQuestOrderAction.h",
@@ -23480,7 +23480,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "985E464F97076111AEE6317DB54D9242D30C859EF80877E1D30351C3C21FD46D"
+    "sha256": "DA8E3D32D87FD707DDF60311FAA13EB63D345FB523D900B4098A9BC10FF2647E"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/TellLosAction.cpp",
@@ -23570,7 +23570,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "81F14502B3FEA0DDF010608536BFB606546C85C998A547FD1D8C8556FCAEA359"
+    "sha256": "3D1E2409ECF88BDA15A2831F2507EE24B0AD2CE8417C041B3D2F3B722E3D152F"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/SecurityCheckAction.cpp",
@@ -23908,7 +23908,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "F010DC71B931FA0B4F02912BD7BD47F5E28BD006314384C3038ECC72785F6701"
+    "sha256": "BDEBCF66BB3A86845BC3DB34A645732D0AB8C39BBBC4739CAE65E1F1096F1014"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/TellMasterAction.h",
@@ -24581,7 +24581,7 @@
       "death_reset",
       "async"
     ],
-    "sha256": "1BD33E9AB4A4AE8F26DF03B65228E8E30A802E8EE25D42EFF0E8F04BF5C51C2B"
+    "sha256": "562F47D5AF50693646FCE40B0E08D19DEB87895D080DCA1DB402836AD3FB77CE"
   },
   {
     "file": "src/game/BattleLog.cpp",
