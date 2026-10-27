@@ -1,4 +1,3 @@
-
 #include "playerbot/playerbot.h"
 #include "TradeAction.h"
 #include "playerbot/strategy/ItemVisitors.h"
@@ -9,44 +8,52 @@ using namespace ai;
 bool TradeAction::Execute(Event& event)
 {
     std::string text = event.getParam();
+    bool const nonTradedOnly = event.getSource() == "nt";
+    Player* player = nullptr;
+    for (auto const& guid : chat->parseGameobjects(text))
+    {
+        if (guid.IsPlayer())
+            player = sObjectMgr.GetPlayer(guid);
+    }
+    if (!player)
+        player = event.getOwner() ? event.getOwner() : GetMaster();
+    if (!player || (bot->GetTrader() && bot->GetTrader() != player) ||
+        (player->GetTrader() && player->GetTrader() != bot))
+        return false;
 
+    IterateItemsMask mask = IterateItemsMask((uint8)IterateItemsMask::ITERATE_ITEMS_IN_EQUIP | (uint8)IterateItemsMask::ITERATE_ITEMS_IN_BAGS);
+    if (nonTradedOnly && ai->InventoryParseItems(text, mask).empty())
+        return false;
+
+    bool initiated = false;
     if (!bot->GetTrader())
     {
-        std::list<ObjectGuid> guids = chat->parseGameobjects(text);
-        Player* player = nullptr;
-
-        for(auto& guid: guids)
-        {
-            if (guid.IsPlayer())
-            {
-                player = sObjectMgr.GetPlayer(guid);
-            }
-        }
-
-        if (!player)
-        {
-            player = event.getOwner() ? event.getOwner() : GetMaster();
-        }
-
-        if (!player) 
-        {
+        WorldPacket packet(CMSG_INITIATE_TRADE);
+        packet << player->GetObjectGuid();
+        bot->GetSession()->HandleInitiateTradeOpcode(packet);
+#ifdef MANGOSBOT_ZERO
+        // Turtle's native initiation creates both TradeData objects synchronously.
+        // Keep its distance, eligibility and script checks authoritative, then
+        // open the window before sending its first item update.
+        if (bot->GetTrader() != player || player->GetTrader() != bot ||
+            !bot->GetTradeData() || !player->GetTradeData())
             return false;
-        }
-
-        if (!player->GetTrader())
-        {
-            WorldPacket packet(CMSG_INITIATE_TRADE);
-            packet << player->GetObjectGuid();
-            bot->GetSession()->HandleInitiateTradeOpcode(packet);
-            return true;
-        }
-        else if (player->GetTrader() != bot)
-        {
-            return false;
-        }
+        WorldPacket begin(CMSG_BEGIN_TRADE);
+        bot->GetSession()->HandleBeginTradeOpcode(begin);
+        initiated = true;
+#else
+        // Other cores retain their existing initiation/acknowledgement flow.
+        return true;
+#endif
     }
-    
-    uint32 copper = chat->parseMoney(text);
+
+    // A native handler may cancel a trade. Never populate a stale or different
+    // partner's trade while processing the remainder of this command.
+    if (bot->GetTrader() != player || player->GetTrader() != bot ||
+        !bot->GetTradeData() || !player->GetTradeData())
+        return false;
+
+    uint32 copper = nonTradedOnly ? 0 : chat->parseMoney(text);
     if (copper > 0)
     {
         WorldPacket packet(CMSG_SET_TRADE_GOLD, 4);
@@ -55,71 +62,73 @@ bool TradeAction::Execute(Event& event)
     }
 
     size_t pos = text.rfind(" ");
-    int count = pos!= std::string::npos ? atoi(text.substr(pos + 1).c_str()) : 1;
-
-    IterateItemsMask mask = IterateItemsMask((uint8)IterateItemsMask::ITERATE_ITEMS_IN_EQUIP | (uint8)IterateItemsMask::ITERATE_ITEMS_IN_BAGS);
-    std::list<Item*> found = ai->InventoryParseItems(text, mask);
-    if (found.empty())
-        return false;
-
+    int count = pos != std::string::npos ? atoi(text.substr(pos + 1).c_str()) : 1;
     int traded = 0;
-    for (std::list<Item*>::iterator i = found.begin(); i != found.end(); i++)
+    bool offered = false;
+    // Native initiation runs script hooks; do not retain inventory pointers
+    // across that boundary. Resolve the current owned items again now.
+    std::list<Item*> found = ai->InventoryParseItems(text, mask);
+    for (Item* item : found)
     {
-        Item* item = *i;
-
-        if (!bot->GetTrader() || item->IsInTrade())
-            continue;
-
-        int8 slot = item->CanBeTraded() ? -1 : TRADE_SLOT_NONTRADED;
-        if (TradeItem(*item, slot) && slot != TRADE_SLOT_NONTRADED && ++traded >= count)
+        TradeData* trade = bot->GetTradeData();
+        if (!trade || bot->GetTrader() != player)
             break;
+        int8 slot = nonTradedOnly || !item->CanBeTraded() ? TRADE_SLOT_NONTRADED : -1;
+        if (item->IsInTrade() &&
+            !(nonTradedOnly && trade->GetItem(TRADE_SLOT_NONTRADED) == item))
+            continue;
+        if (TradeItem(*item, slot))
+        {
+            offered = true;
+            if (nonTradedOnly || (slot != TRADE_SLOT_NONTRADED && ++traded >= count))
+                break;
+        }
     }
-
-    return true;
+    return nonTradedOnly ? offered : offered || initiated || copper > 0;
 }
 
 bool TradeAction::TradeItem(const Item& item, int8 slot)
 {
-    int8 tradeSlot = -1;
+    TradeData* trade = bot->GetTradeData();
+    if (!trade || !bot->GetTrader() || !bot->GetTrader()->GetTradeData())
+        return false;
     Item* itemPtr = const_cast<Item*>(&item);
-
-    TradeData* pTrade = bot->GetTradeData();
-    if ((slot >= 0 && slot < TRADE_SLOT_COUNT) && pTrade->GetItem(TradeSlots(slot)) == NULL)
-        tradeSlot = slot;
-
+    int8 tradeSlot = -1;
     if (slot == TRADE_SLOT_NONTRADED)
-        pTrade->SetItem(TRADE_SLOT_NONTRADED, itemPtr);
+    {
+        Item* current = trade->GetItem(TRADE_SLOT_NONTRADED);
+        if (current)
+            return current == itemPtr;
+        tradeSlot = TRADE_SLOT_NONTRADED;
+    }
     else
     {
-        for (uint8 i = 0; i < TRADE_SLOT_TRADED_COUNT && tradeSlot == -1; i++)
+        if (slot >= 0 && slot < TRADE_SLOT_TRADED_COUNT && !trade->GetItem(TradeSlots(slot)))
+            tradeSlot = slot;
+        for (uint8 i = 0; i < TRADE_SLOT_TRADED_COUNT && tradeSlot == -1; ++i)
         {
-            if (pTrade->GetItem(TradeSlots(i)) == itemPtr)
+            if (trade->GetItem(TradeSlots(i)) == itemPtr)
             {
-                tradeSlot = i;
-
                 WorldPacket packet(CMSG_CLEAR_TRADE_ITEM, 1);
-                packet << (uint8) tradeSlot;
+                packet << i;
                 bot->GetSession()->HandleClearTradeItemOpcode(packet);
-                pTrade->SetItem(TradeSlots(i), NULL);
-                return true;
+                return bot->GetTradeData() && !bot->GetTradeData()->GetItem(TradeSlots(i));
             }
         }
-
-        for (uint8 i = 0; i < TRADE_SLOT_TRADED_COUNT && tradeSlot == -1; i++)
+        for (uint8 i = 0; i < TRADE_SLOT_TRADED_COUNT && tradeSlot == -1; ++i)
         {
-            if (pTrade->GetItem(TradeSlots(i)) == NULL)
-            {
+            if (!trade->GetItem(TradeSlots(i)))
                 tradeSlot = i;
-            }
         }
     }
+    if (tradeSlot == -1)
+        return false;
 
-    if (tradeSlot == -1) return false;
-
+    // Let the native handler validate ownership/bank/duplicate restrictions and
+    // reset acceptance/enchant state. Prefilling TradeData would reject this
+    // same item as a duplicate before those native side effects could run.
     WorldPacket packet(CMSG_SET_TRADE_ITEM, 3);
-    packet << (uint8) tradeSlot << (uint8) item.GetBagSlot()
-        << (uint8) item.GetSlot();
+    packet << uint8(tradeSlot) << uint8(item.GetBagSlot()) << uint8(item.GetSlot());
     bot->GetSession()->HandleSetTradeItemOpcode(packet);
-    return true;
+    return bot->GetTradeData() && bot->GetTradeData()->GetItem(TradeSlots(tradeSlot)) == itemPtr;
 }
-
