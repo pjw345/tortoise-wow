@@ -21,6 +21,7 @@ namespace ai
         bool IsEmpty() { return !guid; }
         bool IsLootPossible(Player* bot, bool* suppressRediscovery = nullptr);
         bool IsApproachSafe(Player* bot, Unit** blocker = nullptr);
+        static bool IsWorldObjectApproachSafe(Player* bot, WorldObject* object, Unit** blocker = nullptr);
         void Refresh(Player* bot, ObjectGuid guid, bool debug = false);
         WorldObject* GetWorldObject(Player* bot);
         ObjectGuid guid;

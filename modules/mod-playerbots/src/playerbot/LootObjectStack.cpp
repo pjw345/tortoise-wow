@@ -323,7 +323,18 @@ bool LootObject::IsApproachSafe(Player* bot, Unit** blocker)
     // opt-out. An active human master does not make unattended loot safe.
     if (!bot->GetGroup() || ai->IsGroupLeader() || sPlayerbotAIConfig.lootHostileDistance <= 0.0f)
         return true;
-    WorldObject* object = GetWorldObject(bot);
+    return IsWorldObjectApproachSafe(bot, GetWorldObject(bot), blocker);
+}
+
+bool LootObject::IsWorldObjectApproachSafe(Player* bot, WorldObject* object, Unit** blocker)
+{
+    if (blocker)
+        *blocker = nullptr;
+    PlayerbotAI* ai = GetBotAI(bot);
+    // Same policy for a visible reporting target; no classification, admission
+    // or movement. The wrapper retains its early return before any refresh.
+    if (!bot->GetGroup() || ai->IsGroupLeader() || sPlayerbotAIConfig.lootHostileDistance <= 0.0f)
+        return true;
     if (!object)
         return false;
     // Search the native visible area, not just the configured combat radius:

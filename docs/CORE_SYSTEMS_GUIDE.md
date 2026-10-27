@@ -1167,3 +1167,19 @@ query or always-on diagnostic stream is added. The cast's two-second duration,
 native skill/tool/ownership checks and real loot retry state remain unchanged.
 Blank manual-cast failure text is a separate compatibility issue (#98).
 Source-only until a requested server build and live acceptance.
+
+
+### Skinning warning refresh contract (27 October 2026)
+
+GetWorldObject calls Refresh using the classified GUID. Low-skill classification
+deliberately leaves that GUID empty while retaining required skill metadata.
+Report that refusal before resolving the loot object, or a refresh of the empty
+GUID erases its reason. Reassigning a GUID to a temporary LootObject is also
+insufficient: IsApproachSafe resolves/refreshes it and rejects it again for low
+skill. The warning instead passes its native corpse pointer to the extracted
+IsWorldObjectApproachSafe policy. The ordinary IsApproachSafe wrapper keeps its
+original early policy opt-out before resolving a loot target, and delegates to
+that same policy. Native combat/threat/LOS/range, body readiness, skin rights,
+skill/tool and reporting-repeat checks remain unchanged; no low-skill corpse is
+admitted. Real GetWorldObject regression and two old/partial negative controls
+cover both failure boundaries. Source-only until a requested build/live check.

@@ -19,5 +19,6 @@ queue=(root/'LootObjectStack.cpp').read_text()
 (out/'native-list.inc').write_text(queue[queue.index('LootTarget::LootTarget('):queue.index('LootObject::LootObject(Player*')])
 phase=queue[queue.index('void LootObject::Refresh('):queue.index('    GameObject* go = ai->GetGameObject(guid);',queue.index('void LootObject::Refresh('))]
 (out/'native-phase.inc').write_text(phase+'}\n')
+(out/'native-world-object.inc').write_text(block(queue,'WorldObject* LootObject::GetWorldObject('))
 assert 'TellInsufficientSkinningSkill' in (root/'strategy/actions/AddLootAction.h').read_text()
 assert 'SPELL_FAILED_LOW_CASTLEVEL' in (core/'src/game/Spells/Spell.cpp').read_text()
