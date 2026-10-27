@@ -1183,3 +1183,44 @@ that same policy. Native combat/threat/LOS/range, body readiness, skin rights,
 skill/tool and reporting-repeat checks remain unchanged; no low-skill corpse is
 admitted. Real GetWorldObject regression and two old/partial negative controls
 cover both failure boundaries. Source-only until a requested build/live check.
+
+### Close rear circle for player-led companions (26 October 2026)
+
+CircleFormation retains native role/roster slot ordering and configured radial
+distance. With an active human master outside combat, halve each slot's angular
+deviation from the rear centre; front-side outer slots become a spaced rear arc.
+Combat placement around the current enemy, free/solo bot circles, other
+formations, native height correction, pathfinding and movement prediction retain
+their existing behavior. The live party was configured to circle/follow 2 yards;
+rear-only circle geometry requires the next image build and live acceptance.
+tests/playerbot-rear-circle extracts the actual circle class and native roster
+angle calculation with controlled unit/map services and an old-code control.
+
+### Selected corpse loot recovery (26 October 2026)
+
+The loot movement trigger now uses the same configured master-to-corpse range
+as LootAction selection, retaining native 3D interaction reach. The former
+follow-distance gate could strand a selected corpse and block an eligible herb.
+LootAvailableTrigger permits native reselection when the selected target is no
+longer eligible or its corpse is beyond that range; combat/mount admission,
+candidate safety, existing corpse-first ordering and native release remain.
+tests/playerbot-loot-target-recovery extracts the actual triggers and selector
+with controlled services and old-code negative controls. This is a source fix;
+image build/deployment and live corpse/herb/follow acceptance remain pending.
+
+### Companion loot selection and inherited combat flags (27 October 2026)
+
+Only ZERO's active-human-led PvE loot trigger distinguishes inherited nearby
+group combat flags from native combat links. The bot's own combat flag remains
+a hold. Nearby same-map party members with a native hostile reference, living
+victim or living attacker (including their pet's links) still hold selection.
+A lingering master/group-member flag alone, such as during Bloodrage's native
+regeneration interruption, no longer holds ordinary corpse or gathering selection.
+The existing same-group/master, PvP, mounted, availability, current-target and
+configured corpse-range rules retain their other semantics. Random/free/real
+players, nonmatching master contexts, PvP and other variants keep the old flag
+gate. No spell ID, special buff name, timer, combat/assist/healing predicate or
+native combat exit is changed. Existing selection/movement/opening retain native
+ownership, skill/tool, LOS/range and hostile destination safety. The helper reads
+existing native player/pet combat references; it adds no world scan or background
+state. This is source-only until a requested build and live acceptance.
