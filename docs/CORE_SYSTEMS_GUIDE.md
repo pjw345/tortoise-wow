@@ -1117,3 +1117,20 @@ candidate safety, existing corpse-first ordering and native release remain.
 tests/playerbot-loot-target-recovery extracts the actual triggers and selector
 with controlled services and old-code negative controls. This is a source fix;
 image build/deployment and live corpse/herb/follow acceptance remain pending.
+
+### Companion loot selection and inherited combat flags (27 October 2026)
+
+Only ZERO's active-human-led PvE loot trigger distinguishes inherited nearby
+group combat flags from native combat links. The bot's own combat flag remains
+a hold. Nearby same-map party members with a native hostile reference, living
+victim or living attacker (including their pet's links) still hold selection.
+A lingering master/group-member flag alone, such as during Bloodrage's native
+regeneration interruption, no longer holds ordinary corpse or gathering selection.
+The existing same-group/master, PvP, mounted, availability, current-target and
+configured corpse-range rules retain their other semantics. Random/free/real
+players, nonmatching master contexts, PvP and other variants keep the old flag
+gate. No spell ID, special buff name, timer, combat/assist/healing predicate or
+native combat exit is changed. Existing selection/movement/opening retain native
+ownership, skill/tool, LOS/range and hostile destination safety. The helper reads
+existing native player/pet combat references; it adds no world scan or background
+state. This is source-only until a requested build and live acceptance.
