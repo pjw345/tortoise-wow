@@ -9,6 +9,67 @@ using namespace ai;
 
 namespace
 {
+#ifdef MANGOSBOT_ZERO
+    bool HasLiveLootCombatLinks(Unit* unit)
+    {
+        if (!unit || !unit->IsInWorld() || !sServerFacade.IsAlive(unit))
+            return false;
+
+        // Reuse the native references used by combat exit. A regeneration-
+        // blocking aura or a combat timer alone is not an engaged enemy.
+        if (!unit->GetHostileRefManager().isEmpty())
+            return true;
+        Unit* victim = unit->GetVictim();
+        if (victim && victim->IsInWorld() && victim->GetMap() == unit->GetMap() &&
+            sServerFacade.IsAlive(victim))
+            return true;
+        for (Unit* attacker : unit->getAttackers())
+        {
+            if (attacker && attacker->IsInWorld() && attacker->GetMap() == unit->GetMap() &&
+                sServerFacade.IsAlive(attacker))
+                return true;
+        }
+        return false;
+    }
+#endif
+
+    bool IsLootCombatActive(PlayerbotAI* ai, Player* bot, bool sharedCombat)
+    {
+#ifdef MANGOSBOT_ZERO
+        if (!sharedCombat || !ai->HasActivePlayerMaster() || ai->IsRealPlayer() || ai->IsInPvp())
+            return sharedCombat;
+
+        Player* master = ai->GetMaster();
+        Group* group = bot->GetGroup();
+        if (!master || !master->IsInWorld() || master->GetMap() != bot->GetMap() ||
+            !group || group != master->GetGroup())
+            return sharedCombat;
+
+        // The bot's own combat flag remains authoritative. Relax only the
+        // inherited nearby-party hold when nobody has native combat links.
+        if (sServerFacade.IsInCombat(bot))
+            return true;
+        for (auto const& slot : group->GetMemberSlots())
+        {
+            Player* member = sObjectMgr.GetPlayer(slot.guid);
+            if (!member || member == bot || !member->IsInWorld() ||
+                member->GetMap() != bot->GetMap() || !sServerFacade.IsInCombat(member) ||
+                !sServerFacade.IsDistanceLessOrEqualThan(sServerFacade.GetDistance2d(member, bot),
+                    sPlayerbotAIConfig.reactDistance))
+                continue;
+
+            if (HasLiveLootCombatLinks(member))
+                return true;
+            Pet* pet = member->GetPet();
+            if (pet && pet->GetMap() == bot->GetMap() && HasLiveLootCombatLinks(pet))
+                return true;
+        }
+        return false;
+#else
+        return sharedCombat;
+#endif
+    }
+
     bool IsCorpseOutsideMasterLootRange(PlayerbotAI* ai, Player* bot, LootObject const& loot)
     {
         Player* master = ai->GetMaster();
@@ -29,7 +90,7 @@ namespace
 bool LootAvailableTrigger::IsActive()
 {
     if (!AI_VALUE(bool, "has available loot") ||
-        AI_VALUE2(bool, "combat", "self target") ||
+        IsLootCombatActive(ai, bot, AI_VALUE2(bool, "combat", "self target")) ||
         AI_VALUE2(bool, "mounted", "self target"))
         return false;
 
