@@ -1258,3 +1258,26 @@ native combat exit is changed. Existing selection/movement/opening retain native
 ownership, skill/tool, LOS/range and hostile destination safety. The helper reads
 existing native player/pet combat references; it adds no world scan or background
 state. This is source-only until a requested build and live acceptance.
+
+
+### Role-based box travel formation (27 October 2026)
+
+The opt-in box formation uses living same-map party members and native tank,
+healer and ranged predicates: tanks/melee share the front row, casters/healers
+the rear. GUID order stabilizes slots across group-reference permutations; no
+slot state or character-name exception is stored. The follow target anchors
+its own role row, and relative positions rotate with its current orientation.
+Saved per-bot follow range is the row/column spacing. Rows wrap at the existing
+MAX_GROUP_SIZE. Roster/role changes are recomputed on the existing map-owned
+formation getter; no retained member pointers or background work are added.
+
+GetLocation uses the same native ground/allowed-Z correction as existing modes.
+Base angle/offset getters describe those slots without reading prior follow
+requests. Existing native follow admission, generator, pathfinding, collision,
+speed, combat/loot/gather ownership and recovery remain authoritative. Combat
+and dead/ghost follow use the existing circle policy. Invalid/non-player targets,
+absent/mismatched groups or non-finite/negative spacing return NullLocation.
+The existing loader, formation command and AI save/load store the name box;
+the live default and current party settings are not changed. See
+playerbots/BOX_FORMATION.md and issue #101. Source-only until a requested build
+and route/interaction acceptance; a slot is not proof of a navigable destination.
