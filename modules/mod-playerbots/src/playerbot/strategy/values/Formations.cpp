@@ -260,6 +260,13 @@ namespace ai
 				return Formation::NullLocation;
 
             float angle = GetFollowAngle();
+            if (ai->HasActivePlayerMaster() && !ai->IsStateActive(BotState::BOT_STATE_COMBAT))
+            {
+                // Keep the native roster/role ordering, but place idle companion
+                // slots in the rear half instead of allowing front-side slots.
+                float const orientation = followTarget->GetOrientation();
+                angle = orientation + M_PI_F + (angle - orientation - M_PI_F) * 0.5f;
+            }
             float x = target->GetPositionX() + cos(angle) * range;
             float y = target->GetPositionY() + sin(angle) * range;
             float z = target->GetPositionZ();
