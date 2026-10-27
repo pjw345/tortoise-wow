@@ -14,6 +14,7 @@ enum SkillType{SKILL_NONE=0,SKILL_SKINNING=393};
 enum{UNIT_DYNAMIC_FLAGS=10,UNIT_FIELD_FLAGS=11,UNIT_DYNFLAG_LOOTABLE=1,UNIT_FLAG_SKINNABLE=2,ALIVE=0,CORPSE=1,INTERACTION_DISTANCE=5};
 struct ObjectGuid{uint32 value=0;ObjectGuid()=default;ObjectGuid(uint32 v):value(v){}explicit operator bool()const{return value!=0;}bool IsEmpty()const{return !value;}bool operator<(ObjectGuid rhs)const{return value<rhs.value;}unsigned long GetRawValue()const{return value;}};
 struct WorldObject{float z=0;virtual~WorldObject()=default;float GetPositionZ()const{return z;}};
+struct GameObject:WorldObject{};
 struct Group{};struct PlayerbotAI;struct Player;
 struct Creature:WorldObject{
  bool lootable=true,skinnable=true,tapped=true,rights=true,lootForSkin=false;int death=CORPSE;uint32 level=16;
@@ -33,6 +34,7 @@ struct PlayerbotAI{
  Player*master=nullptr;Creature*corpse=nullptr;bool trained=true,active=true,real=false,leader=false,silent=false,allowed=true;
  bool HasSkill(SkillType){return trained;}bool HasActivePlayerMaster(){return active;}bool IsRealPlayer(){return real;}
  bool IsGroupLeader(){return leader;}Player*GetMaster(){return master;}Creature*GetCreature(ObjectGuid g){return g?corpse:nullptr;}
+ GameObject*GetGameObject(ObjectGuid){return nullptr;}
  ChatHelper chat;ChatHelper*GetChatHelper(){return &chat;}
  struct Message{Player*recipient;std::string text;bool privateMessage;};std::vector<Message>messages;
  bool TellPlayerNoFacing(Player*p,std::string s,int,bool privacy,bool=true,bool=false){if(silent||!allowed)return false;messages.push_back({p,s,privacy});return true;}
@@ -40,6 +42,7 @@ struct PlayerbotAI{
 PlayerbotAI*GetBotAI(Player*p){return p->ai;}
 struct Facade{bool los=true;float distance=2;int GetDeathState(Creature*c){return c->death;}
  bool IsDistanceGreaterThan(float a,float b){return a>b;}float GetDistance2d(WorldObject*,WorldObject*){return distance;}
+ bool isSpawned(GameObject*){return true;}
  bool IsWithinLOSInMap(WorldObject*,WorldObject*){return los;}}sServerFacade;
 struct Log{template<class...T>void outLoot(T...){}}sLog;
 struct Config{uint32 lootTargetInspectDelay=120;float gatheringDistance=50,groupMemberGatheringDistanceWithActiveMaster=15;}sPlayerbotAIConfig;
@@ -49,10 +52,12 @@ struct LootObject{
  LootObject()=default;LootObject(Player*p,ObjectGuid g){Refresh(p,g);}
  bool IsEmpty(){return !guid;}
  void Refresh(Player*,ObjectGuid,bool=false);
- WorldObject*GetWorldObject(Player*p){return guid?static_cast<WorldObject*>(p->ai->GetCreature(guid)):nullptr;}
- bool IsApproachSafe(Player*){return approachSafe;}
+ WorldObject*GetWorldObject(Player*);
+ bool IsApproachSafe(Player*p){return GetWorldObject(p)&&approachSafe;}
+ static bool IsWorldObjectApproachSafe(Player*,WorldObject*o,void* = nullptr){return o&&approachSafe;}
 };
 #include "native-phase.inc"
+#include "native-world-object.inc"
 #include "native-list.h"
 time_t clockNow=100;time_t fixtureTime(time_t*){return clockNow;}
 #define time fixtureTime

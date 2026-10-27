@@ -351,9 +351,9 @@ void AddGatheringLootAction::TellInsufficientSkinningSkill(ObjectGuid guid, Loot
         !sServerFacade.IsWithinLOSInMap(bot, corpse))
         return;
 
-    LootObject warningTarget(loot);
-    warningTarget.guid = guid;
-    if (!warningTarget.IsApproachSafe(bot))
+    // The corpse is a reporting target, not eligible loot. Resolve no loot
+    // GUID here: refreshing would reject it again for the same low skill.
+    if (!LootObject::IsWorldObjectApproachSafe(bot, corpse))
         return;
 
     // Reuse the existing bounded GUID/timestamp list independently of the
@@ -376,16 +376,19 @@ bool AddGatheringLootAction::AddLoot(Player* requester, ObjectGuid guid, bool ex
 {
     LootObject loot(bot, guid);
 
-    WorldObject *wo = loot.GetWorldObject(bot);
-    if (loot.IsEmpty() || !wo)
+    // GetWorldObject refreshes using the classified GUID. An insufficient-skill
+    // corpse has an empty GUID; resolving it would erase its rejection details.
+    if (loot.IsEmpty())
     {
 #ifdef MANGOSBOT_ZERO
-        // Classification retains the native required skill even when a
-        // low-skill corpse is excluded. Explain it without admitting loot.
         TellInsufficientSkinningSkill(guid, loot);
 #endif
         return false;
     }
+
+    WorldObject *wo = loot.GetWorldObject(bot);
+    if (loot.IsEmpty() || !wo)
+        return false;
 
     if (loot.skillId == SKILL_NONE)
         return false;
