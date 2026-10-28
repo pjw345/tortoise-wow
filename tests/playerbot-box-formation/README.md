@@ -12,3 +12,9 @@ round-trips the actual formation name without executing a database session. The
 old native loader is an expected-failing selection control. These are geometry
 and native-call contract tests, not live pathfinding, sockets, NPC reach or
 exhaustive client/combat behavior. No server build or live setting is changed.
+
+The role adapter now executes production IsRanged/IsHeal/IsTank and the actual
+TankAssistStrategy::GetType with the native StrategyType enum. Engine strategy
+presence, human fallback roles and aura state are controlled services. The
+shared-assist case models all companion combat sets advertising the tank bit
+alongside ranged/healer types and must fail against deployed ceddc25d.
