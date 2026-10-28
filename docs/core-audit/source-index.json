@@ -19609,7 +19609,7 @@
     "dependency_signals": [
       "death_reset"
     ],
-    "sha256": "7C400877A6902BA2A032D8BD95C8B4512D299094C0CA9F5522C90F808A9AAF19"
+    "sha256": "85601CAFD1492655AE714E6340EEE1D05D534503B38FE50D360AAB2A6FF92275"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/values/DpsTargetValue.h",

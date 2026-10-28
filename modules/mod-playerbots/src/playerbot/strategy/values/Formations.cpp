@@ -5,6 +5,8 @@
 #include "playerbot/ServerFacade.h"
 #include "playerbot/strategy/values/PositionValue.h"
 #include "Arrow.h"
+#include <algorithm>
+#include <cmath>
 
 using namespace ai;
 
@@ -386,6 +388,102 @@ namespace ai
         }
     };
 
+    class BoxFormation : public MoveFormation
+    {
+    public:
+        BoxFormation(PlayerbotAI* ai) : MoveFormation(ai, "box") {}
+        virtual WorldLocation GetLocation() override
+        {
+            Unit* target = AI_VALUE(Unit*, "follow target");
+            if (!target || !target->IsPlayer() || !target->IsInWorld() || !ai->IsSafe(target))
+                return Formation::NullLocation;
+
+            // Travel slots must not replace combat positioning or the existing
+            // dead/ghost follow behavior. These use the native circle policy.
+            if (ai->IsStateActive(BotState::BOT_STATE_COMBAT) || !bot->IsAlive() || !target->IsAlive())
+            {
+                CircleFormation fallback(ai);
+                return fallback.GetLocation();
+            }
+
+            Player* master = static_cast<Player*>(target);
+            Group* group = bot->GetGroup();
+            if (!group || group != master->GetGroup())
+                return Formation::NullLocation;
+
+            float const range = ai->GetRange("follow");
+            if (!std::isfinite(range) || range < 0.0f)
+                return Formation::NullLocation;
+
+            std::vector<Player*> front, rear;
+            for (GroupReference* ref = group->GetFirstMember(); ref; ref = ref->next())
+            {
+                Player* member = ref->getSource();
+                if (!member || !member->IsInWorld() || !member->IsAlive() || !ai->IsSafe(member))
+                    continue;
+                // Reuse the native tank/ranged/healer predicates. Hybrid class
+                // names alone cannot distinguish a melee spec from a healer.
+                if (!ai->IsTank(member) && (ai->IsHeal(member) || ai->IsRanged(member)))
+                    rear.push_back(member);
+                else
+                    front.push_back(member);
+            }
+
+            // Group iteration order can change on reconnects. Keep the same
+            // GUID in the same slot while the living roster and roles agree.
+            auto byGuid = [](Player* a, Player* b) { return a->GetObjectGuid() < b->GetObjectGuid(); };
+            std::sort(front.begin(), front.end(), byGuid);
+            std::sort(rear.begin(), rear.end(), byGuid);
+
+            // A normal party has two rows. Larger groups reuse the native
+            // party-size row bound rather than creating an arbitrarily wide line.
+            auto slot = [range](std::vector<Player*> const& row, Player* member, size_t depth,
+                                float& forward, float& right)
+            {
+                auto it = std::find(row.begin(), row.end(), member);
+                if (it == row.end())
+                    return false;
+                size_t const index = size_t(it - row.begin());
+                size_t const line = index / MAX_GROUP_SIZE;
+                size_t const column = index % MAX_GROUP_SIZE;
+                size_t const count = std::min(size_t(MAX_GROUP_SIZE), row.size() - line * MAX_GROUP_SIZE);
+                forward = -float(depth + line) * range;
+                right = (float(column) - (float(count) - 1.0f) * 0.5f) * range;
+                return true;
+            };
+            size_t const frontRows = (front.size() + MAX_GROUP_SIZE - 1) / MAX_GROUP_SIZE;
+            auto position = [&](Player* member, float& forward, float& right)
+            {
+                return slot(front, member, 0, forward, right) ||
+                    slot(rear, member, frontRows, forward, right);
+            };
+
+            float masterForward, masterRight, botForward, botRight;
+            if (!position(master, masterForward, masterRight) || !position(bot, botForward, botRight))
+                return Formation::NullLocation;
+
+            float const forward = botForward - masterForward;
+            float const right = botRight - masterRight;
+            float const orientation = target->GetOrientation();
+            float x = target->GetPositionX() + cos(orientation) * forward + sin(orientation) * right;
+            float y = target->GetPositionY() + sin(orientation) * forward - cos(orientation) * right;
+            float z = target->GetPositionZ();
+#ifdef MANGOSBOT_TWO
+            float ground = target->GetMap()->GetHeight(target->GetPhaseMask(), x, y, z);
+#else
+            float ground = target->GetMap()->GetHeight(x, y, z);
+#endif
+            if (ground <= INVALID_HEIGHT)
+                return Formation::NullLocation;
+            if (!bot->IsFlying() && !bot->IsFreeFlying())
+            {
+                z += CONTACT_DISTANCE;
+                bot->UpdateAllowedPositionZ(x, y, z);
+            }
+            return WorldLocation(target->GetMapId(), x, y, z);
+        }
+    };
+
     class FarFormation : public FollowFormation
     {
     public:
@@ -557,6 +655,11 @@ bool FormationValue::Load(std::string formation)
         if (value) delete value;
         value = new CircleFormation(ai);
     }
+    else if (formation == "box")
+    {
+        if (value) delete value;
+        value = new BoxFormation(ai);
+    }
     else if (formation == "line")
     {
         if (value) delete value;
@@ -626,7 +729,7 @@ bool SetFormationAction::Execute(Event& event)
     {
         std::ostringstream str; str << "Invalid formation: |cffff0000" << formation;
         ai->TellPlayer(requester, str);
-        ai->TellPlayer(requester, "Please set to any of:|cffffffff near, queue, chaos, circle, line, shield, arrow, melee, far, default");
+        ai->TellPlayer(requester, "Please set to any of:|cffffffff near, queue, chaos, circle, box, line, shield, arrow, melee, far, default");
         return false;
     }
 
