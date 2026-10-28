@@ -1283,6 +1283,18 @@ playerbots/BOX_FORMATION.md and issue #101. Source-only until a requested build
 and route/interaction acceptance; a slot is not proof of a navigable destination.
 
 
+### Box caster rows with shared tank assist (28 October 2026)
+
+TankAssistStrategy::GetType returns STRATEGY_TYPE_TANK; native IsTank can therefore
+be true alongside IsRanged/IsHeal on a companion. The live party has tank assist
+on every bot. Box travel rows must use IsRanged/IsHeal directly, without letting
+the broad tank-assist flag force casters into the front row. This changes only
+the opt-in formation classification, retaining combat strategies, native role
+APIs and slot/movement/persistence contracts. The regression executes the native
+role predicates, assist type method and enum, including the shared-assist case;
+engine presence and human fallback/aura services remain controlled.
+
+
 ### Mixed physical/caster stat qualification (28 October 2026)
 
 An item with both Intellect and Agility enters both native caster and attack-item

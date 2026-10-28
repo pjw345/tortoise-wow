@@ -421,9 +421,10 @@ namespace ai
                 Player* member = ref->getSource();
                 if (!member || !member->IsInWorld() || !member->IsAlive() || !ai->IsSafe(member))
                     continue;
-                // Reuse the native tank/ranged/healer predicates. Hybrid class
-                // names alone cannot distinguish a melee spec from a healer.
-                if (!ai->IsTank(member) && (ai->IsHeal(member) || ai->IsRanged(member)))
+                // Tank-assist advertises STRATEGY_TYPE_TANK even on casters.
+                // Use native ranged/healer roles directly for travel rows;
+                // an assist policy must not override their rear placement.
+                if (ai->IsHeal(member) || ai->IsRanged(member))
                     rear.push_back(member);
                 else
                     front.push_back(member);
