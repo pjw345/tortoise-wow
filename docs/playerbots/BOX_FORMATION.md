@@ -14,7 +14,9 @@ For the current melee-led party, the intended travel arrangement is:
 ```
 
 Native tanks/melee use the front row. Native ranged/healers share the rear row;
-the native tank predicate takes priority for hybrid roles. This uses roles, not
+ranged/healer predicates take priority over assist strategy type bits. The
+native tank-assist strategy advertises a tank bit even on casters, so IsTank
+alone cannot assign a travel row. This uses roles, not
 class or character-name lists. Members are sorted by GUID within each row so
 unchanged membership/roles retain their slots even if group-reference order
 changes. The human remains the anchor and is never moved by the formation.
