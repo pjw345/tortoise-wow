@@ -2126,7 +2126,10 @@ uint32 RandomItemMgr::CalculateStatWeight(uint8 playerclass, uint8 spec, ItemPro
             }
         }
 
-        if (!isWhitelist && !playerAttacker)
+        // An unused physical stat must not erase useful weighted caster
+        // stats on the same item (e.g. Intellect plus Agility on cloth).
+        if (!isWhitelist && !playerAttacker && basicStatsWeight <= 0 &&
+            !spellPower && !spellHeal && !statWeight)
             return 0;
     }
 

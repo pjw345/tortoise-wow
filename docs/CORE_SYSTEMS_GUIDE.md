@@ -1293,3 +1293,16 @@ the opt-in formation classification, retaining combat strategies, native role
 APIs and slot/movement/persistence contracts. The regression executes the native
 role predicates, assist type method and enum, including the shared-assist case;
 engine presence and human fallback/aura services remain controlled.
+
+
+### Mixed physical/caster stat qualification (28 October 2026)
+
+An item with both Intellect and Agility enters both native caster and attack-item
+qualification. A mage scale without physical-attacker weights must not discard
+its positive weighted caster contribution merely for also having Agility or
+Strength. Preserve positive basic/spell contributions through the final physical
+qualification; existing native class/spec restrictions still precede this gate.
+The comparator must then prefer useful caster weight over a zero-score armor
+tie, while retaining genuine statless armor improvements. The focused stat-only
+adapter extracts native accumulation/qualification/comparison and explicitly
+does not certify full spell/socket/inventory behavior. No grey-item ban is added.
