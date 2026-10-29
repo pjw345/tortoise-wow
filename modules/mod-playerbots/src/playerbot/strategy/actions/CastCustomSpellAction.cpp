@@ -8,6 +8,109 @@
 
 using namespace ai;
 
+static std::string FormatManualCastFailure(SpellCastResult result, std::map<std::string, std::string> args = std::map<std::string, std::string>())
+{
+    args["%result"] = std::to_string(static_cast<unsigned int>(result));
+    char const* key = GetSpellCastResultString(result);
+    if (key && *key)
+    {
+        std::string translated = BOT_TEXT2(key, args);
+        if (!translated.empty() && translated != key)
+            return translated;
+    }
+
+    // BOT_TEXT2 retains realm translations and falls back to its literal input
+    // when a key is absent. Existing realms therefore need no text-table reset.
+    char const* fallback = "Spell cast was rejected (result %result).";
+    switch (result)
+    {
+        case SPELL_FAILED_LOW_CASTLEVEL:
+        case SPELL_FAILED_MIN_SKILL:
+            fallback = "My skill is not high enough."; break;
+        case SPELL_FAILED_EQUIPPED_ITEM:
+        case SPELL_FAILED_EQUIPPED_ITEM_CLASS:
+        case SPELL_FAILED_EQUIPPED_ITEM_CLASS_MAINHAND:
+        case SPELL_FAILED_EQUIPPED_ITEM_CLASS_OFFHAND:
+        case SPELL_FAILED_TOTEMS:
+            fallback = "I need the required equipped item or tool."; break;
+        case SPELL_FAILED_REAGENTS:
+            fallback = "I am missing a required reagent."; break;
+        case SPELL_FAILED_TARGET_NOT_LOOTED:
+            fallback = "The corpse must be fully looted and available to me first."; break;
+        case SPELL_FAILED_TARGET_UNSKINNABLE:
+            fallback = "That creature is not skinnable."; break;
+        case SPELL_FAILED_BAD_TARGETS:
+        case SPELL_FAILED_BAD_IMPLICIT_TARGETS:
+            fallback = "That is not a valid target for this spell."; break;
+        case SPELL_FAILED_NOT_KNOWN:
+        case SPELL_FAILED_SPELL_UNAVAILABLE:
+            fallback = "I do not know or cannot use this spell."; break;
+        case SPELL_FAILED_NOT_READY:
+        case SPELL_FAILED_ITEM_NOT_READY:
+            fallback = "The spell or item is not ready yet."; break;
+        case SPELL_FAILED_OUT_OF_RANGE:
+            fallback = "The target is out of range."; break;
+        case SPELL_FAILED_LINE_OF_SIGHT:
+            fallback = "The target is not in line of sight."; break;
+        case SPELL_FAILED_NO_POWER:
+            fallback = "I do not have enough mana, rage or energy."; break;
+        case SPELL_FAILED_AFFECTING_COMBAT:
+        case SPELL_FAILED_TARGET_AFFECTING_COMBAT:
+        case SPELL_FAILED_TARGET_IN_COMBAT:
+            fallback = "Combat prevents this cast."; break;
+        case SPELL_FAILED_CASTER_DEAD:
+        case SPELL_FAILED_NOT_WHILE_GHOST:
+            fallback = "I cannot cast while dead."; break;
+        case SPELL_FAILED_NOT_IN_CONTROL:
+        case SPELL_FAILED_STUNNED:
+        case SPELL_FAILED_CONFUSED:
+        case SPELL_FAILED_FLEEING:
+        case SPELL_FAILED_CHARMED:
+        case SPELL_FAILED_POSSESSED:
+            fallback = "I am not in control of my actions."; break;
+        case SPELL_FAILED_SILENCED:
+        case SPELL_FAILED_PACIFIED:
+            fallback = "I am silenced or pacified."; break;
+        case SPELL_FAILED_MOVING:
+            fallback = "I must stop moving first."; break;
+        case SPELL_FAILED_NOT_STANDING:
+            fallback = "I must stand up first."; break;
+        case SPELL_FAILED_SPELL_IN_PROGRESS:
+            fallback = "Another spell or action is in progress."; break;
+        case SPELL_FAILED_TARGET_ENEMY:
+            fallback = "That spell cannot target an enemy."; break;
+        case SPELL_FAILED_TARGET_FRIENDLY:
+            fallback = "That spell cannot target a friendly unit."; break;
+        case SPELL_FAILED_TARGETS_DEAD:
+            fallback = "The target is dead."; break;
+        case SPELL_FAILED_TARGET_NOT_DEAD:
+            fallback = "The target must be dead."; break;
+        case SPELL_FAILED_NOT_TRADEABLE:
+        case SPELL_FAILED_NOT_TRADING:
+            fallback = "That item is not available for this trade cast."; break;
+        case SPELL_FAILED_ITEM_NOT_FOUND:
+            fallback = "The required item was not found."; break;
+        case SPELL_FAILED_IMMUNE:
+        case SPELL_FAILED_DAMAGE_IMMUNE:
+            fallback = "The target is immune."; break;
+        case SPELL_FAILED_REQUIRES_SPELL_FOCUS:
+            fallback = "I need the required spell focus."; break;
+        case SPELL_FAILED_HIGHLEVEL:
+        case SPELL_FAILED_LEVEL_REQUIREMENT:
+            fallback = "The level requirement is not met."; break;
+        case SPELL_FAILED_LOWLEVEL:
+            fallback = "The target level is too low."; break;
+        case SPELL_FAILED_NOT_MOUNTED:
+        case SPELL_FAILED_ONLY_MOUNTED:
+        case SPELL_FAILED_NOT_ON_TAXI:
+            fallback = "My mount or flight state prevents this cast."; break;
+        case SPELL_FAILED_NOPATH:
+            fallback = "No path to the target is available."; break;
+        default: break;
+    }
+    return BOT_TEXT2(fallback, args);
+}
+
 int FindLastSeparator(std::string text, std::string sep)
 {
     int pos = text.rfind(sep);
@@ -235,13 +338,13 @@ bool CastCustomSpellAction::Execute(Event& event)
         replyArgs["%unit"] = target->GetName();
     }
 
-    SpellCastResult checkResult;
+    SpellCastResult checkResult = SPELL_FAILED_UNKNOWN;
     const bool canCast = gameObjectTarget ? ai->CanCastSpell(spell, gameObjectTarget, 0, true, false, false, false, &checkResult) : ai->CanCastSpell(spell, target, 0, true, itemTarget, false, false, false, &checkResult);
     if (!bot->GetTrader() && !canCast)
     {
         std::map<std::string, std::string> args;
         args["%spell"] = replyArgs["%spell"];
-        args["%fail_reason"] = BOT_TEXT2(GetSpellCastResultString(checkResult), args);
+        args["%fail_reason"] = FormatManualCastFailure(checkResult, args);
         ai->TellPlayerNoFacing(requester, BOT_TEXT2("cast_spell_command_error", args));
         return false;
     }

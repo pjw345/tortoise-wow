@@ -3750,7 +3750,7 @@ bool ChatHandler::HandleTeleDelCommand(char* args)
 
     std::string name = args;
 
-    sWorld.GetMigration().SetAuthor(m_session->GetUsername());
+    sWorld.GetMigration().SetAuthor(m_session ? m_session->GetUsername() : "Console");
     if (!sObjectMgr.DeleteGameTele(name))
     {
         SendSysMessage(LANG_COMMAND_TELE_NOTFOUND);

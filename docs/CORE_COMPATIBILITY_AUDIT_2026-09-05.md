@@ -360,3 +360,27 @@ tolerances, target selection, saved distance, collision and speed bonuses remain
 authoritative. Production-class/dispatch fixtures pass and the old class fails
 the negative control. Full image and gameplay checks remain pending; see
 `docs/playerbots/STABLE_REAR_FOLLOW.md`.
+
+
+## Console delete and manual cast feedback correction (29 October 2026)
+
+Issue #99: tele del is console-enabled but its migration attribution dereferenced
+an absent player session. The handler now retains a player's account username
+or uses the existing Console convention, then follows the unchanged native
+ObjectMgr::DeleteGameTele path. Five production-extracted handler/cache cases
+pass; the old console handler fails in an isolated test process.
+
+Issue #98: the Turtle compatibility result-string function returned an empty
+string for every spell failure. It now maps Turtle's own named enum constants
+to symbolic text keys, following the CMaNGOS helper contract without copying
+enum offsets. The command retains existing text translations and placeholders,
+with readable literal fallback through BOT_TEXT2 and numeric fallback for
+unmapped results. Native spell eligibility and execution are unchanged.
+Eight focused cast cases pass; old-helper and old full-rejection controls fail.
+
+Together 44 cases across five suites pass, including existing Skinning-warning,
+spell-fallback and non-traded-offer regressions. CastCustomSpellAction.cpp and
+PlayerbotAI.cpp pass native-header compilation; all 2,525 officially regenerated
+native source hashes match. Tests control session, text, DB and spell services;
+full image compilation, end-to-end commands and in-game feedback remain separate
+validation stages. No new diagnostics, SQL changes or runtime bypasses added.
