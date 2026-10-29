@@ -1338,7 +1338,7 @@
       "doors",
       "threat"
     ],
-    "sha256": "20A981E5EF929CDB06E20263C4111DF51281E996CEA2C847B172531246FD3F32"
+    "sha256": "F75C8C5BE297C24709C7BA2F9563FAF9907BC9C9F6369657ACA99BE55A8E79B1"
   },
   {
     "file": "src/game/AI/ScriptedEscortAI.h",
@@ -16484,7 +16484,7 @@
     "addsc": [],
     "loader_calls": [],
     "dependency_signals": [],
-    "sha256": "A11298D338172B8D52FF9920FDCBAD0B2FE9BA943C4415BC9C36A0E08780FA26"
+    "sha256": "0751217EFF6978A909015B23D3C140228D26040733E7803BF55052C1733E6C58"
   },
   {
     "file": "modules/mod-playerbots/botpch.h",
@@ -23992,7 +23992,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "F21BD6D0BBBF9C0E3FD679F349AC9606BA3C4DD8393CD23F1B7189BC3B18FB38"
+    "sha256": "A0EE570BE707E45641781F049E26AFCFC3FD0A697E84973D270E1098EE10CB7A"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/SayAction.h",

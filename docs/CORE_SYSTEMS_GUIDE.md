@@ -1306,3 +1306,25 @@ The comparator must then prefer useful caster weight over a zero-score armor
 tie, while retaining genuine statless armor improvements. The focused stat-only
 adapter extracts native accumulation/qualification/comparison and explicitly
 does not certify full spell/socket/inventory behavior. No grey-item ban is added.
+
+## Console teleport deletion and manual cast rejection feedback (29 October 2026)
+
+`tele del` is console-enabled. HandleTeleDelCommand uses the session username
+when present and the existing `Console` attribution convention otherwise,
+before the unchanged native DeleteGameTele cache/database path. Empty, missing
+and repeated deletion retain their native return values and messages. No
+command access or teleport operation is widened.
+
+The Turtle compatibility GetSpellCastResultString maps native named enum values
+to symbolic text keys without assuming CMaNGOS numeric equivalence. Manual cast
+rejection uses existing BOT_TEXT2 translations when present, otherwise readable
+fallback text and a numeric result for unmapped failures. Existing realms do
+not need new SQL or a text-table reset. A defensive local result initializer
+prevents uninitialized feedback from a rejecting adapter. Native unit/GO checks,
+skill/tools/ownership/readiness, cast execution, successful/trade behavior and
+late CastSpell failure handling remain authoritative and unchanged. Generic
+low-skill results do not invent Skinning-specific requirement numbers.
+
+Focused console-tele-delete and playerbot-cast-feedback suites extract production
+bodies with controlled services; they do not prove end-to-end SOAP/database or
+in-game chat delivery. No diagnostic instrumentation is introduced.
