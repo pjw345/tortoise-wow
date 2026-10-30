@@ -1,0 +1,26 @@
+name: External profiling tools
+on:
+  push:
+    paths:
+      - 'tools/profiling/**'
+      - '.github/workflows/profiling.yml'
+  pull_request:
+    paths:
+      - 'tools/profiling/**'
+      - '.github/workflows/profiling.yml'
+permissions:
+  contents: read
+jobs:
+  profiling:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.9', '3.12']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -s tools/profiling -p test_profile.py -v

@@ -4,6 +4,10 @@ Source baseline: `mantech-turtle`, `b2d5a8549194f7ffa38e324dcb7a82ccc0ba2132`, r
 
 Start with the [compatibility audit](CORE_COMPATIBILITY_AUDIT_2026-09-05.md), [map coverage](core-audit/COVERAGE.md), and [diagnostic inventory](../doc/TURTLE_DIAGNOSTICS.md). `AGENTS.md` requires using native mechanisms and checking their full contract before making changes.
 
+For repeatable external CPU/memory measurements on the Linux host, use the
+[profiling workflow](../tools/profiling/README.md). It attaches to an existing
+process without changing native scheduling or enabling in-process probes.
+
 ## How to investigate the next bug
 
 1. Record the exact build, config, client version, entity entry/GUID, map/instance, reproduction and expected behavior. A local source tree is not proof of the running binary.
