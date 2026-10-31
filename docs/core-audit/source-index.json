@@ -22279,7 +22279,7 @@
     "dependency_signals": [
       "spells"
     ],
-    "sha256": "6A2B3463E8D5667263104A36217591043027CF950EC31F2E29C10280164F62C3"
+    "sha256": "82F9E301061FC42140EA8D0289C89BC5CD9F31382590DA460A9170EC9037B913"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/PullActions.cpp",
@@ -23008,7 +23008,7 @@
       "death_reset",
       "threat"
     ],
-    "sha256": "BB2B5D7DE80536B0C9B8C2589A6D958D7E6B3568B854BB9A82D65CEC6326B90E"
+    "sha256": "C573497E523731F387FB0B623CF521691CBE8A676913BC8B08A5FCA2348A67CC"
   },
   {
     "file": "modules/mod-playerbots/src/playerbot/strategy/actions/GuildAcceptQuestOrderAction.h",

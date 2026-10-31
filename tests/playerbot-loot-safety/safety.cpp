@@ -30,6 +30,7 @@ struct Pet:Unit{bool enabled=true;bool IsPet()const override{return true;}bool I
 struct World{float rate=1;float getConfig(int){return rate;}}sWorld;
 struct ObjectGuid { int id=0; unsigned long GetRawValue() const {return id;} bool IsCreature() const {return true;} };
 struct PlayerbotAI {
+    int stops=0;void StopMoving(){++stops;}
     bool leader=false, activeMaster=true; int scans=0; float lastRadius=0; std::list<Unit*> hostiles;
     bool IsGroupLeader() {return leader;}
     bool HasActivePlayerMaster() {return activeMaster;}
@@ -78,7 +79,7 @@ int main() {try{
 
     ai.activeMaster=true;
     MoveToLootAction move{&bot,&ai};
-    check(!move.Execute(event)&&nativeMoves==0&&stack.defers==1&&current.object==nullptr,"new hostile blocks queued movement and defers target");
+    check(!move.Execute(event)&&nativeMoves==0&&stack.defers==1&&current.object==nullptr&&ai.stops==1,"new hostile blocks queued movement and defers target");
     ai.hostiles.clear();current=loot;
     check(move.Execute(event)&&nativeMoves==1,"safe target can approach after danger clears");
     int scans=ai.scans;

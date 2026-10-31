@@ -1328,3 +1328,23 @@ low-skill results do not invent Skinning-specific requirement numbers.
 Focused console-tele-delete and playerbot-cast-feedback suites extract production
 bodies with controlled services; they do not prove end-to-end SOAP/database or
 in-game chat delivery. No diagnostic instrumentation is introduced.
+
+
+## Loot threat cancellation and arrival recheck (31 October 2026)
+
+MoveToLootAction previously deferred a newly unsafe target but did not stop its
+already launched motion. It now uses the existing PlayerbotAI::StopMoving before
+clearing/defer, preserving the queue retry interval. For protected grouped
+followers only, its normal movement wait is capped by the existing global
+cooldown so the same native threat check can run again during longer trips.
+Shorter waits, solo/leader/explicit-zero policies and native routing remain.
+Automatic OpenLootAction also rechecks safety before in-range interaction;
+explicit owner-requested use retains its existing semantics. No opening/cast
+duration, hostile level/aggro/LOS/floor policy, ownership or native loot rules
+are weakened. No new timer, worker or persistent pointer is introduced.
+
+This closes demonstrated cancellation/arrival-check gaps; it does not establish
+the exact cause of the user's unspecified barrel/crate incident or certify
+that every intermediate path segment avoids aggro. Existing logs captured
+hostile rejections on the reported play session. Route-level checks remain a
+separate #24 validation requirement. No diagnostics or live settings changed.
