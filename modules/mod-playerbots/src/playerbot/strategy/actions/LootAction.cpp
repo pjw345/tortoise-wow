@@ -94,6 +94,16 @@ enum ProfessionSpells
 bool OpenLootAction::Execute(Event& event)
 {
     LootObject lootObject = AI_VALUE(LootObject, "loot target");
+    // Automatic in-range opening can run without another move action. Recheck
+    // the same native safety policy here too. An explicit owner's use command
+    // retains its existing intentional/manual semantics.
+    if (!event.getOwner() && !lootObject.IsEmpty() && !lootObject.IsApproachSafe(bot))
+    {
+        ai->StopMoving();
+        AI_VALUE(LootObjectStack*, "available loot")->Defer(lootObject.guid, sPlayerbotAIConfig.lootTargetRetryDelay);
+        RESET_AI_VALUE(LootObject, "loot target");
+        return false;
+    }
     bool result = DoLoot(lootObject);
     if (result)
     {

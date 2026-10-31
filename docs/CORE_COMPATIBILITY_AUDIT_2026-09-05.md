@@ -384,3 +384,23 @@ PlayerbotAI.cpp pass native-header compilation; all 2,525 officially regenerated
 native source hashes match. Tests control session, text, DB and spell services;
 full image compilation, end-to-end commands and in-game feedback remain separate
 validation stages. No new diagnostics, SQL changes or runtime bypasses added.
+
+
+## Loot threat cancellation and arrival recheck (31 October 2026)
+
+MoveToLootAction previously deferred a newly unsafe target but did not stop its
+already launched motion. It now uses the existing PlayerbotAI::StopMoving before
+clearing/defer, preserving the queue retry interval. For protected grouped
+followers only, its normal movement wait is capped by the existing global
+cooldown so the same native threat check can run again during longer trips.
+Shorter waits, solo/leader/explicit-zero policies and native routing remain.
+Automatic OpenLootAction also rechecks safety before in-range interaction;
+explicit owner-requested use retains its existing semantics. No opening/cast
+duration, hostile level/aggro/LOS/floor policy, ownership or native loot rules
+are weakened. No new timer, worker or persistent pointer is introduced.
+
+This closes demonstrated cancellation/arrival-check gaps; it does not establish
+the exact cause of the user's unspecified barrel/crate incident or certify
+that every intermediate path segment avoids aggro. Existing logs captured
+hostile rejections on the reported play session. Route-level checks remain a
+separate #24 validation requirement. No diagnostics or live settings changed.

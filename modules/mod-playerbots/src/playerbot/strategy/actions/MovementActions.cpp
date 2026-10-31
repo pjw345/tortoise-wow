@@ -3359,6 +3359,9 @@ bool MoveToLootAction::Execute(Event& event)
     // scan/selection. Do not issue a route while its destination is unsafe.
     if (!loot.IsApproachSafe(bot))
     {
+        // Clearing the selected target does not cancel an already launched
+        // spline. Stop through the native movement owner before deferring it.
+        ai->StopMoving();
         if (debugLoot)
             sLog.outLoot("bot=%s event=move-abort guid=%lu reason=hostile retry-seconds=%u",
                 bot->GetName(), lootGuid.GetRawValue(), sPlayerbotAIConfig.lootTargetRetryDelay);
@@ -3391,7 +3394,13 @@ bool MoveToLootAction::Execute(Event& event)
         sPlayerbotAIConfig.contactDistance;
     bool moved = los ? MoveNear(wo, approachDistance) : MoveTo(WorldPosition(wo));
     if (moved)
+    {
         WaitForReach(std::max(0.0f, dist - approachDistance));
+        // Keep the normal route and movement wait, but let protected followers
+        // recheck a roaming/respawning threat before the full trip elapses.
+        if (bot->GetGroup() && !ai->IsGroupLeader() && sPlayerbotAIConfig.lootHostileDistance > 0.0f)
+            SetDuration(std::min(GetDuration(), sPlayerbotAIConfig.globalCoolDown));
+    }
 
     if (debugLoot)
         sLog.outLoot("bot=%s event=move guid=%lu distance=%.1f best=%.1f los=%d approach=%.1f result=%d",
