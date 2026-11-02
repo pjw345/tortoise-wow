@@ -3,6 +3,8 @@
 /build/
 /build-*/
 /bin/
+/profiling-results/
+/tools/profiling/__pycache__/
 /.vscode/
 *.kate-swp
 *.exe

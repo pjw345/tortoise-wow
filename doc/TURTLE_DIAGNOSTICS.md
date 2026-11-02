@@ -2,6 +2,22 @@
 
 Purpose: explain server-side action latency at the configured population without logging every bot action. This is an instrumentation/removal inventory, not a claim of live performance validation.
 
+## External profiling workflow (30 October 2026)
+
+`tools/profiling/profile.py` and its [runbook](../tools/profiling/README.md) provide
+bounded, explicitly targeted Linux process/thread CPU, RSS/swap/I/O and start/end
+PSS sampling, plus optional short `perf` attachment. These are external collectors;
+they introduce no native hooks, scheduling changes, runtime config writes or service
+operations. Nothing runs unless the operator invokes the tool. Stop the collector
+to end its work; its profiler child is cleaned up separately from the game process.
+Remove `tools/profiling`, its CI workflow and guide links together if retired.
+
+Existing clocks/atomics, tracked-allocation accounting and diagnostic probes remain
+in place. Collector/perf overhead is not yet measured on TurtleWoW; compare repeated
+matching runs with/without perf. CPU sample percentiles are not tick-latency
+percentiles. Runtime symbol resolution, actual workload captures, allocation/wait
+profiling and gameplay acceptance remain separate from offline collector tests.
+
 ## Playerbot loot diagnostics
 
 The `debug loot` strategy writes a compact trace to
